@@ -1,43 +1,43 @@
 {
-  "schemaVersion": 1,
-  "id": "stargate",
-  "version": "${version}",
-  "name": "Stargate",
-  "description": "A recreation of the legendary SGCraft.",
-  "authors": [
-    "gungun974"
-  ],
-  "contact": {
-    "homepage": "",
-    "sources": ""
-  },
-
+	"schemaVersion": 1,
+	"id": "stargate",
+	"version": "${version}",
+	"name": "Stargate",
+	"description": "A recreation of the legendary SGCraft.",
+	"authors": [
+		"gungun974"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
 	"icon": "icon.png",
-  "license": "CC0-1.0",
-
-  "environment": "*",
-  "entrypoints": {
-    "main": [
-      "gungun974.stargate.StargateMod"
-    ],
+	"license": "CC0-1.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"gungun974.stargate.StargateMod"
+		],
+		"initModels": [
+			"gungun974.stargate.StargateModels"
+		],
 		"beforeGameStart": [
-          "gungun974.stargate.StargateMod"
+			"gungun974.stargate.StargateMod"
 		],
 		"afterGameStart": [
-          "gungun974.stargate.StargateMod"
+			"gungun974.stargate.StargateMod"
 		],
 		"recipesReady": [
-          "gungun974.stargate.StargateMod"
+			"gungun974.stargate.StargateMod"
 		]
 	},
-  "mixins": [
+	"mixins": [
 		"stargate.mixins.json"
-  ],
-
-  "depends": {
+	],
+	"depends": {
 		"minecraft": "*",
-    "fabricloader": ">=0.15.5"
-  },
-  "suggests": {
-  }
+		"fabricloader": ">=0.15.5"
+	},
+	"suggests": {
+	}
 }
