@@ -1,5 +1,6 @@
 package gungun974.stargate.gate.blocks.core;
 
+import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import net.minecraft.core.block.entity.TileEntity;
@@ -120,5 +121,19 @@ public class TileEntityStargateCore extends TileEntity {
 			this.assembled = false;
 			StargateMod.LOGGER.info("Disassemble Stargate");
 		}
+	}
+
+	@Override
+	public void readFromNBT(CompoundTag compoundTag) {
+		assembled = compoundTag.getBooleanOrDefault("Assembled", false);
+
+		super.readFromNBT(compoundTag);
+	}
+
+	@Override
+	public void writeToNBT(CompoundTag compoundTag) {
+		compoundTag.putBoolean("Assembled", assembled);
+
+		super.writeToNBT(compoundTag);
 	}
 }
