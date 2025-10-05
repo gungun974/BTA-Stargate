@@ -65,4 +65,9 @@ public class BlockLogicStargateRing extends BlockLogic {
 			stargateCore.checkAndAssemble();
 		}
 	}
+
+	@Override
+	public boolean isSolidRender() {
+		return false;
+	}
 }

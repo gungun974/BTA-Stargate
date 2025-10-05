@@ -10,7 +10,7 @@ import net.minecraft.core.world.WorldSource;
 import javax.annotation.Nullable;
 
 public class TileEntityStargateCore extends TileEntity {
-	boolean assembled = false;
+	private boolean assembled = false;
 
 	@Nullable
 	public static TileEntityStargateCore findStargateCore(WorldSource worldSource, int x, int y, int z) {
@@ -54,6 +54,19 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		return null;
+	}
+
+	public boolean isAssembled() {
+		return assembled;
+	}
+
+	public Direction getDirection() {
+		World world = worldObj;
+		if (world == null) {
+			return Direction.NORTH;
+		}
+
+		return BlockLogicStargateCore.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
 	}
 
 	private boolean isValidStructure() {

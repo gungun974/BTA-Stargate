@@ -1,6 +1,8 @@
 package gungun974.stargate.gate.blocks.ring;
 
+import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
 import net.minecraft.client.render.block.model.BlockModelStandard;
+import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.texture.stitcher.IconCoordinate;
 import net.minecraft.client.render.texture.stitcher.TextureRegistry;
 import net.minecraft.core.block.Block;
@@ -29,5 +31,14 @@ public class BlockModelStargateRing<T extends BlockLogic> extends BlockModelStan
 		} else {
 			return this.blockTextures.get(Side.getSideById(index));
 		}
+	}
+
+	@Override
+	public boolean render(Tessellator tessellator, int x, int y, int z) {
+		TileEntityStargateCore stargateCore = TileEntityStargateCore.findStargateCore(renderBlocks.blockAccess, x, y, z);
+		if (stargateCore != null && stargateCore.isAssembled()) {
+			return false;
+		}
+		return super.render(tessellator, x, y, z);
 	}
 }

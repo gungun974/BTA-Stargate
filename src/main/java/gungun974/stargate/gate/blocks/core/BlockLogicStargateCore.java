@@ -46,4 +46,9 @@ public class BlockLogicStargateCore extends BlockLogicRotatable {
 			stargateCore.checkAndAssemble();
 		}
 	}
+
+	@Override
+	public boolean isSolidRender() {
+		return false;
+	}
 }
