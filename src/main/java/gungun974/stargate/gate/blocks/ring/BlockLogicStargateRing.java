@@ -67,6 +67,16 @@ public class BlockLogicStargateRing extends BlockLogic {
 	}
 
 	@Override
+	public boolean onBlockRightClicked(World world, int x, int y, int z, Player player, Side side, double xHit, double yHit) {
+		TileEntityStargateCore stargateCore = TileEntityStargateCore.findStargateCore(world, x, y, z);
+		if (stargateCore != null) {
+			stargateCore.autoDial();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public boolean isSolidRender() {
 		return false;
 	}

@@ -3,6 +3,7 @@ package gungun974.stargate.gate.blocks.core;
 import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
+import gungun974.stargate.core.StargateAddress;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
@@ -11,6 +12,15 @@ import net.minecraft.core.world.WorldSource;
 import javax.annotation.Nullable;
 
 public class TileEntityStargateCore extends TileEntity {
+	public final static double symbolAngle = 360.0 / StargateAddress.NUMBER_OF_SYMBOL;
+
+	private double currentAngle = 0;
+	private double lastAngle = 0;
+
+	private double targetAngle = 0;
+
+	private boolean ringDirection = false;
+
 	private boolean assembled = false;
 
 	@Nullable
@@ -55,6 +65,11 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		return null;
+	}
+
+	public static double angularDistance(double angle1, double angle2) {
+		double diff = Math.abs(angle1 - angle2) % 360.0;
+		return diff > 180.0 ? 360.0 - diff : diff;
 	}
 
 	public boolean isAssembled() {
@@ -135,5 +150,41 @@ public class TileEntityStargateCore extends TileEntity {
 		compoundTag.putBoolean("Assembled", assembled);
 
 		super.writeToNBT(compoundTag);
+	}
+
+	public double interpolatedRingAngle(double partialTicks) {
+		return lastAngle + (currentAngle - lastAngle) * partialTicks;
+	}
+
+	private int getCurrentChevron() {
+		return (int) (Math.abs(currentAngle % 360) / symbolAngle);
+	}
+
+	@Override
+	public void tick() {
+		lastAngle = currentAngle;
+
+		if (currentAngle == targetAngle) {
+			return;
+		}
+
+		double angleDistance = angularDistance(targetAngle, currentAngle);
+
+		double angleSpeed = Math.min(angleDistance, 1);
+
+		if (ringDirection) {
+			currentAngle -= angleSpeed;
+		} else {
+			currentAngle += angleSpeed;
+		}
+	}
+
+	public void encode() {
+		ringDirection = !ringDirection;
+	}
+
+	public void autoDial() {
+		targetAngle = 38 * symbolAngle;
+		StargateMod.LOGGER.info("{}", targetAngle);
 	}
 }
