@@ -8,20 +8,27 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 public class TileEntityStargateCore extends TileEntity {
 	public final static double symbolAngle = 360.0 / StargateAddress.NUMBER_OF_SYMBOL;
-
+	private final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	private double currentAngle = 0;
 	private double lastAngle = 0;
-
 	private double targetAngle = 0;
-
 	private boolean ringDirection = false;
-
 	private boolean assembled = false;
+	private StargateAnimation animation = StargateAnimation.NONE;
+	private int animationTick = 0;
+	private int lastAnimationTick = 0;
+
+	private boolean shouldDial = false;
+	private short currentDialingAddressSize = 0;
+	private int[] currentDialingAddress = new int[9];
 
 	@Nullable
 	public static TileEntityStargateCore findStargateCore(WorldSource worldSource, int x, int y, int z) {
@@ -156,12 +163,74 @@ public class TileEntityStargateCore extends TileEntity {
 		return lastAngle + (currentAngle - lastAngle) * partialTicks;
 	}
 
-	private int getCurrentChevron() {
+	public boolean interpolatedChevronActive(int chevron, double partialTicks) {
+		int currentEncodedChevron = 6 < currentDialingAddressSize ? currentDialingAddressSize + 1 : currentDialingAddressSize;
+
+		currentEncodedChevron = shouldDial && currentDialingAddressSize != 9 ? currentEncodedChevron - 1 : currentEncodedChevron;
+
+		if (animation == StargateAnimation.ENCODE_CHEVRON) {
+			if (chevron < currentEncodedChevron - 1 && chevron != 6) {
+				return true;
+			}
+
+			if (chevron != currentEncodedChevron - 1 && chevron != 6) {
+				return false;
+			}
+
+			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+
+			if (chevron == 6) {
+				if (!shouldDial && currentAnimationTick > 38.67) {
+					return false;
+				}
+				return currentAnimationTick > 4.67;
+			}
+
+			return currentAnimationTick > 30.67;
+		} else {
+			if (chevron == 6) {
+				return shouldDial;
+			}
+
+			return chevron < currentEncodedChevron;
+		}
+
+	}
+
+	public double interpolatedChevronDistance(int chevron, double partialTicks) {
+		if (animation != StargateAnimation.ENCODE_CHEVRON) {
+			return 0;
+		}
+
+		if (chevron != 6) {
+			return 0;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+
+		if (currentAnimationTick > 26.67) {
+			return (1 - Math.min((currentAnimationTick - 26.67) / 6.66, 1)) * -0.125;
+		}
+
+		if (currentAnimationTick > 12.67) {
+			return Math.min(((currentAnimationTick - 12.67) / 6.66), 1) * -0.125;
+		}
+
+		return 0;
+	}
+
+	private int getCurrentSymbol() {
 		return (int) (Math.abs(currentAngle % 360) / symbolAngle);
 	}
 
 	@Override
 	public void tick() {
+		updateRotation();
+		updateCommands();
+		updateAnimation();
+	}
+
+	private void updateRotation() {
 		lastAngle = currentAngle;
 
 		if (currentAngle == targetAngle) {
@@ -179,12 +248,72 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 	}
 
+	private void updateAnimation() {
+		if (animation == StargateAnimation.NONE) {
+			return;
+		}
+
+		// Wait for anim completion
+		lastAnimationTick = animationTick;
+		if (++animationTick >= animation.duration) {
+			animation = StargateAnimation.NONE;
+			animationTick = 0;
+			lastAnimationTick = 0;
+		}
+	}
+
+	public void playAnimation(StargateAnimation animation) {
+		if (EnvironmentHelper.isClientWorld()) {
+			throw new UnsupportedOperationException("Cannot play animations on the client");
+		}
+
+		this.animation = animation;
+		animationTick = 0;
+		lastAnimationTick = 0;
+	}
+
+	private void updateCommands() {
+		if (animation != StargateAnimation.NONE || commandQueue.isEmpty()) {
+			return;
+		}
+
+		Runnable command = commandQueue.poll();
+		if (command == null) {
+			return;
+		}
+
+		command.run();
+	}
+
 	public void encode() {
-		ringDirection = !ringDirection;
+		commandQueue.add(() -> {
+			if (shouldDial) {
+				return;
+			}
+
+			int currentSymbol = getCurrentSymbol();
+
+			for (int i = 0; i < currentDialingAddressSize; i++) {
+				if (currentDialingAddress[i] == currentSymbol) {
+					return;
+				}
+			}
+
+			ringDirection = !ringDirection;
+			currentDialingAddress[currentDialingAddressSize] = currentSymbol;
+			currentDialingAddressSize += 1;
+
+			if (currentSymbol == 0 || currentDialingAddressSize == 9) {
+				this.shouldDial = true;
+			}
+
+			playAnimation(StargateAnimation.ENCODE_CHEVRON);
+		});
 	}
 
 	public void autoDial() {
-		targetAngle = 38 * symbolAngle;
-		StargateMod.LOGGER.info("{}", targetAngle);
+		encode();
+		//targetAngle = 38 * symbolAngle;
+		//StargateMod.LOGGER.info("{}", targetAngle);
 	}
 }

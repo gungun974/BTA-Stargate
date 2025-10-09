@@ -137,7 +137,7 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		renderOuterRing(tessellator);
 		renderSymbolRing(tessellator, stargateCore, partialTicks);
 		renderInnerRing(tessellator, stargateCore, partialTicks);
-		renderChevrons(tessellator);
+		renderChevrons(tessellator, stargateCore, partialTicks);
 		renderIris(tessellator, stargateCore, partialTicks);
 		renderEventHorizon(tessellator, stargateCore, partialTicks);
 	}
@@ -260,22 +260,34 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		GL11.glPopMatrix();
 	}
 
-	void renderChevrons(Tessellator tessellator) {
+	void renderChevrons(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 		for (int i = 0; i < 9; i++) {
-			renderChevronAtPosition(tessellator, i, 360 / 9f, false);
+			renderChevronAtPosition(tessellator, i, stargateCore, partialTicks);
 		}
 	}
 
-	void renderChevronAtPosition(Tessellator tessellator, int chevronNumber, float angleBetweenChevrons, boolean engaged) {
+	void renderChevronAtPosition(Tessellator tessellator, int chevronNumber, TileEntityStargateCore stargateCore, float partialTicks) {
 		GL11.glPushMatrix();
 
-		GL11.glRotatef(90 - (chevronNumber - 4) * angleBetweenChevrons, 0, 0, 1);
+		GL11.glRotatef(90 - (chevronNumber + 1) * (float) 40.0, 0, 0, 1);
 
-		chevron(tessellator, engaged);
+		int chevron = chevronNumber;
+
+		if (chevronNumber == 3) {
+			chevron = 7;
+		}
+		if (chevronNumber == 4) {
+			chevron = 8;
+		}
+		if (chevronNumber >= 5) {
+			chevron -= 2;
+		}
+
+		chevron(tessellator, stargateCore, chevron, partialTicks);
 		GL11.glPopMatrix();
 	}
 
-	void chevron(Tessellator tessellator, boolean engaged) {
+	void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
 		double z2 = ringDepth / 2;
 		double z1 = z2 + chevronDepth;
 		double w1 = chevronBorderWidth;
@@ -283,8 +295,13 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		double x1 = chevronInnerRadius, y1 = chevronWidth / 4;
 		double x2 = chevronOuterRadius, y2 = chevronWidth / 2;
 
-		if (engaged)
-			GL11.glTranslated(-chevronMotionDistance, 0, 0);
+		double chevronDistance = stargateCore.interpolatedChevronDistance(chevron, partialTicks);
+
+		boolean chevronActive = stargateCore.interpolatedChevronActive(chevron, partialTicks);
+
+		if (chevronDistance != 0) {
+			GL11.glTranslated(chevronDistance, 0, 0);
+		}
 
 		tessellator.startDrawingQuads();
 
@@ -351,7 +368,7 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		GL11.glPushMatrix();
 
 		selectTile(TextureIndex.CHEVRON_LIT);
-		if (!engaged) {
+		if (!chevronActive) {
 			GL11.glColor3d(0.4, 0.4, 0.4);
 		}
 		tessellator.startDrawingQuads();
@@ -373,13 +390,13 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		vertex(tessellator, x2, -y2 + w2, z1, 16, 4);
 		vertex(tessellator, x2, -y2 + w2, z2, 16, 0);
 
-		if (engaged) {
+		if (chevronActive) {
 			GL11.glColor3f(1, 1, 1);
 		}
 		tessellator.draw();
 		GL11.glPopMatrix();
 
-		if (engaged) {
+		if (chevronActive) {
 			GL11.glColor3f(1, 1, 1);
 		} else {
 			GL11.glColor3f(0.9f, 0.9f, 0.9f);
