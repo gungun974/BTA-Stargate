@@ -220,12 +220,18 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	private int getCurrentSymbol() {
-		return (int) (Math.abs(currentAngle % 360) / symbolAngle);
+		return (int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle);
 	}
 
 	@Override
 	public void tick() {
 		updateRotation();
+
+		double angleDistance = angularDistance(targetAngle, currentAngle);
+		if (angleDistance > 0.01) {
+			return;
+		}
+
 		updateCommands();
 		updateAnimation();
 	}
@@ -233,11 +239,11 @@ public class TileEntityStargateCore extends TileEntity {
 	private void updateRotation() {
 		lastAngle = currentAngle;
 
-		if (currentAngle == targetAngle) {
+		double angleDistance = angularDistance(targetAngle, currentAngle);
+
+		if (angleDistance < 0.01) {
 			return;
 		}
-
-		double angleDistance = angularDistance(targetAngle, currentAngle);
 
 		double angleSpeed = Math.min(angleDistance, 1);
 
@@ -311,9 +317,29 @@ public class TileEntityStargateCore extends TileEntity {
 		});
 	}
 
+	public void moveToSymbol(int symbol) {
+		commandQueue.add(() -> {
+			if (shouldDial) {
+				return;
+			}
+			targetAngle = symbol * symbolAngle;
+		});
+	}
+
 	public void autoDial() {
+		moveToSymbol(5);
 		encode();
-		//targetAngle = 38 * symbolAngle;
-		//StargateMod.LOGGER.info("{}", targetAngle);
+		moveToSymbol(3);
+		encode();
+		moveToSymbol(4);
+		encode();
+		moveToSymbol(1);
+		encode();
+		moveToSymbol(2);
+		encode();
+		moveToSymbol(38);
+		encode();
+		moveToSymbol(0);
+		encode();
 	}
 }
