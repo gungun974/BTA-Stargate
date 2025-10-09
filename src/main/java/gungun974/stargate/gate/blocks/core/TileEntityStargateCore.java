@@ -187,6 +187,22 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 
 			return currentAnimationTick > 30.67;
+		} else if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
+			if (chevron < currentEncodedChevron - 1 && chevron != 6) {
+				return true;
+			}
+
+			if (chevron != currentEncodedChevron - 1 && chevron != 6) {
+				return false;
+			}
+
+			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+
+			if (chevron == 6 && !shouldDial) {
+				return false;
+			}
+
+			return currentAnimationTick > (double) StargateAnimation.FAST_ENCODE_CHEVRON.duration / 2;
 		} else {
 			if (chevron == 6) {
 				return shouldDial;
@@ -326,20 +342,37 @@ public class TileEntityStargateCore extends TileEntity {
 		});
 	}
 
+	public void fastEncode(int symbol) {
+		commandQueue.add(() -> {
+			if (shouldDial) {
+				return;
+			}
+
+			for (int i = 0; i < currentDialingAddressSize; i++) {
+				if (currentDialingAddress[i] == symbol) {
+					return;
+				}
+			}
+
+			ringDirection = !ringDirection;
+			currentDialingAddress[currentDialingAddressSize] = symbol;
+			currentDialingAddressSize += 1;
+
+			if (symbol == 0 || currentDialingAddressSize == 9) {
+				this.shouldDial = true;
+			}
+
+			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
+		});
+	}
+
 	public void autoDial() {
-		moveToSymbol(5);
-		encode();
-		moveToSymbol(3);
-		encode();
-		moveToSymbol(4);
-		encode();
-		moveToSymbol(1);
-		encode();
-		moveToSymbol(2);
-		encode();
-		moveToSymbol(38);
-		encode();
-		moveToSymbol(0);
-		encode();
+		fastEncode(5);
+		fastEncode(3);
+		fastEncode(4);
+		fastEncode(1);
+		fastEncode(2);
+		fastEncode(38);
+		fastEncode(0);
 	}
 }
