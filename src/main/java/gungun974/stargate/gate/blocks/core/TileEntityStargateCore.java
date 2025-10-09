@@ -3,8 +3,10 @@ package gungun974.stargate.gate.blocks.core;
 import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
+import gungun974.stargate.core.SoundHelper;
 import gungun974.stargate.core.StargateAddress;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
@@ -77,6 +79,12 @@ public class TileEntityStargateCore extends TileEntity {
 	public static double angularDistance(double angle1, double angle2) {
 		double diff = Math.abs(angle1 - angle2) % 360.0;
 		return diff > 180.0 ? 360.0 - diff : diff;
+	}
+
+	@Override
+	public void invalidate() {
+		SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+		super.invalidate();
 	}
 
 	public boolean isAssembled() {
@@ -275,6 +283,21 @@ public class TileEntityStargateCore extends TileEntity {
 			return;
 		}
 
+		if (animation == StargateAnimation.ENCODE_CHEVRON) {
+			if (animationTick == 4) {
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+			if (animationTick == 26 && !this.shouldDial) {
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+		}
+
+		if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
+			if (animationTick == 4) {
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+		}
+
 		// Wait for anim completion
 		lastAnimationTick = animationTick;
 		if (++animationTick >= animation.duration) {
@@ -329,6 +352,7 @@ public class TileEntityStargateCore extends TileEntity {
 				this.shouldDial = true;
 			}
 
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
 			playAnimation(StargateAnimation.ENCODE_CHEVRON);
 		});
 	}
@@ -338,6 +362,7 @@ public class TileEntityStargateCore extends TileEntity {
 			if (shouldDial) {
 				return;
 			}
+			SoundHelper.playSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			targetAngle = symbol * symbolAngle;
 		});
 	}
@@ -362,17 +387,25 @@ public class TileEntityStargateCore extends TileEntity {
 				this.shouldDial = true;
 			}
 
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
 			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
 		});
 	}
 
 	public void autoDial() {
-		fastEncode(5);
-		fastEncode(3);
-		fastEncode(4);
-		fastEncode(1);
-		fastEncode(2);
-		fastEncode(38);
-		fastEncode(0);
+		moveToSymbol(26);
+		encode();
+		moveToSymbol(6);
+		encode();
+		moveToSymbol(14);
+		encode();
+		moveToSymbol(31);
+		encode();
+		moveToSymbol(11);
+		encode();
+		moveToSymbol(29);
+		encode();
+		moveToSymbol(0);
+		encode();
 	}
 }

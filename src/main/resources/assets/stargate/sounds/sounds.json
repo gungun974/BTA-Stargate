@@ -1,0 +1,39 @@
+{
+  "stargate.milkyway.roll": {
+    "sounds": [
+      {
+        "name": "milkyway/roll_long.ogg",
+        "volume": 1,
+        "attenuation_distance": 128,
+        "stream": true
+      }
+    ]
+  },
+  "stargate.milkyway.encode.lock": {
+    "sounds": [
+      "milkyway/lock.ogg"
+    ]
+  },
+  "stargate.milkyway.encode.slow": {
+    "sounds": [
+      "milkyway/slow_encode1.ogg",
+      "milkyway/slow_encode2.ogg",
+      "milkyway/slow_encode3.ogg",
+      "milkyway/slow_encode4.ogg",
+      "milkyway/slow_encode5.ogg",
+      "milkyway/slow_encode6.ogg",
+      "milkyway/slow_encode7.ogg"
+    ]
+  },
+  "stargate.milkyway.encode.fast": {
+    "sounds": [
+      "milkyway/fast_encode1.ogg",
+      "milkyway/fast_encode2.ogg",
+      "milkyway/fast_encode3.ogg",
+      "milkyway/fast_encode4.ogg",
+      "milkyway/fast_encode5.ogg",
+      "milkyway/fast_encode6.ogg",
+      "milkyway/fast_encode7.ogg"
+    ]
+  }
+}

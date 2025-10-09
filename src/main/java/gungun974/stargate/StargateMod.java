@@ -1,6 +1,7 @@
 package gungun974.stargate;
 
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.client.sound.SoundRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import turniplabs.halplibe.util.GameStartEntrypoint;
@@ -33,7 +34,7 @@ public class StargateMod implements ModInitializer, RecipeEntrypoint, GameStartE
 
 	@Override
 	public void beforeGameStart() {
-
+		SoundRepository.registerNamespace(MOD_ID);
 	}
 
 	@Override
