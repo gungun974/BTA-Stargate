@@ -5,6 +5,7 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.SoundHelper;
 import gungun974.stargate.core.StargateAddress;
+import gungun974.stargate.core.StargateState;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
@@ -19,6 +20,7 @@ import java.util.Queue;
 public class TileEntityStargateCore extends TileEntity {
 	public final static double symbolAngle = 360.0 / StargateAddress.NUMBER_OF_SYMBOL;
 	private final Queue<Runnable> commandQueue = new ArrayDeque<>();
+	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
 	private double currentAngle = 0;
 	private double lastAngle = 0;
 	private double targetAngle = 0;
@@ -27,8 +29,9 @@ public class TileEntityStargateCore extends TileEntity {
 	private StargateAnimation animation = StargateAnimation.NONE;
 	private int animationTick = 0;
 	private int lastAnimationTick = 0;
-
-	private boolean shouldDial = false;
+	private int eventHorizonTick = 0;
+	private int lasteventHorizonTick = 0;
+	private StargateState state = StargateState.IDLE;
 	private short currentDialingAddressSize = 0;
 	private int[] currentDialingAddress = new int[9];
 
@@ -79,6 +82,10 @@ public class TileEntityStargateCore extends TileEntity {
 	public static double angularDistance(double angle1, double angle2) {
 		double diff = Math.abs(angle1 - angle2) % 360.0;
 		return diff > 180.0 ? 360.0 - diff : diff;
+	}
+
+	public StargateState getState() {
+		return state;
 	}
 
 	@Override
@@ -174,7 +181,9 @@ public class TileEntityStargateCore extends TileEntity {
 	public boolean interpolatedChevronActive(int chevron, double partialTicks) {
 		int currentEncodedChevron = 6 < currentDialingAddressSize ? currentDialingAddressSize + 1 : currentDialingAddressSize;
 
-		currentEncodedChevron = shouldDial && currentDialingAddressSize != 9 ? currentEncodedChevron - 1 : currentEncodedChevron;
+		boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
+
+		currentEncodedChevron = isLastChevronActive && currentDialingAddressSize != 9 ? currentEncodedChevron - 1 : currentEncodedChevron;
 
 		if (animation == StargateAnimation.ENCODE_CHEVRON) {
 			if (chevron < currentEncodedChevron - 1 && chevron != 6) {
@@ -188,7 +197,7 @@ public class TileEntityStargateCore extends TileEntity {
 			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
 
 			if (chevron == 6) {
-				if (!shouldDial && currentAnimationTick > 38.67) {
+				if (!isLastChevronActive && currentAnimationTick > 38.67) {
 					return false;
 				}
 				return currentAnimationTick > 4.67;
@@ -206,14 +215,14 @@ public class TileEntityStargateCore extends TileEntity {
 
 			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
 
-			if (chevron == 6 && !shouldDial) {
+			if (chevron == 6 && !isLastChevronActive) {
 				return false;
 			}
 
 			return currentAnimationTick > (double) StargateAnimation.FAST_ENCODE_CHEVRON.duration / 2;
 		} else {
 			if (chevron == 6) {
-				return shouldDial;
+				return isLastChevronActive;
 			}
 
 			return chevron < currentEncodedChevron;
@@ -241,6 +250,85 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		return 0;
+	}
+
+	public double easeInExpo(double x) {
+		return x == 0 ? 0 : Math.pow(2, 10 * x - 10);
+	}
+
+	public double easeOutExpo(double x) {
+		return x == 1 ? 1 : 1 - Math.pow(2, -10 * x);
+
+	}
+
+	public double interpolatedUnstableVortexDistance(double partialTicks) {
+		if (animation != StargateAnimation.KAWOOSH) {
+			return 0;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+
+		if (currentAnimationTick < 18) {
+			return 0;
+		}
+
+		if (currentAnimationTick < 36) {
+			final double openAnimationProgress = Math.min((currentAnimationTick - 18) / 6, 1);
+
+			return easeOutExpo(openAnimationProgress);
+		}
+
+		final double closeAnimationProgress = Math.min((currentAnimationTick - 36) / (StargateAnimation.KAWOOSH.duration - 36), 1);
+
+		return 1 - easeInExpo(closeAnimationProgress);
+
+	}
+
+	public double interpolatedAnimationTick(double partialTicks) {
+		return lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+	}
+
+	public double interpolatedEventHorizonTick(double partialTicks) {
+		return lasteventHorizonTick + (eventHorizonTick - lasteventHorizonTick) * partialTicks;
+	}
+
+
+	public double interpolatedUnstableVortexDiameter(double partialTicks) {
+		if (animation != StargateAnimation.KAWOOSH) {
+			return 1;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 12;
+
+		if (currentAnimationTick < 6) {
+			return 0;
+		}
+
+		if (currentAnimationTick < 24) {
+			final double openAnimationProgress = Math.min((currentAnimationTick - 6) / 24, 1);
+
+			return 0.5 + easeOutExpo(openAnimationProgress) * 0.5;
+		}
+
+		if (currentAnimationTick < 48) {
+			final double middleAnimationProgress = Math.min((currentAnimationTick - 24) / 24, 1);
+
+			return 1 - middleAnimationProgress * 0.5;
+		}
+
+		final double closeAnimationProgress = Math.min((currentAnimationTick - 36) / (StargateAnimation.KAWOOSH.duration - 36), 1);
+
+		return 0.5 + easeInExpo(closeAnimationProgress) * 0.5;
+	}
+
+	public boolean interpolatedShowEventHorizon(double partialTicks) {
+		if (animation != StargateAnimation.KAWOOSH) {
+			return true;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 12;
+
+		return currentAnimationTick >= 6;
 	}
 
 	private int getCurrentSymbol() {
@@ -279,15 +367,23 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	private void updateAnimation() {
+		eventHorizon.applyRandomImpulse();
+		eventHorizon.updateEventHorizon();
+
+		lasteventHorizonTick = eventHorizonTick;
+		eventHorizonTick++;
+
 		if (animation == StargateAnimation.NONE) {
 			return;
 		}
 
 		if (animation == StargateAnimation.ENCODE_CHEVRON) {
+			boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
+
 			if (animationTick == 4) {
 				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
-			if (animationTick == 26 && !this.shouldDial) {
+			if (animationTick == 26 && !isLastChevronActive) {
 				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 		}
@@ -332,7 +428,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 	public void encode() {
 		commandQueue.add(() -> {
-			if (shouldDial) {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
 				return;
 			}
 
@@ -349,7 +445,9 @@ public class TileEntityStargateCore extends TileEntity {
 			currentDialingAddressSize += 1;
 
 			if (currentSymbol == 0 || currentDialingAddressSize == 9) {
-				this.shouldDial = true;
+				state = StargateState.AWAIT;
+			} else {
+				state = StargateState.DIALLING;
 			}
 
 			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
@@ -359,7 +457,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 	public void moveToSymbol(int symbol) {
 		commandQueue.add(() -> {
-			if (shouldDial) {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
 				return;
 			}
 			SoundHelper.playSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
@@ -369,7 +467,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 	public void fastEncode(int symbol) {
 		commandQueue.add(() -> {
-			if (shouldDial) {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
 				return;
 			}
 
@@ -384,7 +482,9 @@ public class TileEntityStargateCore extends TileEntity {
 			currentDialingAddressSize += 1;
 
 			if (symbol == 0 || currentDialingAddressSize == 9) {
-				this.shouldDial = true;
+				state = StargateState.AWAIT;
+			} else {
+				state = StargateState.DIALLING;
 			}
 
 			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
@@ -392,20 +492,42 @@ public class TileEntityStargateCore extends TileEntity {
 		});
 	}
 
+	public void dial() {
+		commandQueue.add(() -> {
+			if (state != StargateState.AWAIT) {
+				return;
+			}
+
+			state = StargateState.OPENING;
+
+			SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			playAnimation(StargateAnimation.KAWOOSH);
+		});
+	}
+
 	public void autoDial() {
-		moveToSymbol(26);
-		encode();
-		moveToSymbol(6);
-		encode();
-		moveToSymbol(14);
-		encode();
-		moveToSymbol(31);
-		encode();
-		moveToSymbol(11);
-		encode();
-		moveToSymbol(29);
-		encode();
-		moveToSymbol(0);
-		encode();
+//		moveToSymbol(26);
+//		encode();
+//		moveToSymbol(6);
+//		encode();
+//		moveToSymbol(14);
+//		encode();
+//		moveToSymbol(31);
+//		encode();
+//		moveToSymbol(11);
+//		encode();
+//		moveToSymbol(29);
+//		encode();
+//		moveToSymbol(0);
+//		encode();
+
+		fastEncode(26);
+		fastEncode(6);
+		fastEncode(14);
+		fastEncode(31);
+		fastEncode(11);
+		fastEncode(29);
+		fastEncode(0);
+		dial();
 	}
 }

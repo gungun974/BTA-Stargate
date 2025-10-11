@@ -21,9 +21,14 @@ enum TextureIndex {
 }
 
 public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityStargateCore> {
+	public final static int eventHorizonGridRadialSize = 8;
 	final static int numRingSegments = 39 * 2;
-	final static double ringInnerRadius = 2.05; // 2.05
-	final static double ringMidRadius = 2.27; // 2.27
+	public final static int eventHorizonGridPolarSize = numRingSegments;
+	final static double ringInnerRadius = 2.05;
+	public final static double eventHorizonBandWidth = ringInnerRadius / eventHorizonGridRadialSize;
+	public final static double eventHorizonVortexBaseWidth = ringInnerRadius * 0.48;
+	public final static double eventHorizonVortexMaxDepth = ringInnerRadius * 1.55;
+	final static double ringMidRadius = 2.27;
 	final static double ringOuterRadius = 2.5;
 	final static double ringDepth = 0.4;
 	final static double ringOverlap = 1 / 64.0;
@@ -33,7 +38,6 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	final static double chevronWidth = (chevronOuterRadius - chevronInnerRadius) * 1.5;
 	final static double chevronBorderWidth = chevronWidth / 6;
 	final static double chevronDepth = 0.125;
-	final static double chevronMotionDistance = 1 / 8.0;
 	final static int textureTilesWide = 32;
 	final static int textureTilesHigh = 2;
 	final static double textureScaleU = 1.0 / (textureTilesWide * 16);
@@ -41,7 +45,6 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	final static double ringSymbolTextureLength = 512.0;
 	final static double ringSymbolTextureHeight = 16.0;
 	final static double ringSymbolSegmentWidth = ringSymbolTextureLength / numRingSegments;
-
 	static double[] ringSinValues = new double[numRingSegments + 1];
 	static double[] ringCosValues = new double[numRingSegments + 1];
 
@@ -91,6 +94,8 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 				break;
 		}
 
+		GL11.glScaled(1.5, 1.5, 1.5);
+
 		renderStargate(tessellator, tileEntity, partialTicks);
 
 //		this.loadTexture("/assets/stargate/textures/template.png");
@@ -139,7 +144,14 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		renderInnerRing(tessellator, stargateCore, partialTicks);
 		renderChevrons(tessellator, stargateCore, partialTicks);
 		renderIris(tessellator, stargateCore, partialTicks);
-		renderEventHorizon(tessellator, stargateCore, partialTicks);
+		switch (stargateCore.getState()) {
+			case OPENING:
+			case CONNECTED:
+			case DISCONNECTING:
+				renderEventHorizon(tessellator, stargateCore, partialTicks);
+				renderEventHorizonVortex(tessellator, stargateCore, partialTicks);
+				break;
+		}
 	}
 
 	private void renderOuterRing(Tessellator tessellator) {
@@ -406,6 +418,171 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	}
 
 	void renderEventHorizon(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
+		if (!tileEntity.interpolatedShowEventHorizon(partialTicks)) {
+			return;
+		}
+
+		final double time = tileEntity.interpolatedEventHorizonTick(partialTicks) / 3;
+
+		final int frame = (int) (time % 14);
+
+		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
+
+		GL11.glDisable(GL11.GL_LIGHTING);
+		GL11.glDisable(GL11.GL_CULL_FACE);
+
+		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
+
+		double notShieldedRadius = 2.5;
+
+		for (int i = 1; i < eventHorizonGridRadialSize; i++) {
+			tessellator.startDrawing(GL11.GL_QUAD_STRIP);
+			tessellator.setNormal(0, 0, 1);
+			for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
+				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame);
+				eventHorizonVertex(tessellator, eventHorizonGrid, i + 1, j, notShieldedRadius, frame);
+			}
+			tessellator.draw();
+		}
+
+		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
+
+		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
+		tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
+
+		for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
+			eventHorizonVertex(tessellator, eventHorizonGrid, 1, j, notShieldedRadius, frame);
+		}
+
+		tessellator.draw();
+
+		GL11.glDepthMask(true);
+
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
+
+	void renderEventHorizonVortex(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
+		final int split = 100;
+
+		final double rawDistance = tileEntity.interpolatedUnstableVortexDistance(partialTicks);
+
+		if (rawDistance == 0) {
+			return;
+		}
+
+		final double depth = eventHorizonVortexMaxDepth;
+
+		final double time = tileEntity.interpolatedAnimationTick(partialTicks) / 4;
+
+		final int frame = (int) (time * 4 % 14);
+
+		final double diameter = tileEntity.interpolatedUnstableVortexDiameter(partialTicks);
+
+		final double distance = depth - rawDistance * depth + StargateEventHorizon.sinWave(time / 4);
+
+		final int vortexSide = 30;
+
+		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
+
+		GL11.glDisable(GL11.GL_LIGHTING);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+
+		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
+
+		GL11.glRotatef(90, 0, 0, 1);
+
+		double notShieldedRadius = 2.5;
+		tessellator.startDrawing(GL11.GL_QUAD_STRIP);
+
+		tessellator.setNormal(0, 0, 1);
+
+		for (int i = 0; i < split; i++) {
+			for (int j = 0; j <= vortexSide; j++) {
+				double maxClip = eventHorizonGrid[(int) (
+					(float) i / split * TileEntityRenderStargateCore.eventHorizonGridPolarSize
+				)][5];
+
+				eventHorizonVortexVertex(
+					tessellator,
+					StargateEventHorizon.getEventHorizonVortexShape(
+						(double) (i + 1) / split,
+						diameter,
+						(double) j / vortexSide,
+						time
+					),
+					j * numRingSegments / vortexSide,
+					Math.max((double) (i + 1) / split * depth - distance, maxClip),
+					notShieldedRadius,
+					frame
+				);
+				eventHorizonVortexVertex(
+					tessellator,
+					StargateEventHorizon.getEventHorizonVortexShape(
+						(double) i / split,
+						diameter,
+						(double) j / vortexSide,
+						time
+					),
+					j * numRingSegments / vortexSide,
+					Math.max((double) i / split * depth - distance, maxClip),
+					notShieldedRadius,
+					frame
+				);
+			}
+		}
+		tessellator.draw();
+
+		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
+
+		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
+		tessellator.addVertex(0, 0, eventHorizonClip(Math.max(depth - distance, 0), 0, notShieldedRadius));
+
+		for (int j = 0; j <= vortexSide; j++) {
+			eventHorizonVortexVertex(
+				tessellator,
+				StargateEventHorizon.getEventHorizonVortexShape(
+					1,
+					diameter,
+					(double) j / vortexSide,
+					time
+				),
+				j * numRingSegments / vortexSide,
+				Math.max(depth - distance, 0),
+				notShieldedRadius,
+				frame
+			);
+		}
+
+		tessellator.draw();
+
+		GL11.glDepthMask(true);
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
+
+	void eventHorizonVortexVertex(Tessellator tessellator, double i, int j, double h, double notShieldedRadius, int frame) {
+		double r = i * eventHorizonVortexBaseWidth;
+		double x = r * ringCosValues[j];
+		double y = r * ringSinValues[j];
+		double z = eventHorizonClip(h, r, notShieldedRadius);
+		tessellator.setTextureUV(x / 56 + 0.25 + (double) frame / 14, y / 4 + 0.5);
+		tessellator.addVertex(x, y, z);
+	}
+
+
+	void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame) {
+		double r = i * eventHorizonBandWidth;
+		double x = r * ringCosValues[j];
+		double y = r * ringSinValues[j];
+		double z = eventHorizonClip(grid[j + 1][i], r, notShieldedRadius);
+		tessellator.setTextureUV(x / 56 + 0.25 + (double) frame / 14, y / 4 + 0.5);
+		tessellator.addVertex(x, y, z);
+	}
+
+	double eventHorizonClip(double z, double r, double radius) {
+		if (r >= radius)
+			z = Math.min(z, 0);
+		return z;
 	}
 
 	void renderIris(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
