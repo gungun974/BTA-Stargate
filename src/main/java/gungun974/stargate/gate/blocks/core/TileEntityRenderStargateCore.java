@@ -3,6 +3,7 @@ package gungun974.stargate.gate.blocks.core;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
+import net.minecraft.core.util.helper.Direction;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -76,61 +77,73 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-		switch (tileEntity.getDirection()) {
-			case NORTH:
-				GL11.glTranslated(0.5, 2.5, 0.5);
-				break;
-			case EAST:
-				GL11.glRotatef(-90, 0, 180, 0);
-				GL11.glTranslated(0.5, 2.5, -0.5);
-				break;
-			case SOUTH:
-				GL11.glRotatef(180, 0, 180, 0);
-				GL11.glTranslated(-0.5, 2.5, -0.5);
-				break;
-			case WEST:
-				GL11.glRotatef(90, 0, 180, 0);
-				GL11.glTranslated(-0.5, 2.5, 0.5);
-				break;
+		if (tileEntity.getOrientation() == Direction.NORTH) {
+			switch (tileEntity.getDirection()) {
+				case NORTH:
+					GL11.glTranslated(0.5, 3.5, 0.5);
+					break;
+				case EAST:
+					GL11.glRotatef(-90, 0, 180, 0);
+					GL11.glTranslated(0.5, 3.5, -0.5);
+					break;
+				case SOUTH:
+					GL11.glRotatef(180, 0, 180, 0);
+					GL11.glTranslated(-0.5, 3.5, -0.5);
+					break;
+				case WEST:
+					GL11.glRotatef(90, 0, 180, 0);
+					GL11.glTranslated(-0.5, 3.5, 0.5);
+					break;
+			}
+		} else if (tileEntity.getOrientation() == Direction.UP) {
+			switch (tileEntity.getDirection()) {
+				case NORTH:
+					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glTranslated(0.5, 2.5, 0.5);
+					break;
+				case EAST:
+					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotatef(-90, 0, 0, 1);
+					GL11.glTranslated(0.5, 3.5, 0.5);
+					break;
+				case SOUTH:
+					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotatef(180, 0, 0, 1);
+					GL11.glTranslated(-0.5, 3.5, 0.5);
+					break;
+				case WEST:
+					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotatef(90, 0, 0, 1);
+					GL11.glTranslated(-0.5, 2.5, 0.5);
+					break;
+			}
+		} else {
+			switch (tileEntity.getDirection()) {
+				case NORTH:
+					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotatef(180, 0, 0, 1);
+					GL11.glTranslated(-0.5, 2.5, -0.5);
+					break;
+				case EAST:
+					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotatef(-90, 0, 0, 1);
+					GL11.glTranslated(-0.5, 3.5, -0.5);
+					break;
+				case SOUTH:
+					GL11.glRotated(90, 0, 0, 0);
+					GL11.glTranslated(0.5, 3.5, -0.5);
+					break;
+				case WEST:
+					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotatef(90, 0, 0, 1);
+					GL11.glTranslated(0.5, 2.5, -0.5);
+					break;
+			}
 		}
 
-		GL11.glScaled(1.5, 1.5, 1.5);
+		GL11.glScaled(1.4, 1.4, 1.4);
 
 		renderStargate(tessellator, tileEntity, partialTicks);
-
-//		this.loadTexture("/assets/stargate/textures/template.png");
-//
-//		double scale = 2.55;
-//
-//		GL11.glScaled(-scale, -scale, -scale);
-//
-//		//GL11.glTranslated(0, 0, -0.1);
-//
-//		//GL11.glTranslated(0, 0, -0.040);
-//
-//		GL11.glColor3f(1.0f, 1.0f, 1.0f);
-//		GL11.glNormal3f(0.0f, 0.0f, 1.0f);
-//
-//		GL11.glBegin(GL11.GL_QUADS);
-//		// ⚙️ Rotation 180° correcte : on inverse l’ordre des sommets
-//
-//		// Haut droit (ancien bas gauche)
-//		GL11.glTexCoord2f(1.0f, 1.0f);
-//		GL11.glVertex3f(1.0f, 1.0f, 0.0f);
-//
-//		// Haut gauche (ancien bas droit)
-//		GL11.glTexCoord2f(0.0f, 1.0f);
-//		GL11.glVertex3f(-1.0f, 1.0f, 0.0f);
-//
-//		// Bas gauche (ancien haut droit)
-//		GL11.glTexCoord2f(0.0f, 0.0f);
-//		GL11.glVertex3f(-1.0f, -1.0f, 0.0f);
-//
-//		// Bas droit (ancien haut gauche)
-//		GL11.glTexCoord2f(1.0f, 0.0f);
-//		GL11.glVertex3f(1.0f, -1.0f, 0.0f);
-//		GL11.glEnd();
-
 
 		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 		GL11.glPopMatrix();

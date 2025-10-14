@@ -26,6 +26,7 @@ public class TileEntityStargateCore extends TileEntity {
 	private double targetAngle = 0;
 	private boolean ringDirection = false;
 	private boolean assembled = false;
+	private Direction orientation = Direction.NORTH;
 	private StargateAnimation animation = StargateAnimation.NONE;
 	private int animationTick = 0;
 	private int lastAnimationTick = 0;
@@ -37,46 +38,174 @@ public class TileEntityStargateCore extends TileEntity {
 
 	@Nullable
 	public static TileEntityStargateCore findStargateCore(WorldSource worldSource, int x, int y, int z) {
-		{
-			TileEntity tileEntity = worldSource.getTileEntity(x, y, z);
-			if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-		}
+		TileEntity tileEntity = worldSource.getTileEntity(x, y, z);
+		if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
 
-		for (int i = -2; i <= 2; i++) {
-			if (i != 0) {
-				TileEntity tileEntity = worldSource.getTileEntity(x, y, z + i);
-				if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-			}
-			{
-				TileEntity tileEntity = worldSource.getTileEntity(x, y - 4, z + i);
-				if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+		for (Direction direction : Direction.directions) {
+			if (direction == Direction.DOWN) {
+				continue;
 			}
 
-			if (i != 0) {
-				TileEntity tileEntity = worldSource.getTileEntity(x + i, y, z);
+			for (int j = 0; j < 7; j++) {
+				int i;
+				switch (j) {
+					case 0:
+						i = 1;
+						break;
+					case 1:
+					case 5:
+						i = 2;
+						break;
+					case 2:
+					case 3:
+					case 4:
+						i = 3;
+						break;
+					case 6:
+						i = 1;
+						tileEntity = worldSource.getTileEntity(x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
+						if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+						break;
+					default:
+						continue;
+				}
+
+				if (direction == Direction.UP) {
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j + i
+					);
+					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j - i
+					);
+					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j + i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j
+					);
+					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j - i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j
+					);
+				} else {
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j + direction.getOffsetZ() * i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j + direction.getOffsetX() * i
+					);
+					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j - direction.getOffsetZ() * i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j - direction.getOffsetX() * i
+					);
+
+				}
 				if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
 			}
-			{
-				TileEntity tileEntity = worldSource.getTileEntity(x + i, y - 4, z);
-				if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-			}
-		}
-
-		for (int yy = y - 1; yy >= y - 3; yy--) {
-			TileEntity tileEntity = worldSource.getTileEntity(x, yy, z + 2);
-			if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-			tileEntity = worldSource.getTileEntity(x, yy, z - 2);
-			if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-			tileEntity = worldSource.getTileEntity(x + 2, yy, z);
-			if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-			tileEntity = worldSource.getTileEntity(x - 2, yy, z);
-			if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
 		}
 
 		return null;
+	}
+
+	public static boolean isPartOfAssembled(WorldSource worldSource, int x, int y, int z) {
+		TileEntity tileEntity = worldSource.getTileEntity(x, y, z);
+		if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+			return true;
+
+		for (Direction direction : Direction.directions) {
+			if (direction == Direction.DOWN) {
+				continue;
+			}
+
+			for (int j = 0; j < 7; j++) {
+				int i;
+				switch (j) {
+					case 0:
+						i = 1;
+						break;
+					case 1:
+					case 5:
+						i = 2;
+						break;
+					case 2:
+					case 3:
+					case 4:
+						i = 3;
+						break;
+					case 6:
+						i = 1;
+						tileEntity = worldSource.getTileEntity(x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
+						if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+							return true;
+						break;
+					default:
+						continue;
+				}
+
+				if (direction == Direction.UP) {
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j + i
+					);
+					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+						return true;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j - i
+					);
+					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+						return true;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j + i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j
+					);
+					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+						return true;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j - i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j
+					);
+				} else {
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j + direction.getOffsetZ() * i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j + direction.getOffsetX() * i
+					);
+					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+						return true;
+
+					tileEntity = worldSource.getTileEntity(
+						x - direction.getOffsetX() * j - direction.getOffsetZ() * i,
+						y - direction.getOffsetY() * j,
+						z - direction.getOffsetZ() * j - direction.getOffsetX() * i
+					);
+
+				}
+				if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
+					return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static double angularDistance(double angle1, double angle2) {
@@ -108,6 +237,18 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	private boolean isValidStructure() {
+		if (isValidStructureVertical()) {
+			orientation = Direction.NORTH;
+			return true;
+		}
+		if (isValidStructureHorizontal()) {
+			orientation = Direction.UP;
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isValidStructureVertical() {
 		World world = worldObj;
 		if (world == null) {
 			return false;
@@ -117,30 +258,105 @@ public class TileEntityStargateCore extends TileEntity {
 			world.getBlockMetadata(x, y, z)
 		);
 
-		for (int j = 0; j < 5; j++) {
-			for (int i = -2; i < 3; i++) {
-				if (i == 0 && j == 0) {
-					continue;
+		for (int j = 0; j < 7; j++) {
+			for (int i = -4; i < 5; i++) {
+				switch (j) {
+					case 0:
+						if (Math.abs(i) != 1) continue;
+						break;
+					case 1:
+					case 5:
+						if (Math.abs(i) != 2) continue;
+						break;
+					case 2:
+					case 3:
+					case 4:
+						if (Math.abs(i) != 3) continue;
+						break;
+					case 6:
+						if (Math.abs(i) > 1) continue;
+						break;
+					default:
+						continue;
 				}
 
-				if (i != -2 && i != 2 && j > 0 && j < 4) {
-					continue;
-				}
+				int px = x + direction.getOffsetZ() * i;
+				int py = y + j;
+				int pz = z + direction.getOffsetX() * i;
 
-				int id = world.getBlockId(x + direction.getOffsetZ() * i, y + j, z + direction.getOffsetX() * i);
+				int id = world.getBlockId(px, py, pz);
 
 				if (id != StargateBlocks.STARGATE_RING.id()) {
 					return false;
 				}
 
-				int meta = world.getBlockMetadata(x + direction.getOffsetZ() * i, y + j, z + direction.getOffsetX() * i);
+				int meta = world.getBlockMetadata(px, py, pz);
 
-				if (meta != ((i + (j + 1) & 1) & 1)) {
+				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
+					if (meta != 1) {
+						return false;
+					}
+				} else if (meta != 0) {
 					return false;
 				}
 			}
 		}
+		return true;
+	}
 
+	private boolean isValidStructureHorizontal() {
+		World world = worldObj;
+		if (world == null) {
+			return false;
+		}
+
+		Direction direction = BlockLogicStargateCore.getDirectionFromMeta(
+			world.getBlockMetadata(x, y, z)
+		);
+
+		for (int j = 0; j < 7; j++) {
+			for (int i = -4; i < 5; i++) {
+				switch (j) {
+					case 0:
+						if (Math.abs(i) != 1) continue;
+						break;
+					case 1:
+					case 5:
+						if (Math.abs(i) != 2) continue;
+						break;
+					case 2:
+					case 3:
+					case 4:
+						if (Math.abs(i) != 3) continue;
+						break;
+					case 6:
+						if (Math.abs(i) > 1) continue;
+						break;
+					default:
+						continue;
+				}
+
+				int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
+				int py = y;
+				int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+
+				int id = world.getBlockId(px, py, pz);
+
+				if (id != StargateBlocks.STARGATE_RING.id()) {
+					return false;
+				}
+
+				int meta = world.getBlockMetadata(px, py, pz);
+
+				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
+					if (meta != 1) {
+						return false;
+					}
+				} else if (meta != 0) {
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 
@@ -163,6 +379,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void readFromNBT(CompoundTag compoundTag) {
 		assembled = compoundTag.getBooleanOrDefault("Assembled", false);
+		orientation = Direction.values()[compoundTag.getIntegerOrDefault("Orientation", Direction.NORTH.ordinal())];
 
 		super.readFromNBT(compoundTag);
 	}
@@ -170,6 +387,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putBoolean("Assembled", assembled);
+		compoundTag.putInt("Orientation", orientation.ordinal());
 
 		super.writeToNBT(compoundTag);
 	}
@@ -529,5 +747,13 @@ public class TileEntityStargateCore extends TileEntity {
 		fastEncode(29);
 		fastEncode(0);
 		dial();
+	}
+
+	public Direction getOrientation() {
+		return orientation;
+	}
+
+	public void setOrientation(Direction orientation) {
+		this.orientation = orientation;
 	}
 }

@@ -35,8 +35,8 @@ public class BlockModelStargateRing<T extends BlockLogic> extends BlockModelStan
 
 	@Override
 	public boolean render(Tessellator tessellator, int x, int y, int z) {
-		TileEntityStargateCore stargateCore = TileEntityStargateCore.findStargateCore(renderBlocks.blockAccess, x, y, z);
-		if (stargateCore != null && stargateCore.isAssembled()) {
+		boolean assembled = TileEntityStargateCore.isPartOfAssembled(renderBlocks.blockAccess, x, y, z);
+		if (assembled) {
 			return false;
 		}
 		return super.render(tessellator, x, y, z);
