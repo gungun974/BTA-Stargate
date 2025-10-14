@@ -5,12 +5,14 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.SoundHelper;
 import gungun974.stargate.core.StargateAddress;
+import gungun974.stargate.core.StargateChunkLoader;
 import gungun974.stargate.core.StargateState;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
+import net.minecraft.core.world.chunk.Chunk;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nullable;
@@ -716,11 +718,35 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			state = StargateState.OPENING;
+			int x = -3;
+			int y = 7;
+			int z = 6;
+			int dim = 0;
 
-			SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
-			playAnimation(StargateAnimation.KAWOOSH);
+			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
+
+			if (chunk == null) {
+				state = StargateState.IDLE;
+				return;
+			}
+
+			TileEntityStargateCore stargateCore = (TileEntityStargateCore) chunk.getTileEntity(x & 15, y, z & 15);
+
+			if (stargateCore == null || !stargateCore.isAssembled()) {
+				state = StargateState.IDLE;
+				return;
+			}
+
+			stargateCore.openGate();
+			openGate();
 		});
+	}
+
+	private void openGate() {
+		state = StargateState.OPENING;
+
+		SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+		playAnimation(StargateAnimation.KAWOOSH);
 	}
 
 	public void autoDial() {
