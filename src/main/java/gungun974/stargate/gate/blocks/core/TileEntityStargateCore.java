@@ -8,6 +8,8 @@ import gungun974.stargate.core.StargateAddress;
 import gungun974.stargate.core.StargateChunkLoader;
 import gungun974.stargate.core.StargateState;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.net.packet.Packet;
+import net.minecraft.core.net.packet.PacketTileEntityData;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
@@ -27,8 +29,11 @@ public class TileEntityStargateCore extends TileEntity {
 	private double lastAngle = 0;
 	private double targetAngle = 0;
 	private boolean ringDirection = false;
+	private boolean lastRingMove = false;
+	private boolean ringMove = false;
 	private boolean assembled = false;
 	private Direction orientation = Direction.NORTH;
+	private StargateAnimation lastAnimation = StargateAnimation.NONE;
 	private StargateAnimation animation = StargateAnimation.NONE;
 	private int animationTick = 0;
 	private int lastAnimationTick = 0;
@@ -225,6 +230,11 @@ public class TileEntityStargateCore extends TileEntity {
 		super.invalidate();
 	}
 
+	@Override
+	public Packet getDescriptionPacket() {
+		return new PacketTileEntityData(this);
+	}
+
 	public boolean isAssembled() {
 		return assembled;
 	}
@@ -383,6 +393,26 @@ public class TileEntityStargateCore extends TileEntity {
 		assembled = compoundTag.getBooleanOrDefault("Assembled", false);
 		orientation = Direction.values()[compoundTag.getIntegerOrDefault("Orientation", Direction.NORTH.ordinal())];
 
+		state = StargateState.values()[compoundTag.getIntegerOrDefault("State", StargateAnimation.NONE.ordinal())];
+		currentDialingAddressSize = compoundTag.getShortOrDefault("DialingAddressSize", (short) 0);
+		currentDialingAddress[0] = compoundTag.getIntegerOrDefault("DialingAddress0", 0);
+		currentDialingAddress[1] = compoundTag.getIntegerOrDefault("DialingAddress1", 0);
+		currentDialingAddress[2] = compoundTag.getIntegerOrDefault("DialingAddress2", 0);
+		currentDialingAddress[3] = compoundTag.getIntegerOrDefault("DialingAddress3", 0);
+		currentDialingAddress[4] = compoundTag.getIntegerOrDefault("DialingAddress4", 0);
+		currentDialingAddress[5] = compoundTag.getIntegerOrDefault("DialingAddress5", 0);
+		currentDialingAddress[6] = compoundTag.getIntegerOrDefault("DialingAddress6", 0);
+		currentDialingAddress[7] = compoundTag.getIntegerOrDefault("DialingAddress7", 0);
+		currentDialingAddress[8] = compoundTag.getIntegerOrDefault("DialingAddress8", 0);
+
+		currentAngle = compoundTag.getDoubleOrDefault("CurrentAngle", 0);
+		targetAngle = compoundTag.getDoubleOrDefault("TargetAngle", 0);
+		ringDirection = compoundTag.getBooleanOrDefault("RingDirection", false);
+		ringMove = compoundTag.getBooleanOrDefault("RingMove", false);
+
+		animation = StargateAnimation.values()[compoundTag.getIntegerOrDefault("Animation", StargateAnimation.NONE.ordinal())];
+		animationTick = compoundTag.getIntegerOrDefault("AnimationTick", 0);
+
 		super.readFromNBT(compoundTag);
 	}
 
@@ -390,6 +420,26 @@ public class TileEntityStargateCore extends TileEntity {
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putBoolean("Assembled", assembled);
 		compoundTag.putInt("Orientation", orientation.ordinal());
+
+		compoundTag.putInt("State", state.ordinal());
+		compoundTag.putShort("DialingAddressSize", currentDialingAddressSize);
+		compoundTag.putInt("DialingAddress0", currentDialingAddress[0]);
+		compoundTag.putInt("DialingAddress1", currentDialingAddress[1]);
+		compoundTag.putInt("DialingAddress2", currentDialingAddress[2]);
+		compoundTag.putInt("DialingAddress3", currentDialingAddress[3]);
+		compoundTag.putInt("DialingAddress4", currentDialingAddress[4]);
+		compoundTag.putInt("DialingAddress5", currentDialingAddress[5]);
+		compoundTag.putInt("DialingAddress6", currentDialingAddress[6]);
+		compoundTag.putInt("DialingAddress7", currentDialingAddress[7]);
+		compoundTag.putInt("DialingAddress8", currentDialingAddress[8]);
+
+		compoundTag.putDouble("CurrentAngle", currentAngle);
+		compoundTag.putDouble("TargetAngle", targetAngle);
+		compoundTag.putBoolean("RingDirection", ringDirection);
+		compoundTag.putBoolean("RingMove", ringMove);
+
+		compoundTag.putInt("Animation", animation.ordinal());
+		compoundTag.putInt("AnimationTick", animationTick);
 
 		super.writeToNBT(compoundTag);
 	}
@@ -559,8 +609,7 @@ public class TileEntityStargateCore extends TileEntity {
 	public void tick() {
 		updateRotation();
 
-		double angleDistance = angularDistance(targetAngle, currentAngle);
-		if (angleDistance > 0.01) {
+		if (ringMove) {
 			return;
 		}
 
@@ -569,13 +618,25 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	private void updateRotation() {
+		if (!lastRingMove && ringMove) {
+			SoundHelper.playSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+		}
+
+		if (lastRingMove && !ringMove) {
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+		}
+
+		lastRingMove = ringMove;
 		lastAngle = currentAngle;
 
 		double angleDistance = angularDistance(targetAngle, currentAngle);
 
 		if (angleDistance < 0.01) {
+			ringMove = false;
 			return;
 		}
+
+		ringMove = true;
 
 		double angleSpeed = Math.min(angleDistance, 1);
 
@@ -593,9 +654,18 @@ public class TileEntityStargateCore extends TileEntity {
 		lasteventHorizonTick = eventHorizonTick;
 		eventHorizonTick++;
 
+		if (lastAnimation != animation) {
+			if (animation == StargateAnimation.KAWOOSH) {
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+		}
+
+		lastAnimation = animation;
+
 		if (animation == StargateAnimation.NONE) {
 			return;
 		}
+
 
 		if (animation == StargateAnimation.ENCODE_CHEVRON) {
 			boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
@@ -631,6 +701,10 @@ public class TileEntityStargateCore extends TileEntity {
 		this.animation = animation;
 		animationTick = 0;
 		lastAnimationTick = 0;
+
+		if (worldObj != null) {
+			worldObj.markBlockNeedsUpdate(x, y, z);
+		}
 	}
 
 	private void updateCommands() {
@@ -670,7 +744,6 @@ public class TileEntityStargateCore extends TileEntity {
 				state = StargateState.DIALLING;
 			}
 
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
 			playAnimation(StargateAnimation.ENCODE_CHEVRON);
 		});
 	}
@@ -680,8 +753,11 @@ public class TileEntityStargateCore extends TileEntity {
 			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
 				return;
 			}
-			SoundHelper.playSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			targetAngle = symbol * symbolAngle;
+
+			if (worldObj != null) {
+				worldObj.markBlockNeedsUpdate(x, y, z);
+			}
 		});
 	}
 
@@ -718,9 +794,9 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			int x = -3;
+			int x = -23;
 			int y = 7;
-			int z = 6;
+			int z = -14;
 			int dim = 0;
 
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
@@ -744,8 +820,8 @@ public class TileEntityStargateCore extends TileEntity {
 
 	private void openGate() {
 		state = StargateState.OPENING;
+		StargateMod.LOGGER.info("OPEN GATE");
 
-		SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 		playAnimation(StargateAnimation.KAWOOSH);
 	}
 
@@ -765,14 +841,14 @@ public class TileEntityStargateCore extends TileEntity {
 //		moveToSymbol(0);
 //		encode();
 
-//		fastEncode(26);
-//		fastEncode(6);
-//		fastEncode(14);
-//		fastEncode(31);
-//		fastEncode(11);
-//		fastEncode(29);
-//		fastEncode(0);
-//		dial();
+		fastEncode(26);
+		fastEncode(6);
+		fastEncode(14);
+		fastEncode(31);
+		fastEncode(11);
+		fastEncode(29);
+		fastEncode(0);
+		dial();
 
 		StargateAddress stargateAddress = StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
 

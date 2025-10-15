@@ -8,6 +8,7 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
 import org.jetbrains.annotations.NotNull;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 public class BlockLogicStargateCore extends BlockLogicRotatable {
 	public BlockLogicStargateCore(Block<?> block, Material material) {
@@ -50,6 +51,10 @@ public class BlockLogicStargateCore extends BlockLogicRotatable {
 
 	@Override
 	public boolean onBlockRightClicked(World world, int x, int y, int z, Player player, Side side, double xHit, double yHit) {
+		if (EnvironmentHelper.isClientWorld()) {
+			return false;
+		}
+
 		TileEntityStargateCore stargateCore = TileEntityStargateCore.findStargateCore(world, x, y, z);
 		if (stargateCore != null && stargateCore.isAssembled()) {
 			stargateCore.autoDial();

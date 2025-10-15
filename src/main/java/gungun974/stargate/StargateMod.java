@@ -4,6 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.sound.SoundRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.util.GameStartEntrypoint;
 import turniplabs.halplibe.util.RecipeEntrypoint;
 
@@ -34,6 +35,12 @@ public class StargateMod implements ModInitializer, RecipeEntrypoint, GameStartE
 
 	@Override
 	public void beforeGameStart() {
+		if (!EnvironmentHelper.isServerEnvironment()) {
+			beforeGameStartClient();
+		}
+	}
+
+	public void beforeGameStartClient() {
 		SoundRepository.registerNamespace(MOD_ID);
 	}
 
