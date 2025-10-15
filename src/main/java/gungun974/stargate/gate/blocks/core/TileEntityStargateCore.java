@@ -765,14 +765,18 @@ public class TileEntityStargateCore extends TileEntity {
 //		moveToSymbol(0);
 //		encode();
 
-		fastEncode(26);
-		fastEncode(6);
-		fastEncode(14);
-		fastEncode(31);
-		fastEncode(11);
-		fastEncode(29);
-		fastEncode(0);
-		dial();
+//		fastEncode(26);
+//		fastEncode(6);
+//		fastEncode(14);
+//		fastEncode(31);
+//		fastEncode(11);
+//		fastEncode(29);
+//		fastEncode(0);
+//		dial();
+
+		StargateAddress stargateAddress = StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
+
+		StargateMod.LOGGER.info("Gate address : {}", stargateAddress.encodeAddress());
 	}
 
 	public Direction getOrientation() {
