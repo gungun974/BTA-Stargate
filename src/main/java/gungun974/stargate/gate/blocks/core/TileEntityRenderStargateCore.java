@@ -143,28 +143,54 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		GL11.glScaled(1.4, 1.4, 1.4);
 
-		renderStargate(tessellator, tileEntity, partialTicks);
-
-		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-	}
-
-	void renderStargate(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/stargate.png");
 
 		renderOuterRing(tessellator);
-		renderSymbolRing(tessellator, stargateCore, partialTicks);
-		renderInnerRing(tessellator, stargateCore, partialTicks);
-		renderChevrons(tessellator, stargateCore, partialTicks);
-		renderIris(tessellator, stargateCore, partialTicks);
-		switch (stargateCore.getState()) {
+		renderSymbolRing(tessellator, tileEntity, partialTicks);
+		renderInnerRing(tessellator, tileEntity, partialTicks);
+		renderChevrons(tessellator, tileEntity, partialTicks);
+		renderIris(tessellator, tileEntity, partialTicks);
+		switch (tileEntity.getState()) {
 			case OPENING:
 			case CONNECTED:
 			case DISCONNECTING:
-				renderEventHorizon(tessellator, stargateCore, partialTicks);
-				renderEventHorizonVortex(tessellator, stargateCore, partialTicks);
+				renderEventHorizon(tessellator, tileEntity, partialTicks);
+				if (tileEntity.getOrientation() == Direction.NORTH) {
+					GL11.glPushMatrix();
+					switch (tileEntity.getDirection()) {
+						case NORTH:
+							if (z < -0.4) {
+								GL11.glTranslated(0, 0, -0.16);
+								renderEventHorizon(tessellator, tileEntity, partialTicks);
+							}
+							break;
+						case EAST:
+							if (x > -0.6) {
+								GL11.glTranslated(0, 0, -0.16);
+								renderEventHorizon(tessellator, tileEntity, partialTicks);
+							}
+							break;
+						case SOUTH:
+							if (z > -0.6) {
+								GL11.glTranslated(0, 0, -0.16);
+								renderEventHorizon(tessellator, tileEntity, partialTicks);
+							}
+							break;
+						case WEST:
+							if (x < -0.4) {
+								GL11.glTranslated(0, 0, -0.16);
+								renderEventHorizon(tessellator, tileEntity, partialTicks);
+							}
+							break;
+					}
+					GL11.glPopMatrix();
+				}
+				renderEventHorizonVortex(tessellator, tileEntity, partialTicks);
 				break;
 		}
+
+		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+		GL11.glPopMatrix();
 	}
 
 	private void renderOuterRing(Tessellator tessellator) {
@@ -443,6 +469,53 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glDisable(GL11.GL_CULL_FACE);
+
+		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
+
+		double notShieldedRadius = 2.5;
+
+		for (int i = 1; i < eventHorizonGridRadialSize; i++) {
+			tessellator.startDrawing(GL11.GL_QUAD_STRIP);
+			tessellator.setNormal(0, 0, 1);
+			for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
+				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame);
+				eventHorizonVertex(tessellator, eventHorizonGrid, i + 1, j, notShieldedRadius, frame);
+			}
+			tessellator.draw();
+		}
+
+		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
+
+		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
+		tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
+
+		for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
+			eventHorizonVertex(tessellator, eventHorizonGrid, 1, j, notShieldedRadius, frame);
+		}
+
+		tessellator.draw();
+
+		GL11.glDepthMask(true);
+
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
+
+	void renderEventHorizonInside(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
+		if (!tileEntity.interpolatedShowEventHorizon(partialTicks)) {
+			return;
+		}
+
+		final double time = tileEntity.interpolatedEventHorizonTick(partialTicks) / 3;
+
+		final int frame = (int) (time % 14);
+
+		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
+
+		GL11.glTranslated(0, 0, -0.16);
+
+		GL11.glDisable(GL11.GL_LIGHTING);
+		GL11.glEnable(GL11.GL_CULL_FACE);
 
 		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
 
