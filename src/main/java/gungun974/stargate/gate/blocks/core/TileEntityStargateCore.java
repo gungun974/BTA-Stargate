@@ -617,7 +617,6 @@ public class TileEntityStargateCore extends TileEntity {
 						state == StargateState.CONNECTED
 				) && session == null
 			) {
-				StargateMod.LOGGER.info("CLOSE {}", session);
 				state = StargateState.IDLE;
 				currentDialingAddressSize = 0;
 

@@ -4,6 +4,7 @@
   "package": "gungun974.stargate.mixins",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "LevelDataMixin",
     "MenuInventoryCreativeMixin"
   ],
   "client": [

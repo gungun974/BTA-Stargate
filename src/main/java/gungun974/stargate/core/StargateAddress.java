@@ -1,5 +1,7 @@
 package gungun974.stargate.core;
 
+import gungun974.stargate.StargateMod;
+
 import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
@@ -105,7 +107,7 @@ public class StargateAddress {
 
 	@Nullable
 	static public StargateAddress createAddressFromEncoded(int[] address) {
-		if (address == null || address.length >= 8) {
+		if (address == null || address.length < 8) {
 			return null;
 		}
 
@@ -118,6 +120,7 @@ public class StargateAddress {
 		final long plane = S * S;
 
 		if (partialPermutation(N, 6) < plane || (N - 6) < (DIM_MAX - DIM_MIN + 1)) {
+			StargateMod.LOGGER.info("B");
 			return null;
 		}
 
@@ -127,6 +130,7 @@ public class StargateAddress {
 			int base = symbols.size();
 			int idx = symbols.indexOf(address[i]);
 			if (idx < 0) {
+				StargateMod.LOGGER.info("C");
 				return null;
 			}
 			rankXZ += (long) idx * mult;
@@ -135,15 +139,18 @@ public class StargateAddress {
 		}
 
 		if (rankXZ < 0 || rankXZ >= plane) {
+			StargateMod.LOGGER.info("D");
 			return null;
 		}
 
 		int idxDim = symbols.indexOf(address[6]);
 		if (idxDim < 0) {
+			StargateMod.LOGGER.info("E");
 			return null;
 		}
 		int dim = idxDim + DIM_MIN;
 		if (dim > DIM_MAX) {
+			StargateMod.LOGGER.info("F");
 			return null;
 		}
 		symbols.remove(idxDim);
@@ -160,6 +167,7 @@ public class StargateAddress {
 
 		int idxLocal = symbols.indexOf(address[7]);
 		if (idxLocal < 0) {
+			StargateMod.LOGGER.info("G");
 			return null;
 		}
 
