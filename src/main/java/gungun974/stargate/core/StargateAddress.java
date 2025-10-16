@@ -105,7 +105,7 @@ public class StargateAddress {
 
 	@Nullable
 	static public StargateAddress createAddressFromEncoded(int[] address) {
-		if (address == null || address.length != 8) {
+		if (address == null || address.length >= 8) {
 			return null;
 		}
 
@@ -179,7 +179,7 @@ public class StargateAddress {
 
 	public int[] encodeAddress() {
 		List<Integer> symbols = new LinkedList<>();
-		int[] address = new int[8];
+		int[] address = new int[9];
 
 		for (int i = 1; i < numberOfSymbol(); i++) symbols.add(i);
 
@@ -206,6 +206,8 @@ public class StargateAddress {
 		int remaining = symbols.size();
 		int encoded = mod((gx * 5) + gz, remaining);
 		address[7] = symbols.remove(encoded);
+
+		address[8] = 0;
 
 		return address;
 	}

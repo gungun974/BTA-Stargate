@@ -3,10 +3,7 @@ package gungun974.stargate.gate.blocks.core;
 import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
-import gungun974.stargate.core.SoundHelper;
-import gungun974.stargate.core.StargateAddress;
-import gungun974.stargate.core.StargateChunkLoader;
-import gungun974.stargate.core.StargateState;
+import gungun974.stargate.core.*;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
@@ -607,6 +604,35 @@ public class TileEntityStargateCore extends TileEntity {
 
 	@Override
 	public void tick() {
+		if (!EnvironmentHelper.isClientWorld()) {
+			StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+			if (
+				(
+					(state == StargateState.OPENING && animation != StargateAnimation.KAWOOSH) ||
+						state == StargateState.CONNECTED
+				) && session == null
+			) {
+				StargateMod.LOGGER.info("CLOSE {}", session);
+				state = StargateState.IDLE;
+				currentDialingAddressSize = 0;
+
+				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+			}
+
+			if (state != StargateState.CONNECTED && session != null && animation != StargateAnimation.KAWOOSH) {
+				state = StargateState.CONNECTED;
+				currentDialingAddressSize = session.dialingAddressSize;
+				currentDialingAddress = session.originAddress.encodeAddress();
+
+				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+			}
+		}
+
 		updateRotation();
 
 		if (ringMove) {
@@ -806,21 +832,22 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			TileEntityStargateCore stargateCore = (TileEntityStargateCore) chunk.getTileEntity(x & 15, y, z & 15);
+			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(x & 15, y, z & 15);
 
-			if (stargateCore == null || !stargateCore.isAssembled()) {
+			if (this == destinationGate || destinationGate == null || !destinationGate.isAssembled()) {
 				state = StargateState.IDLE;
 				return;
 			}
 
-			stargateCore.openGate();
+			StargateSessionManager.getInstance().createSession(this, destinationGate, currentDialingAddressSize);
+
+			destinationGate.openGate();
 			openGate();
 		});
 	}
 
 	private void openGate() {
 		state = StargateState.OPENING;
-		StargateMod.LOGGER.info("OPEN GATE");
 
 		playAnimation(StargateAnimation.KAWOOSH);
 	}
@@ -850,6 +877,8 @@ public class TileEntityStargateCore extends TileEntity {
 		fastEncode(0);
 		dial();
 
+		StargateMod.LOGGER.info("State: {}", state);
+
 		StargateAddress stargateAddress = StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
 
 		StargateMod.LOGGER.info("Gate address : {}", stargateAddress.encodeAddress());
@@ -859,7 +888,7 @@ public class TileEntityStargateCore extends TileEntity {
 		return orientation;
 	}
 
-	public void setOrientation(Direction orientation) {
-		this.orientation = orientation;
+	public StargateAddress getAddress() {
+		return StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
 	}
 }
