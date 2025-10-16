@@ -224,6 +224,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void invalidate() {
 		SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+		StargateSessionManager.getInstance().removeSession(this);
 		super.invalidate();
 	}
 
@@ -382,6 +383,9 @@ public class TileEntityStargateCore extends TileEntity {
 			// DISASSEMBLE
 			this.assembled = false;
 			StargateMod.LOGGER.info("Disassemble Stargate");
+
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
 

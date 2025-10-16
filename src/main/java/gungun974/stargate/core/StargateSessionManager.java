@@ -4,6 +4,7 @@ import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class StargateSessionManager {
@@ -66,6 +67,31 @@ public class StargateSessionManager {
 				return session;
 			}
 			if (gate.x == session.destinationX && gate.y == session.destinationY && gate.z == session.destinationZ && dim == session.destinationDim) {
+				return session;
+			}
+		}
+
+		return null;
+	}
+
+	public StargateSession removeSession(TileEntityStargateCore gate) {
+		if (gate == null) {
+			return null;
+		}
+
+		int dim = gate.worldObj.dimension.id;
+		Iterator<StargateSession> iterator = sessions.iterator();
+
+		while (iterator.hasNext()) {
+			StargateSession session = iterator.next();
+
+			if (gate.x == session.originX && gate.y == session.originY && gate.z == session.originZ && dim == session.originDim) {
+				iterator.remove();
+				return session;
+			}
+
+			if (gate.x == session.destinationX && gate.y == session.destinationY && gate.z == session.destinationZ && dim == session.destinationDim) {
+				iterator.remove();
 				return session;
 			}
 		}
