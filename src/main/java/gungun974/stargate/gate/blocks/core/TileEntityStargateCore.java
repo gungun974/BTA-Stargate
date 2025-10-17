@@ -5,10 +5,12 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.entity.Entity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
+import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
@@ -16,6 +18,7 @@ import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
 
 public class TileEntityStargateCore extends TileEntity {
@@ -606,10 +609,46 @@ public class TileEntityStargateCore extends TileEntity {
 		return (int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle);
 	}
 
+	private AABB getDetectionBox() {
+		Direction direction = getDirection();
+		double x1 = x + direction.getOffsetZ() * -3;
+		double y1 = y;
+		double z1 = z + direction.getOffsetX() * -3;
+		double x2 = x + direction.getOffsetZ() * 3;
+		double y2 = y + 5;
+		double z2 = z + direction.getOffsetX() * 3;
+		double minX = Math.min(x1, x2);
+		double minY = Math.min(y1, y2);
+		double minZ = Math.min(z1, z2);
+		double maxX = Math.max(x1, x2) + (double) 1.0F;
+		double maxY = Math.max(y1, y2) + (double) 1.0F;
+		double maxZ = Math.max(z1, z2) + (double) 1.0F;
+		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
+	}
+
+
 	@Override
 	public void tick() {
 		if (!EnvironmentHelper.isClientWorld()) {
 			StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+			if (state == StargateState.CONNECTED && session != null && worldObj != null) {
+
+				Direction direction = getDirection();
+
+				AABB detectionBox = this.getDetectionBox();
+				List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
+
+				for (Entity entity : list) {
+					double distanceX = (entity.x - x - 0.5) * direction.getOffsetZ() + (entity.z - z - 0.5) * direction.getOffsetX();
+					double distanceY = entity.y - y - 3.5;
+					double distanceZ = (entity.x - x - 0.5) * direction.getOffsetX() + (entity.z - z - 0.5) * direction.getOffsetZ();
+					double distance = distanceX * distanceX + distanceY * distanceY;
+					if (distanceZ > 0 && distance < 5.1529) {
+						this.teleportEntity(entity, session);
+					}
+				}
+			}
 
 			if (
 				(
@@ -645,6 +684,69 @@ public class TileEntityStargateCore extends TileEntity {
 		updateCommands();
 		updateAnimation();
 	}
+
+	private void teleportEntity(Entity entity, StargateSession session) {
+		Direction originDirection = getDirection();
+		Direction destinationDirectionOpp = session.destinationDirection.getOpposite();
+
+		double originX = x + 0.5;
+		double originY = y + 3.5;
+		double originZ = z + 0.5;
+
+		double destinationX = session.destinationX + 0.5;
+		double destinationY = session.destinationY + 3.5;
+		double destinationZ = session.destinationZ + 0.5;
+
+		double deltaX = entity.x - originX;
+		double deltaY = entity.y - originY;
+		double deltaZ = entity.z - originZ;
+
+		double velocityX = entity.xd;
+		double velocityZ = entity.zd;
+
+		int rot = Math.floorMod(
+			originDirection.getHorizontalIndex() - destinationDirectionOpp.getHorizontalIndex(), 4
+		);
+
+		double orientedDeltaX, orientedDeltaZ, orientedVelocityX, orientedVelocityZ;
+		switch (rot) {
+			case 1:
+				orientedDeltaX = deltaZ;
+				orientedDeltaZ = -deltaX;
+				orientedVelocityX = velocityZ;
+				orientedVelocityZ = -velocityX;
+				break;
+			case 2:
+				orientedDeltaX = -deltaX;
+				orientedDeltaZ = -deltaZ;
+				orientedVelocityX = -velocityX;
+				orientedVelocityZ = -velocityZ;
+				break;
+			case 3:
+				orientedDeltaX = -deltaZ;
+				orientedDeltaZ = deltaX;
+				orientedVelocityX = -velocityZ;
+				orientedVelocityZ = velocityX;
+				break;
+			default:
+				orientedDeltaX = deltaX;
+				orientedDeltaZ = deltaZ;
+				orientedVelocityX = velocityX;
+				orientedVelocityZ = velocityZ;
+		}
+
+		entity.xd = orientedVelocityX;
+		entity.zd = orientedVelocityZ;
+
+		entity.absMoveTo(
+			destinationX + orientedDeltaX,
+			destinationY + deltaY,
+			destinationZ + orientedDeltaZ,
+			entity.yRot + rot * -90,
+			entity.xRot
+		);
+	}
+
 
 	private void updateRotation() {
 		if (!lastRingMove && ringMove) {
@@ -827,6 +929,12 @@ public class TileEntityStargateCore extends TileEntity {
 			int y = 7;
 			int z = -14;
 			int dim = 0;
+
+			if (EnvironmentHelper.isSinglePlayer()) {
+				x = -3;
+				y = 7;
+				z = 6;
+			}
 
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
 

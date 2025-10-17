@@ -3,6 +3,7 @@ package gungun974.stargate.core;
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import net.minecraft.core.util.helper.Direction;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -37,6 +38,8 @@ public class StargateSessionManager {
 			sessionTag.putInt("OriginX", session.originX);
 			sessionTag.putInt("OriginY", session.originY);
 			sessionTag.putInt("OriginZ", session.originZ);
+			sessionTag.putInt("OriginDirection", session.originDirection.ordinal());
+			sessionTag.putInt("OriginOrientation", session.originOrientation.ordinal());
 			sessionTag.putInt("OriginDim", session.originDim);
 
 			int[] originAddress = session.originAddress.encodeAddress();
@@ -53,6 +56,8 @@ public class StargateSessionManager {
 			sessionTag.putInt("DestinationX", session.destinationX);
 			sessionTag.putInt("DestinationY", session.destinationY);
 			sessionTag.putInt("DestinationZ", session.destinationZ);
+			sessionTag.putInt("DestinationDirection", session.destinationDirection.ordinal());
+			sessionTag.putInt("DestinationOrientation", session.destinationOrientation.ordinal());
 			sessionTag.putInt("DestinationDim", session.destinationDim);
 
 			int[] destinationAddress = session.destinationAddress.encodeAddress();
@@ -91,6 +96,8 @@ public class StargateSessionManager {
 				sessionTag.getInteger("OriginY"),
 				sessionTag.getInteger("OriginZ"),
 				sessionTag.getInteger("OriginDim"),
+				Direction.values()[sessionTag.getInteger("OriginDirection")],
+				Direction.values()[sessionTag.getInteger("OriginOrientation")],
 				StargateAddress.createAddressFromEncoded(new int[]{
 					sessionTag.getInteger("OriginAddress0"),
 					sessionTag.getInteger("OriginAddress1"),
@@ -105,6 +112,8 @@ public class StargateSessionManager {
 				sessionTag.getInteger("DestinationY"),
 				sessionTag.getInteger("DestinationZ"),
 				sessionTag.getInteger("DestinationDim"),
+				Direction.values()[sessionTag.getInteger("DestinationDirection")],
+				Direction.values()[sessionTag.getInteger("DestinationOrientation")],
 				StargateAddress.createAddressFromEncoded(new int[]{
 					sessionTag.getInteger("DestinationAddress0"),
 					sessionTag.getInteger("DestinationAddress1"),
@@ -143,11 +152,15 @@ public class StargateSessionManager {
 			origin.y,
 			origin.z,
 			origin.worldObj.dimension.id,
+			origin.getDirection(),
+			origin.getOrientation(),
 			origin.getAddress(),
 			destination.x,
 			destination.y,
 			destination.z,
 			destination.worldObj.dimension.id,
+			destination.getDirection(),
+			destination.getOrientation(),
 			destination.getAddress(),
 			dialingAddressSize
 		));
