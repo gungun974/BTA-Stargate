@@ -6,6 +6,7 @@ import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
 import net.minecraft.core.sound.SoundCategory;
@@ -611,12 +612,12 @@ public class TileEntityStargateCore extends TileEntity {
 
 	private AABB getDetectionBox() {
 		Direction direction = getDirection();
-		double x1 = x + direction.getOffsetZ() * -3;
+		double x1 = x + direction.getOffsetZ() * -3 + direction.getOffsetX() * 3;
 		double y1 = y;
-		double z1 = z + direction.getOffsetX() * -3;
-		double x2 = x + direction.getOffsetZ() * 3;
+		double z1 = z + direction.getOffsetX() * -3 + direction.getOffsetZ() * 3;
+		double x2 = x + direction.getOffsetZ() * 3 - direction.getOffsetX() * 3;
 		double y2 = y + 5;
-		double z2 = z + direction.getOffsetX() * 3;
+		double z2 = z + direction.getOffsetX() * 3 - direction.getOffsetZ() * 3;
 		double minX = Math.min(x1, x2);
 		double minY = Math.min(y1, y2);
 		double minZ = Math.min(z1, z2);
@@ -640,14 +641,56 @@ public class TileEntityStargateCore extends TileEntity {
 				List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
 				for (Entity entity : list) {
-					double distanceX = (entity.x - x - 0.5) * direction.getOffsetZ() + (entity.z - z - 0.5) * direction.getOffsetX();
-					double distanceY = entity.y - y - 3.5;
-					double distanceZ = (entity.x - x - 0.5) * direction.getOffsetX() + (entity.z - z - 0.5) * direction.getOffsetZ();
-					double distance = distanceX * distanceX + distanceY * distanceY;
-					if (distanceZ > 0 && distance < 5.1529) {
-						this.teleportEntity(entity, session);
+					double dx = direction.getOffsetX();
+					double dz = direction.getOffsetZ();
+
+					double cx = x + 0.5;
+					double cy = y + 3.5;
+					double cz = z + 0.5;
+
+					double x0 = entity.xo;
+					double y0 = entity.yo;
+					double z0 = entity.zo;
+
+					double x1 = entity.x;
+					double y1 = entity.y;
+					double z1 = entity.z;
+
+					double nx = dx;
+					double ny = 0;
+					double nz = dz;
+
+					double d0 = (x0 - cx) * nx + (y0 - cy) * ny + (z0 - cz) * nz;
+					double d1 = (x1 - cx) * nx + (y1 - cy) * ny + (z1 - cz) * nz;
+
+					if (d0 * d1 < 0) {
+						double t = d0 / (d0 - d1);
+						double ix = x0 + t * (x1 - x0);
+						double iy = y0 + t * (y1 - y0);
+						double iz = z0 + t * (z1 - z0);
+
+						double dxIntersect = ix - cx;
+						double dyIntersect = iy - cy;
+						double dzIntersect = iz - cz;
+						double distanceSq = dxIntersect * dxIntersect + dyIntersect * dyIntersect + dzIntersect * dzIntersect;
+
+						if (distanceSq < 5.1529) {
+							if (
+								(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
+									d0 > 0 && d1 < 0
+							) {
+								if (entity instanceof Player) {
+									((Player) entity).killPlayer();
+								} else {
+									entity.remove();
+								}
+							} else if (d0 < 0 && d1 > 0) {
+								this.teleportEntity(entity, session);
+							}
+						}
 					}
 				}
+
 			}
 
 			if (
