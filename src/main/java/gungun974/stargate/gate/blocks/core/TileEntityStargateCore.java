@@ -719,6 +719,7 @@ public class TileEntityStargateCore extends TileEntity {
 								(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
 									d0 > 0 && d1 < 0
 							) {
+								SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
 								if (entity instanceof Player) {
 									((Player) entity).killPlayer();
 								} else {
@@ -963,6 +964,9 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 		}
 
+		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
+		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) newX, (float) newY, (float) newZ, 1.0f, 1.0f);
+
 		entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
 	}
 
@@ -1006,7 +1010,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 		if (lastAnimation != animation) {
 			if (animation == StargateAnimation.KAWOOSH) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 		}
 

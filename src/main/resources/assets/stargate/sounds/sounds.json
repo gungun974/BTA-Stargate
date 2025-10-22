@@ -36,9 +36,20 @@
       "milkyway/fast_encode7.ogg"
     ]
   },
-  "stargate.milkyway.evenHorizon.open": {
+  "stargate.evenHorizon.open": {
     "sounds": [
-      "milkyway/event_horizon_open.ogg"
+      "event_horizon_open.ogg"
+    ]
+  },
+  "stargate.eventHorizon.enter": {
+    "sounds": [
+      "enter_event_horizon1.ogg",
+      "enter_event_horizon2.ogg",
+      "enter_event_horizon3.ogg",
+      "enter_event_horizon4.ogg",
+      "enter_event_horizon5.ogg",
+      "enter_event_horizon6.ogg",
+      "enter_event_horizon7.ogg"
     ]
   },
   "stargate.eventHorizon": {

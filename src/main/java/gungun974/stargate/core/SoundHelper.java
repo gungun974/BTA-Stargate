@@ -13,12 +13,17 @@ import turniplabs.halplibe.helper.EnvironmentHelper;
 import java.net.URL;
 
 public class SoundHelper {
+	private static int idCounter = 0;
+
 	static public void playShortSoundAt(String name, SoundCategory category, float x, float y, float z, float volume, float pitch) {
 		if (EnvironmentHelper.isServerEnvironment()) {
 			return;
 		}
 
-		Minecraft.getMinecraft().sndManager.playSoundAt(name, category, x, y, z, volume, pitch);
+		idCounter = (idCounter + 1) % 256;
+		String soundName = "stargate_sound_" + idCounter;
+
+		playSoundWithIdAtPos(name, category, x, y, z, volume, pitch, soundName, false);
 	}
 
 	static public void playSingleSoundAt(String name, SoundCategory category, float x, float y, float z, float volume, float pitch) {
@@ -28,7 +33,7 @@ public class SoundHelper {
 
 		String id = String.format("stargate_%f_%f_%f_%s", x, y, z, name);
 
-		playLongSoundWithIdAtPos(name, category, x, y, z, volume, pitch, id, false);
+		playSoundWithIdAtPos(name, category, x, y, z, volume, pitch, id, false);
 	}
 
 	static public void playSingleSoundAtWithLoop(String name, SoundCategory category, float x, float y, float z, float volume, float pitch) {
@@ -38,10 +43,10 @@ public class SoundHelper {
 
 		String id = String.format("stargate_%f_%f_%f_%s", x, y, z, name);
 
-		playLongSoundWithIdAtPos(name, category, x, y, z, volume, pitch, id, true);
+		playSoundWithIdAtPos(name, category, x, y, z, volume, pitch, id, true);
 	}
 
-	private static void playLongSoundWithIdAtPos(String name, SoundCategory category, float x, float y, float z, float volume, float pitch, String id, boolean loop) {
+	private static void playSoundWithIdAtPos(String name, SoundCategory category, float x, float y, float z, float volume, float pitch, String id, boolean loop) {
 		SoundEntry entry = SoundRepository.SOUNDS.getSoundEntry(name);
 
 		SoundSystem soundSystem = ((SoundEngineAccessor) Minecraft.getMinecraft().sndManager).getSoundSystem();
