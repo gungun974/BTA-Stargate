@@ -32,6 +32,8 @@ public class TileEntityStargateCore extends TileEntity {
 	private boolean ringDirection = false;
 	private boolean lastRingMove = false;
 	private boolean ringMove = false;
+	private boolean lastEventHoirzonNoise = false;
+	private boolean eventHoirzonNoise = false;
 	private boolean assembled = false;
 	private Direction orientation = Direction.NORTH;
 	private StargateAnimation lastAnimation = StargateAnimation.NONE;
@@ -227,7 +229,8 @@ public class TileEntityStargateCore extends TileEntity {
 
 	@Override
 	public void invalidate() {
-		SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+		SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
+		SoundHelper.stopSingleSoundAt("stargate:stargate.eventHorizon", x, y, z);
 		StargateSessionManager.getInstance().removeSession(this);
 		super.invalidate();
 	}
@@ -388,7 +391,7 @@ public class TileEntityStargateCore extends TileEntity {
 			this.assembled = false;
 			StargateMod.LOGGER.info("Disassemble Stargate");
 
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
 			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
@@ -755,6 +758,18 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 		}
 
+		eventHoirzonNoise = state == StargateState.CONNECTED;
+
+		if (!lastEventHoirzonNoise && eventHoirzonNoise) {
+			playSoundAtCenter("stargate:stargate.eventHorizon", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, true);
+		}
+
+		if (lastEventHoirzonNoise && !eventHoirzonNoise) {
+			SoundHelper.stopSingleSoundAt("stargate:stargate.eventHorizon", x, y, z);
+		}
+
+		lastEventHoirzonNoise = eventHoirzonNoise;
+
 		updateRotation();
 
 		if (ringMove) {
@@ -763,6 +778,39 @@ public class TileEntityStargateCore extends TileEntity {
 
 		updateCommands();
 		updateAnimation();
+	}
+
+	private void playSoundAtCenter(String name, SoundCategory soundCategory, float volume, float pitch, boolean loop) {
+		Direction direction = getDirection();
+		Direction orientation = getOrientation();
+
+		float centerX, centerY, centerZ;
+
+		if (orientation == Direction.NORTH) {
+			centerX = x + 0.5f;
+			centerY = y + 3.5f;
+			centerZ = z + 0.5f;
+		} else {
+			centerX = x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
+			centerY = y + orientation.getOffsetY() * 0.5f;
+			centerZ = z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+
+			if (direction.getOffsetX() < 0) {
+				centerX += 1;
+				centerZ += 1;
+			}
+
+			if (direction.getOffsetZ() < 0) {
+				centerZ += 1;
+				centerX += 1;
+			}
+		}
+
+		if (loop) {
+			SoundHelper.playSingleSoundAtWithLoop(name, soundCategory, centerX, centerY, centerZ, volume, pitch);
+		} else {
+			SoundHelper.playSingleSoundAt(name, soundCategory, centerX, centerY, centerZ, volume, pitch);
+		}
 	}
 
 	private void teleportEntity(Entity entity, StargateSession session) {
@@ -921,11 +969,11 @@ public class TileEntityStargateCore extends TileEntity {
 
 	private void updateRotation() {
 		if (!lastRingMove && ringMove) {
-			SoundHelper.playSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			playSoundAtCenter("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, false);
 		}
 
 		if (lastRingMove && !ringMove) {
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
 		}
 
 		lastRingMove = ringMove;
@@ -1085,7 +1133,7 @@ public class TileEntityStargateCore extends TileEntity {
 				state = StargateState.DIALLING;
 			}
 
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, x, y, z);
+			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
 			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
 		});
 	}

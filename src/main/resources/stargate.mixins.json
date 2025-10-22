@@ -8,7 +8,8 @@
     "MenuInventoryCreativeMixin"
   ],
   "client": [
-    "MinecraftMixin"
+    "MinecraftMixin",
+    "SoundEngineAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

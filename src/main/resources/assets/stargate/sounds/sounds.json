@@ -40,5 +40,14 @@
     "sounds": [
       "milkyway/event_horizon_open.ogg"
     ]
+  },
+  "stargate.eventHorizon": {
+    "sounds": [
+      {
+        "name": "event_horizon.ogg",
+        "volume": 1,
+        "attenuation_distance": 16
+      }
+    ]
   }
 }
