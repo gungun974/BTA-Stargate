@@ -611,13 +611,28 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	private AABB getDetectionBox() {
+		Direction orientation = getOrientation();
+
+		double offset = 3.0;
+
 		Direction direction = getDirection();
-		double x1 = x + direction.getOffsetZ() * -3 + direction.getOffsetX() * 3;
+		double x1 = x + direction.getOffsetZ() * -3 + direction.getOffsetX() * offset;
 		double y1 = y;
-		double z1 = z + direction.getOffsetX() * -3 + direction.getOffsetZ() * 3;
-		double x2 = x + direction.getOffsetZ() * 3 - direction.getOffsetX() * 3;
+		double z1 = z + direction.getOffsetX() * -3 + direction.getOffsetZ() * offset;
+		double x2 = x + direction.getOffsetZ() * 3 - direction.getOffsetX() * offset;
 		double y2 = y + 5;
-		double z2 = z + direction.getOffsetX() * 3 - direction.getOffsetZ() * 3;
+		double z2 = z + direction.getOffsetX() * 3 - direction.getOffsetZ() * offset;
+
+		if (orientation != Direction.NORTH) {
+			x1 = x - direction.getOffsetZ() * 3;
+			y1 = y - offset;
+			z1 = z - direction.getOffsetX() * 3;
+
+			x2 = x + direction.getOffsetX() * 6 + direction.getOffsetZ() * 3;
+			y2 = y + offset;
+			z2 = z + direction.getOffsetX() * 3 + direction.getOffsetZ() * 6;
+		}
+
 		double minX = Math.min(x1, x2);
 		double minY = Math.min(y1, y2);
 		double minZ = Math.min(z1, z2);
@@ -634,6 +649,8 @@ public class TileEntityStargateCore extends TileEntity {
 			StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 			if (state == StargateState.CONNECTED && session != null && worldObj != null) {
+
+				Direction orientation = getOrientation();
 
 				Direction direction = getDirection();
 
@@ -660,6 +677,26 @@ public class TileEntityStargateCore extends TileEntity {
 					double ny = 0;
 					double nz = dz;
 
+					if (orientation != Direction.NORTH) {
+						cx = x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
+						cy = y + orientation.getOffsetY() * 0.5;
+						cz = z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+
+						if (direction.getOffsetX() < 0) {
+							cx += 1;
+							cz += 1;
+						}
+
+						if (direction.getOffsetZ() < 0) {
+							cz += 1;
+							cx += 1;
+						}
+
+						nx = 0;
+						ny = -orientation.getOffsetY();
+						nz = 0;
+					}
+
 					double d0 = (x0 - cx) * nx + (y0 - cy) * ny + (z0 - cz) * nz;
 					double d1 = (x1 - cx) * nx + (y1 - cy) * ny + (z1 - cz) * nz;
 
@@ -674,7 +711,7 @@ public class TileEntityStargateCore extends TileEntity {
 						double dzIntersect = iz - cz;
 						double distanceSq = dxIntersect * dxIntersect + dyIntersect * dyIntersect + dzIntersect * dzIntersect;
 
-						if (distanceSq < 5.1529) {
+						if (distanceSq < 7.5) {
 							if (
 								(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
 									d0 > 0 && d1 < 0
@@ -730,64 +767,155 @@ public class TileEntityStargateCore extends TileEntity {
 
 	private void teleportEntity(Entity entity, StargateSession session) {
 		Direction originDirection = getDirection();
-		Direction destinationDirectionOpp = session.destinationDirection.getOpposite();
+		Direction originOrientation = getOrientation();
 
-		double originX = x + 0.5;
-		double originY = y + 3.5;
-		double originZ = z + 0.5;
+		Direction destinationDirection = session.destinationDirection;
+		Direction destinationOrientation = session.destinationOrientation;
 
-		double destinationX = session.destinationX + 0.5;
-		double destinationY = session.destinationY + 3.5;
-		double destinationZ = session.destinationZ + 0.5;
+		double originX, originY, originZ;
+		double destinationX, destinationY, destinationZ;
 
-		double deltaX = entity.x - originX;
-		double deltaY = entity.y - originY;
-		double deltaZ = entity.z - originZ;
+		if (originOrientation == Direction.NORTH) {
+			originX = x + 0.5;
+			originY = y + 3.5;
+			originZ = z + 0.5;
+		} else {
+			originX = x + originDirection.getOffsetZ() * 0.5 + originDirection.getOffsetX() * 3.5;
+			originY = y + originOrientation.getOffsetY() * 0.5;
+			originZ = z + originDirection.getOffsetX() * 0.5 + originDirection.getOffsetZ() * 3.5;
 
-		double velocityX = entity.xd;
-		double velocityZ = entity.zd;
+			if (originDirection.getOffsetX() < 0) {
+				originX += 1;
+				originZ += 1;
+			}
 
-		int rot = Math.floorMod(
-			originDirection.getHorizontalIndex() - destinationDirectionOpp.getHorizontalIndex(), 4
-		);
-
-		double orientedDeltaX, orientedDeltaZ, orientedVelocityX, orientedVelocityZ;
-		switch (rot) {
-			case 1:
-				orientedDeltaX = deltaZ;
-				orientedDeltaZ = -deltaX;
-				orientedVelocityX = velocityZ;
-				orientedVelocityZ = -velocityX;
-				break;
-			case 2:
-				orientedDeltaX = -deltaX;
-				orientedDeltaZ = -deltaZ;
-				orientedVelocityX = -velocityX;
-				orientedVelocityZ = -velocityZ;
-				break;
-			case 3:
-				orientedDeltaX = -deltaZ;
-				orientedDeltaZ = deltaX;
-				orientedVelocityX = -velocityZ;
-				orientedVelocityZ = velocityX;
-				break;
-			default:
-				orientedDeltaX = deltaX;
-				orientedDeltaZ = deltaZ;
-				orientedVelocityX = velocityX;
-				orientedVelocityZ = velocityZ;
+			if (originDirection.getOffsetZ() < 0) {
+				originZ += 1;
+				originX += 1;
+			}
 		}
 
-		entity.xd = orientedVelocityX;
-		entity.zd = orientedVelocityZ;
+		if (destinationOrientation == Direction.NORTH) {
+			destinationX = session.destinationX + 0.5;
+			destinationY = session.destinationY + 3.5;
+			destinationZ = session.destinationZ + 0.5;
+		} else {
+			destinationX = session.destinationX + destinationDirection.getOffsetZ() * 0.5 + destinationDirection.getOffsetX() * 3.5;
+			destinationY = session.destinationY + destinationOrientation.getOffsetY() * 0.5;
+			destinationZ = session.destinationZ + destinationDirection.getOffsetX() * 0.5 + destinationDirection.getOffsetZ() * 3.5;
 
-		entity.absMoveTo(
-			destinationX + orientedDeltaX,
-			destinationY + deltaY,
-			destinationZ + orientedDeltaZ,
-			entity.yRot + rot * -90,
-			entity.xRot
-		);
+			if (destinationDirection.getOffsetX() < 0) {
+				destinationX += 1;
+				destinationZ += 1;
+			}
+
+			if (destinationDirection.getOffsetZ() < 0) {
+				destinationZ += 1;
+				destinationX += 1;
+			}
+		}
+
+		int onx, ony, onz;
+		if (originOrientation == Direction.NORTH) {
+			onx = originDirection.getOffsetX();
+			ony = 0;
+			onz = originDirection.getOffsetZ();
+		} else {
+			onx = 0;
+			ony = -originOrientation.getOffsetY();
+			onz = 0;
+		}
+
+		int oux, ouy, ouz;
+		if (ony != 0) {
+			oux = originDirection.getOffsetX();
+			ouy = 0;
+			ouz = originDirection.getOffsetZ();
+		} else {
+			oux = 0;
+			ouy = 1;
+			ouz = 0;
+		}
+
+		int orx = ony * ouz - onz * ouy;
+		int ory = 0;
+		int orz = onx * ouy - ony * oux;
+
+		int ddx, ddy, ddz;
+		if (destinationOrientation != Direction.NORTH) {
+			ddx = 0;
+			ddy = destinationOrientation.getOffsetY();
+			ddz = 0;
+		} else {
+			ddx = -destinationDirection.getOffsetX();
+			ddy = 0;
+			ddz = -destinationDirection.getOffsetZ();
+		}
+
+		int dux, duy, duz;
+		if (Math.abs(ddy) == 1) {
+			dux = destinationDirection.getOffsetX();
+			duy = 0;
+			duz = destinationDirection.getOffsetZ();
+		} else {
+			dux = 0;
+			duy = 1;
+			duz = 0;
+		}
+		int drx = ddy * duz - ddz * duy;
+		int dry = 0;
+		int drz = ddx * duy - ddy * dux;
+
+		double dx = entity.x - originX;
+		double dy = entity.y - originY;
+		double dz = entity.z - originZ;
+
+		double alpha = dx * orx + dy * ory + dz * orz;
+		double beta = dx * oux + dy * ouy + dz * ouz;
+
+		double vx = entity.xd, vy = entity.yd, vz = entity.zd;
+		double valpha = vx * orx + vy * ory + vz * orz;
+		double vbeta = vx * oux + vy * ouy + vz * ouz;
+		double vnorm = vx * onx + vy * ony + vz * onz;
+
+		double newX = destinationX + alpha * drx + beta * dux;
+		double newY = destinationY + alpha * dry + beta * duy;
+		double newZ = destinationZ + alpha * drz + beta * duz;
+
+		double nVx = valpha * drx + vbeta * dux + vnorm * ddx;
+		double nVy = valpha * dry + vbeta * duy + vnorm * ddy;
+		double nVz = valpha * drz + vbeta * duz + vnorm * ddz;
+
+		float newYaw;
+		float newPitch = entity.xRot;
+
+		if (originOrientation == Direction.NORTH && destinationOrientation == Direction.NORTH) {
+			int rot = Math.floorMod(
+				originDirection.getHorizontalIndex() - destinationDirection.getOpposite().getHorizontalIndex(), 4
+			);
+			newYaw = entity.yRot + rot * -90;
+		} else {
+			double horiz = Math.sqrt(nVx * nVx + nVz * nVz);
+			newYaw = (float) Math.toDegrees(Math.atan2(-nVx, nVz));
+			newPitch = (float) Math.toDegrees(Math.atan2(-nVy, horiz));
+		}
+
+		entity.xd = nVx;
+		entity.yd = nVy;
+		entity.zd = nVz;
+
+		if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH && destinationY - newY > 0) {
+			double distX = destinationX - newX;
+			double distY = destinationY - newY;
+			double distZ = destinationZ - newZ;
+			double dist = distX * distX + distY * distY + distZ * distZ;
+
+			if (dist > 1.905) {
+				newY += entity.heightOffset;
+			}
+		}
+
+		entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
 	}
 
 
@@ -977,6 +1105,10 @@ public class TileEntityStargateCore extends TileEntity {
 				x = -3;
 				y = 7;
 				z = 6;
+
+				x = 10;
+				y = 7;
+				z = 39;
 			}
 
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
