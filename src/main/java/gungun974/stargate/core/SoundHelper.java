@@ -100,6 +100,20 @@ public class SoundHelper {
 
 		String id = String.format("stargate_%f_%f_%f_%s", x, y, z, name);
 
-		((SoundEngineAccessor) Minecraft.getMinecraft().sndManager).getSoundSystem().stop(id);
+		stopSoundId(id);
+	}
+
+	static public void stopSoundId(String id) {
+		if (EnvironmentHelper.isServerEnvironment()) {
+			return;
+		}
+
+		SoundSystem soundSystem = ((SoundEngineAccessor) Minecraft.getMinecraft().sndManager).getSoundSystem();
+
+		if (soundSystem == null) {
+			return;
+		}
+
+		soundSystem.stop(id);
 	}
 }

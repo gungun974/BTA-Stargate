@@ -6,5 +6,5 @@ public enum StargateState {
 	AWAIT,
 	OPENING,
 	CONNECTED,
-	DISCONNECTING,
+	CLOSING,
 }

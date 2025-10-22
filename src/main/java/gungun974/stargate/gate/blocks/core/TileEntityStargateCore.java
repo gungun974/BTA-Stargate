@@ -32,8 +32,7 @@ public class TileEntityStargateCore extends TileEntity {
 	private boolean ringDirection = false;
 	private boolean lastRingMove = false;
 	private boolean ringMove = false;
-	private boolean lastEventHoirzonNoise = false;
-	private boolean eventHoirzonNoise = false;
+	private boolean lastEventHorizonNoise = false;
 	private boolean assembled = false;
 	private Direction orientation = Direction.NORTH;
 	private StargateAnimation lastAnimation = StargateAnimation.NONE;
@@ -41,7 +40,7 @@ public class TileEntityStargateCore extends TileEntity {
 	private int animationTick = 0;
 	private int lastAnimationTick = 0;
 	private int eventHorizonTick = 0;
-	private int lasteventHorizonTick = 0;
+	private int lastEventHorizonTick = 0;
 	private StargateState state = StargateState.IDLE;
 	private short currentDialingAddressSize = 0;
 	private int[] currentDialingAddress = new int[9];
@@ -567,7 +566,7 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	public double interpolatedEventHorizonTick(double partialTicks) {
-		return lasteventHorizonTick + (eventHorizonTick - lasteventHorizonTick) * partialTicks;
+		return lastEventHorizonTick + (eventHorizonTick - lastEventHorizonTick) * partialTicks;
 	}
 
 
@@ -599,8 +598,35 @@ public class TileEntityStargateCore extends TileEntity {
 		return 0.5 + easeInExpo(closeAnimationProgress) * 0.5;
 	}
 
+	public float interpolatedEventHorizonExposure(double partialTicks) {
+		if (animation != StargateAnimation.CLOSING) {
+			return 0;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 10;
+
+		return (float) currentAnimationTick / (StargateAnimation.CLOSING.duration - 10);
+	}
+
+	public float interpolatedEventHorizonFormationProgress(double partialTicks) {
+		if (animation != StargateAnimation.CLOSING) {
+			return 1;
+		}
+
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 38;
+
+		double ratio = 1 - currentAnimationTick / 13;
+		float step = 0.05f;
+		return (float) (Math.floor(ratio / step) * step);
+
+	}
+
 	public boolean interpolatedShowEventHorizon(double partialTicks) {
-		if (animation != StargateAnimation.KAWOOSH) {
+		if (animation != StargateAnimation.KAWOOSH && animation != StargateAnimation.CLOSING) {
+			return state != StargateState.CLOSING;
+		}
+
+		if (animation == StargateAnimation.CLOSING) {
 			return true;
 		}
 
@@ -727,16 +753,18 @@ public class TileEntityStargateCore extends TileEntity {
 								}
 							} else if (d0 < 0 && d1 > 0) {
 								this.teleportEntity(entity, session);
+								this.closeGate();
 							}
 						}
 					}
 				}
-
 			}
+
+			session = StargateSessionManager.getInstance().getSession(this);
 
 			if (
 				(
-					(state == StargateState.OPENING && animation != StargateAnimation.KAWOOSH) ||
+					(state == StargateState.OPENING && animation != StargateAnimation.KAWOOSH) || (state == StargateState.CLOSING && animation != StargateAnimation.CLOSING) ||
 						state == StargateState.CONNECTED
 				) && session == null
 			) {
@@ -759,17 +787,17 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 		}
 
-		eventHoirzonNoise = state == StargateState.CONNECTED;
+		boolean eventHorizonNoise = state == StargateState.CONNECTED;
 
-		if (!lastEventHoirzonNoise && eventHoirzonNoise) {
-			playSoundAtCenter("stargate:stargate.eventHorizon", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, true);
+		if (!lastEventHorizonNoise && eventHorizonNoise) {
+			//TODO: playSoundAtCenter("stargate:stargate.eventHorizon", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, true);
 		}
 
-		if (lastEventHoirzonNoise && !eventHoirzonNoise) {
+		if (lastEventHorizonNoise && !eventHorizonNoise) {
 			SoundHelper.stopSingleSoundAt("stargate:stargate.eventHorizon", x, y, z);
 		}
 
-		lastEventHoirzonNoise = eventHoirzonNoise;
+		lastEventHorizonNoise = eventHorizonNoise;
 
 		updateRotation();
 
@@ -1005,12 +1033,15 @@ public class TileEntityStargateCore extends TileEntity {
 		eventHorizon.applyRandomImpulse();
 		eventHorizon.updateEventHorizon();
 
-		lasteventHorizonTick = eventHorizonTick;
+		lastEventHorizonTick = eventHorizonTick;
 		eventHorizonTick++;
 
 		if (lastAnimation != animation) {
 			if (animation == StargateAnimation.KAWOOSH) {
 				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+			if (animation == StargateAnimation.CLOSING) {
+				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 		}
 
@@ -1157,10 +1188,6 @@ public class TileEntityStargateCore extends TileEntity {
 				x = -3;
 				y = 7;
 				z = 6;
-
-				x = 10;
-				y = 7;
-				z = 39;
 			}
 
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
@@ -1188,6 +1215,47 @@ public class TileEntityStargateCore extends TileEntity {
 		state = StargateState.OPENING;
 
 		playAnimation(StargateAnimation.KAWOOSH);
+	}
+
+	public void closeGate() {
+		if (state != StargateState.CONNECTED) {
+			return;
+		}
+
+		StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+		if (session == null) {
+			state = StargateState.CLOSING;
+
+			playAnimation(StargateAnimation.CLOSING);
+			return;
+		}
+
+		Chunk originChunk = StargateChunkLoader.loadChunk(worldObj, session.originDim, Math.floorDiv(session.originX, 16), Math.floorDiv(session.originZ, 16));
+
+		if (originChunk != null) {
+			TileEntityStargateCore gate = (TileEntityStargateCore) originChunk.getTileEntity(session.originX & 15, session.originY, session.originZ & 15);
+
+			if (gate != null && gate.isAssembled()) {
+				gate.state = StargateState.CLOSING;
+
+				gate.playAnimation(StargateAnimation.CLOSING);
+			}
+		}
+
+		Chunk destinationChunk = StargateChunkLoader.loadChunk(worldObj, session.destinationDim, Math.floorDiv(session.destinationX, 16), Math.floorDiv(session.destinationZ, 16));
+
+		if (destinationChunk != null) {
+			TileEntityStargateCore gate = (TileEntityStargateCore) destinationChunk.getTileEntity(session.destinationX & 15, session.destinationY, session.destinationZ & 15);
+
+			if (gate != null && gate.isAssembled()) {
+				gate.state = StargateState.CLOSING;
+
+				gate.playAnimation(StargateAnimation.CLOSING);
+			}
+		}
+
+		StargateSessionManager.getInstance().removeSession(this);
 	}
 
 	public void autoDial() {

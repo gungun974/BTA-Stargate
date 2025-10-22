@@ -1,5 +1,6 @@
 package gungun974.stargate.gate.blocks.core;
 
+import gungun974.stargate.core.StargateState;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
@@ -153,9 +154,24 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		switch (tileEntity.getState()) {
 			case OPENING:
 			case CONNECTED:
-			case DISCONNECTING:
+			case CLOSING:
 				renderEventHorizon(tessellator, tileEntity, partialTicks);
-				if (tileEntity.getOrientation() == Direction.NORTH) {
+
+				float exposure = tileEntity.interpolatedEventHorizonExposure(partialTicks);
+
+				if (exposure > 0f) {
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+
+					GL11.glDisable(GL11.GL_TEXTURE_2D);
+					GL11.glColor4f(exposure, exposure, exposure, 1f);
+					renderEventHorizon(tessellator, tileEntity, partialTicks);
+					GL11.glEnable(GL11.GL_TEXTURE_2D);
+
+					GL11.glDisable(GL11.GL_BLEND);
+				}
+
+				if (tileEntity.getState() == StargateState.CONNECTED && tileEntity.getOrientation() == Direction.NORTH) {
 					GL11.glPushMatrix();
 					switch (tileEntity.getDirection()) {
 						case NORTH:
@@ -474,73 +490,35 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		double notShieldedRadius = 2.5;
 
-		for (int i = 1; i < eventHorizonGridRadialSize; i++) {
+		float showProgress = tileEntity.interpolatedEventHorizonFormationProgress(partialTicks);
+
+		for (int i = 0; i < eventHorizonGridRadialSize; i++) {
+			if (i == 0 && showProgress >= 1) {
+				continue;
+			}
+
 			tessellator.startDrawing(GL11.GL_QUAD_STRIP);
 			tessellator.setNormal(0, 0, 1);
 			for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
-				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame);
-				eventHorizonVertex(tessellator, eventHorizonGrid, i + 1, j, notShieldedRadius, frame);
+				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame, showProgress);
+				eventHorizonVertex(tessellator, eventHorizonGrid, i + 1, j, notShieldedRadius, frame, showProgress);
 			}
 			tessellator.draw();
 		}
 
-		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
+		if (showProgress >= 1) {
+			tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
 
-		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
-		tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
+			tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
+			tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
 
-		for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
-			eventHorizonVertex(tessellator, eventHorizonGrid, 1, j, notShieldedRadius, frame);
-		}
-
-		tessellator.draw();
-
-		GL11.glDepthMask(true);
-
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glEnable(GL11.GL_LIGHTING);
-	}
-
-	void renderEventHorizonInside(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
-		if (!tileEntity.interpolatedShowEventHorizon(partialTicks)) {
-			return;
-		}
-
-		final double time = tileEntity.interpolatedEventHorizonTick(partialTicks) / 3;
-
-		final int frame = (int) (time % 14);
-
-		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
-
-		GL11.glTranslated(0, 0, -0.16);
-
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glEnable(GL11.GL_CULL_FACE);
-
-		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
-
-		double notShieldedRadius = 2.5;
-
-		for (int i = 1; i < eventHorizonGridRadialSize; i++) {
-			tessellator.startDrawing(GL11.GL_QUAD_STRIP);
-			tessellator.setNormal(0, 0, 1);
 			for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
-				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame);
-				eventHorizonVertex(tessellator, eventHorizonGrid, i + 1, j, notShieldedRadius, frame);
+				eventHorizonVertex(tessellator, eventHorizonGrid, 1, j, notShieldedRadius, frame, showProgress);
 			}
+
 			tessellator.draw();
+
 		}
-
-		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
-
-		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
-		tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
-
-		for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
-			eventHorizonVertex(tessellator, eventHorizonGrid, 1, j, notShieldedRadius, frame);
-		}
-
-		tessellator.draw();
 
 		GL11.glDepthMask(true);
 
@@ -656,11 +634,19 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	}
 
 
-	void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame) {
+	void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame, double showProgress) {
 		double r = i * eventHorizonBandWidth;
-		double x = r * ringCosValues[j];
-		double y = r * ringSinValues[j];
-		double z = eventHorizonClip(grid[j + 1][i], r, notShieldedRadius);
+		double R = eventHorizonGridRadialSize * eventHorizonBandWidth;
+		double min = R * (1.0 - showProgress);
+
+		if (r + eventHorizonBandWidth < min) {
+			return;
+		}
+
+		double clipped = Math.max(r, min);
+		double x = clipped * ringCosValues[j];
+		double y = clipped * ringSinValues[j];
+		double z = eventHorizonClip(grid[j + 1][i], clipped, notShieldedRadius);
 		tessellator.setTextureUV(x / 56 + 0.25 + (double) frame / 14, y / 4 + 0.5);
 		tessellator.addVertex(x, y, z);
 	}

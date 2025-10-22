@@ -41,6 +41,11 @@
       "event_horizon_open.ogg"
     ]
   },
+  "stargate.evenHorizon.close": {
+    "sounds": [
+      "event_horizon_close.ogg"
+    ]
+  },
   "stargate.eventHorizon.enter": {
     "sounds": [
       "enter_event_horizon1.ogg",
