@@ -529,36 +529,27 @@ public class TileEntityStargateCore extends TileEntity {
 		return 0;
 	}
 
-	public double easeInExpo(double x) {
-		return x == 0 ? 0 : Math.pow(2, 10 * x - 10);
-	}
-
-	public double easeOutExpo(double x) {
-		return x == 1 ? 1 : 1 - Math.pow(2, -10 * x);
-
-	}
-
 	public double interpolatedUnstableVortexDistance(double partialTicks) {
 		if (animation != StargateAnimation.KAWOOSH) {
 			return 0;
 		}
 
-		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 18;
 
-		if (currentAnimationTick < 18) {
+		if (currentAnimationTick < 0) {
 			return 0;
 		}
 
-		if (currentAnimationTick < 36) {
-			final double openAnimationProgress = Math.min((currentAnimationTick - 18) / 6, 1);
+		final double animationProgress = Math.min((currentAnimationTick) / 34.5, 1);
 
-			return easeOutExpo(openAnimationProgress);
+		double ratio = 0.60;
+
+		if (animationProgress < ratio) {
+			return Math.sin((Math.PI / 2) * (animationProgress / ratio));
+		} else {
+			double x = (animationProgress - ratio) / (1 - ratio);
+			return Math.cos((Math.PI / 2) * x);
 		}
-
-		final double closeAnimationProgress = Math.min((currentAnimationTick - 36) / (StargateAnimation.KAWOOSH.duration - 36), 1);
-
-		return 1 - easeInExpo(closeAnimationProgress);
-
 	}
 
 	public double interpolatedAnimationTick(double partialTicks) {
@@ -582,9 +573,9 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		if (currentAnimationTick < 24) {
-			final double openAnimationProgress = Math.min((currentAnimationTick - 6) / 24, 1);
+			final double openAnimationProgress = Math.min((currentAnimationTick - 6) / 18, 1);
 
-			return 0.5 + easeOutExpo(openAnimationProgress) * 0.5;
+			return 0.5 + openAnimationProgress * 0.5;
 		}
 
 		if (currentAnimationTick < 48) {
@@ -595,7 +586,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 		final double closeAnimationProgress = Math.min((currentAnimationTick - 36) / (StargateAnimation.KAWOOSH.duration - 36), 1);
 
-		return 0.5 + easeInExpo(closeAnimationProgress) * 0.5;
+		return 0.5 + closeAnimationProgress * 0.5;
 	}
 
 	public float interpolatedEventHorizonExposure(double partialTicks) {
@@ -1092,6 +1083,7 @@ public class TileEntityStargateCore extends TileEntity {
 			animation = StargateAnimation.NONE;
 			animationTick = 0;
 			lastAnimationTick = 0;
+			//playAnimation(StargateAnimation.KAWOOSH);
 		}
 	}
 
