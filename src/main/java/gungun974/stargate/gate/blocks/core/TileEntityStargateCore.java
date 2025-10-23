@@ -599,6 +599,14 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	public float interpolatedEventHorizonExposure(double partialTicks) {
+		if (animation == StargateAnimation.KAWOOSH) {
+			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 6;
+
+			double ratio = 1 - currentAnimationTick / 18;
+			float step = 0.05f;
+			return (float) (Math.floor(ratio / step) * step);
+		}
+
 		if (animation != StargateAnimation.CLOSING) {
 			return 0;
 		}
@@ -609,6 +617,15 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	public float interpolatedEventHorizonFormationProgress(double partialTicks) {
+		if (animation == StargateAnimation.KAWOOSH) {
+			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 6;
+
+			double ratio = currentAnimationTick / 12;
+			float step = 0.05f;
+			return (float) (Math.floor(ratio / step) * step);
+		}
+
+
 		if (animation != StargateAnimation.CLOSING) {
 			return 1;
 		}
@@ -621,18 +638,12 @@ public class TileEntityStargateCore extends TileEntity {
 
 	}
 
-	public boolean interpolatedShowEventHorizon(double partialTicks) {
+	public boolean interpolatedShowEventHorizon() {
 		if (animation != StargateAnimation.KAWOOSH && animation != StargateAnimation.CLOSING) {
 			return state != StargateState.CLOSING;
 		}
 
-		if (animation == StargateAnimation.CLOSING) {
-			return true;
-		}
-
-		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks - 12;
-
-		return currentAnimationTick >= 6;
+		return true;
 	}
 
 	private int getCurrentSymbol() {

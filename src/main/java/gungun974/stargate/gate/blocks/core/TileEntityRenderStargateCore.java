@@ -473,7 +473,7 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	}
 
 	void renderEventHorizon(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
-		if (!tileEntity.interpolatedShowEventHorizon(partialTicks)) {
+		if (!tileEntity.interpolatedShowEventHorizon()) {
 			return;
 		}
 
@@ -551,6 +551,8 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_CULL_FACE);
+
+		GL11.glColor4f(1, 1, 1, 1f);
 
 		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
 
