@@ -1083,7 +1083,6 @@ public class TileEntityStargateCore extends TileEntity {
 			animation = StargateAnimation.NONE;
 			animationTick = 0;
 			lastAnimationTick = 0;
-			//playAnimation(StargateAnimation.KAWOOSH);
 		}
 	}
 
