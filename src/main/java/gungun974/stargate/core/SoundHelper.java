@@ -1,9 +1,9 @@
 package gungun974.stargate.core;
 
 import gungun974.stargate.StargateMod;
-import gungun974.stargate.mixins.SoundEngineAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sound.SoundCategoryHelper;
+import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.SoundEntry;
 import net.minecraft.client.sound.SoundRepository;
 import net.minecraft.core.sound.SoundCategory;
@@ -49,7 +49,7 @@ public class SoundHelper {
 	private static void playSoundWithIdAtPos(String name, SoundCategory category, float x, float y, float z, float volume, float pitch, String id, boolean loop) {
 		SoundEntry entry = SoundRepository.SOUNDS.getSoundEntry(name);
 
-		SoundSystem soundSystem = ((SoundEngineAccessor) Minecraft.getMinecraft().sndManager).getSoundSystem();
+		SoundSystem soundSystem = SoundEngine.getSoundSystem();
 
 		if (soundSystem == null) {
 			return;
@@ -108,7 +108,7 @@ public class SoundHelper {
 			return;
 		}
 
-		SoundSystem soundSystem = ((SoundEngineAccessor) Minecraft.getMinecraft().sndManager).getSoundSystem();
+		SoundSystem soundSystem = SoundEngine.getSoundSystem();
 
 		if (soundSystem == null) {
 			return;
