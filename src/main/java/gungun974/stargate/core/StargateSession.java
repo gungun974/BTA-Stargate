@@ -21,6 +21,8 @@ public class StargateSession {
 
 	final public short dialingAddressSize;
 
+	public int remainingTick;
+
 	public StargateSession(
 		int originX,
 		int originY,
@@ -36,7 +38,8 @@ public class StargateSession {
 		Direction destinationDirection,
 		Direction destinationOrientation,
 		StargateAddress destinationAddress,
-		short dialingAddressSize
+		short dialingAddressSize,
+		int remainingTick
 	) {
 		this.originX = originX;
 		this.originY = originY;
@@ -53,5 +56,6 @@ public class StargateSession {
 		this.destinationOrientation = destinationOrientation;
 		this.destinationAddress = destinationAddress;
 		this.dialingAddressSize = dialingAddressSize;
+		this.remainingTick = remainingTick;
 	}
 }

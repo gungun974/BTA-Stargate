@@ -753,7 +753,7 @@ public class TileEntityStargateCore extends TileEntity {
 								}
 							} else if (d0 < 0 && d1 > 0) {
 								this.teleportEntity(entity, session);
-								this.closeGate();
+								StargateSessionManager.getInstance().endSession(this);
 							}
 						}
 					}
@@ -768,11 +768,17 @@ public class TileEntityStargateCore extends TileEntity {
 						state == StargateState.CONNECTED
 				) && session == null
 			) {
-				state = StargateState.IDLE;
-				currentDialingAddressSize = 0;
+				if (state == StargateState.CONNECTED) {
+					state = StargateState.CLOSING;
 
-				if (worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
+					playAnimation(StargateAnimation.CLOSING);
+				} else {
+					state = StargateState.IDLE;
+					currentDialingAddressSize = 0;
+
+					if (worldObj != null) {
+						worldObj.markBlockNeedsUpdate(x, y, z);
+					}
 				}
 			}
 
@@ -1229,30 +1235,6 @@ public class TileEntityStargateCore extends TileEntity {
 
 			playAnimation(StargateAnimation.CLOSING);
 			return;
-		}
-
-		Chunk originChunk = StargateChunkLoader.loadChunk(worldObj, session.originDim, Math.floorDiv(session.originX, 16), Math.floorDiv(session.originZ, 16));
-
-		if (originChunk != null) {
-			TileEntityStargateCore gate = (TileEntityStargateCore) originChunk.getTileEntity(session.originX & 15, session.originY, session.originZ & 15);
-
-			if (gate != null && gate.isAssembled()) {
-				gate.state = StargateState.CLOSING;
-
-				gate.playAnimation(StargateAnimation.CLOSING);
-			}
-		}
-
-		Chunk destinationChunk = StargateChunkLoader.loadChunk(worldObj, session.destinationDim, Math.floorDiv(session.destinationX, 16), Math.floorDiv(session.destinationZ, 16));
-
-		if (destinationChunk != null) {
-			TileEntityStargateCore gate = (TileEntityStargateCore) destinationChunk.getTileEntity(session.destinationX & 15, session.destinationY, session.destinationZ & 15);
-
-			if (gate != null && gate.isAssembled()) {
-				gate.state = StargateState.CLOSING;
-
-				gate.playAnimation(StargateAnimation.CLOSING);
-			}
 		}
 
 		StargateSessionManager.getInstance().removeSession(this);

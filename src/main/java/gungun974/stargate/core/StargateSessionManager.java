@@ -5,6 +5,7 @@ import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
 import net.minecraft.core.util.helper.Direction;
 import org.jetbrains.annotations.NotNull;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 public class StargateSessionManager {
+	private static final int MAX_OPENING_TIME = 20 * 60 * 38;
+	private static final int END_SESSION_TIME = 20 * 5;
+
 	private static StargateSessionManager instance;
 	private final List<StargateSession> sessions = new ArrayList<>();
 
@@ -73,6 +77,8 @@ public class StargateSessionManager {
 
 			sessionTag.putShort("DialingAddressSize", session.dialingAddressSize);
 
+			sessionTag.putInt("RemainingTick", session.remainingTick);
+
 			sessionsTag.put(String.valueOf(i), sessionTag);
 		}
 
@@ -84,48 +90,52 @@ public class StargateSessionManager {
 		sessions.clear();
 
 		for (Map.Entry<String, Tag<?>> entry : sessionsTag.getValue().entrySet()) {
-			final Tag<?> tag = entry.getValue();
-			if (!(tag instanceof CompoundTag)) {
-				continue;
+			try {
+				final Tag<?> tag = entry.getValue();
+				if (!(tag instanceof CompoundTag)) {
+					continue;
+				}
+
+				final CompoundTag sessionTag = (CompoundTag) tag;
+
+				sessions.add(new StargateSession(
+					sessionTag.getInteger("OriginX"),
+					sessionTag.getInteger("OriginY"),
+					sessionTag.getInteger("OriginZ"),
+					sessionTag.getInteger("OriginDim"),
+					Direction.values()[sessionTag.getInteger("OriginDirection")],
+					Direction.values()[sessionTag.getInteger("OriginOrientation")],
+					StargateAddress.createAddressFromEncoded(new int[]{
+						sessionTag.getInteger("OriginAddress0"),
+						sessionTag.getInteger("OriginAddress1"),
+						sessionTag.getInteger("OriginAddress2"),
+						sessionTag.getInteger("OriginAddress3"),
+						sessionTag.getInteger("OriginAddress4"),
+						sessionTag.getInteger("OriginAddress5"),
+						sessionTag.getInteger("OriginAddress6"),
+						sessionTag.getInteger("OriginAddress7")
+					}),
+					sessionTag.getInteger("DestinationX"),
+					sessionTag.getInteger("DestinationY"),
+					sessionTag.getInteger("DestinationZ"),
+					sessionTag.getInteger("DestinationDim"),
+					Direction.values()[sessionTag.getInteger("DestinationDirection")],
+					Direction.values()[sessionTag.getInteger("DestinationOrientation")],
+					StargateAddress.createAddressFromEncoded(new int[]{
+						sessionTag.getInteger("DestinationAddress0"),
+						sessionTag.getInteger("DestinationAddress1"),
+						sessionTag.getInteger("DestinationAddress2"),
+						sessionTag.getInteger("DestinationAddress3"),
+						sessionTag.getInteger("DestinationAddress4"),
+						sessionTag.getInteger("DestinationAddress5"),
+						sessionTag.getInteger("DestinationAddress6"),
+						sessionTag.getInteger("DestinationAddress7")
+					}),
+					sessionTag.getShort("DialingAddressSize"),
+					sessionTag.getInteger("RemainingTick")
+				));
+			} catch (Exception ignored) {
 			}
-
-			final CompoundTag sessionTag = (CompoundTag) tag;
-
-			sessions.add(new StargateSession(
-				sessionTag.getInteger("OriginX"),
-				sessionTag.getInteger("OriginY"),
-				sessionTag.getInteger("OriginZ"),
-				sessionTag.getInteger("OriginDim"),
-				Direction.values()[sessionTag.getInteger("OriginDirection")],
-				Direction.values()[sessionTag.getInteger("OriginOrientation")],
-				StargateAddress.createAddressFromEncoded(new int[]{
-					sessionTag.getInteger("OriginAddress0"),
-					sessionTag.getInteger("OriginAddress1"),
-					sessionTag.getInteger("OriginAddress2"),
-					sessionTag.getInteger("OriginAddress3"),
-					sessionTag.getInteger("OriginAddress4"),
-					sessionTag.getInteger("OriginAddress5"),
-					sessionTag.getInteger("OriginAddress6"),
-					sessionTag.getInteger("OriginAddress7")
-				}),
-				sessionTag.getInteger("DestinationX"),
-				sessionTag.getInteger("DestinationY"),
-				sessionTag.getInteger("DestinationZ"),
-				sessionTag.getInteger("DestinationDim"),
-				Direction.values()[sessionTag.getInteger("DestinationDirection")],
-				Direction.values()[sessionTag.getInteger("DestinationOrientation")],
-				StargateAddress.createAddressFromEncoded(new int[]{
-					sessionTag.getInteger("DestinationAddress0"),
-					sessionTag.getInteger("DestinationAddress1"),
-					sessionTag.getInteger("DestinationAddress2"),
-					sessionTag.getInteger("DestinationAddress3"),
-					sessionTag.getInteger("DestinationAddress4"),
-					sessionTag.getInteger("DestinationAddress5"),
-					sessionTag.getInteger("DestinationAddress6"),
-					sessionTag.getInteger("DestinationAddress7")
-				}),
-				sessionTag.getShort("DialingAddressSize")
-			));
 		}
 	}
 
@@ -147,6 +157,14 @@ public class StargateSessionManager {
 			return;
 		}
 
+		if (origin.worldObj == null) {
+			return;
+		}
+
+		if (destination.worldObj == null) {
+			return;
+		}
+
 		sessions.add(new StargateSession(
 			origin.x,
 			origin.y,
@@ -162,13 +180,18 @@ public class StargateSessionManager {
 			destination.getDirection(),
 			destination.getOrientation(),
 			destination.getAddress(),
-			dialingAddressSize
+			dialingAddressSize,
+			MAX_OPENING_TIME
 		));
 	}
 
 	@Nullable
 	public StargateSession getSession(TileEntityStargateCore gate) {
 		if (gate == null) {
+			return null;
+		}
+
+		if (gate.worldObj == null) {
 			return null;
 		}
 
@@ -186,12 +209,17 @@ public class StargateSessionManager {
 		return null;
 	}
 
-	public StargateSession removeSession(TileEntityStargateCore gate) {
+	public void removeSession(TileEntityStargateCore gate) {
 		if (gate == null) {
-			return null;
+			return;
+		}
+
+		if (gate.worldObj == null) {
+			return;
 		}
 
 		int dim = gate.worldObj.dimension.id;
+
 		Iterator<StargateSession> iterator = sessions.iterator();
 
 		while (iterator.hasNext()) {
@@ -199,15 +227,57 @@ public class StargateSessionManager {
 
 			if (gate.x == session.originX && gate.y == session.originY && gate.z == session.originZ && dim == session.originDim) {
 				iterator.remove();
-				return session;
+				return;
 			}
 
 			if (gate.x == session.destinationX && gate.y == session.destinationY && gate.z == session.destinationZ && dim == session.destinationDim) {
 				iterator.remove();
-				return session;
+				return;
 			}
 		}
 
-		return null;
+	}
+
+	public void endSession(TileEntityStargateCore gate) {
+		if (gate == null) {
+			return;
+		}
+
+		if (gate.worldObj == null) {
+			return;
+		}
+
+		int dim = gate.worldObj.dimension.id;
+
+		for (StargateSession session : sessions) {
+			if (gate.x == session.originX && gate.y == session.originY && gate.z == session.originZ && dim == session.originDim) {
+				session.remainingTick = END_SESSION_TIME;
+				return;
+			}
+
+			if (gate.x == session.destinationX && gate.y == session.destinationY && gate.z == session.destinationZ && dim == session.destinationDim) {
+				session.remainingTick = END_SESSION_TIME;
+				return;
+			}
+		}
+
+	}
+
+	public void tick() {
+		if (EnvironmentHelper.isClientWorld()) {
+			return;
+		}
+
+		Iterator<StargateSession> iterator = sessions.iterator();
+
+		while (iterator.hasNext()) {
+			StargateSession session = iterator.next();
+
+			session.remainingTick -= 1;
+
+			if (session.remainingTick <= 0) {
+				iterator.remove();
+			}
+		}
 	}
 }

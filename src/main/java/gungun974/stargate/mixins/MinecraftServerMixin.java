@@ -1,6 +1,7 @@
 package gungun974.stargate.mixins;
 
 import gungun974.stargate.IWorldDirNameAccess;
+import gungun974.stargate.core.StargateSessionManager;
 import net.minecraft.core.world.save.ISaveFormat;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,6 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MinecraftServerMixin implements IWorldDirNameAccess {
 	@Unique
 	public String worldDirName;
+
+	@Inject(method = "doTick()V", at = @At("HEAD"))
+	private void tickStargate(CallbackInfo info) {
+		StargateSessionManager.getInstance().tick();
+	}
+
 
 	@Inject(
 		method = "initWorld",
