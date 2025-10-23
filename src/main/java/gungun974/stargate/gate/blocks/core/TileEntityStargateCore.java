@@ -228,8 +228,8 @@ public class TileEntityStargateCore extends TileEntity {
 
 	@Override
 	public void invalidate() {
-		SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
-		SoundHelper.stopSingleSoundAt("stargate:stargate.eventHorizon", x, y, z);
+		stopSoundAtCenter("stargate:stargate.milkyway.roll");
+		stopSoundAtCenter("stargate:stargate.eventHorizon");
 		StargateSessionManager.getInstance().removeSession(this);
 		super.invalidate();
 	}
@@ -390,7 +390,7 @@ public class TileEntityStargateCore extends TileEntity {
 			this.assembled = false;
 			StargateMod.LOGGER.info("Disassemble Stargate");
 
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
+			stopSoundAtCenter("stargate:stargate.milkyway.roll");
 			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
@@ -798,11 +798,11 @@ public class TileEntityStargateCore extends TileEntity {
 		boolean eventHorizonNoise = state == StargateState.CONNECTED;
 
 		if (!lastEventHorizonNoise && eventHorizonNoise) {
-			//TODO: playSoundAtCenter("stargate:stargate.eventHorizon", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, true);
+			playSoundAtCenter("stargate:stargate.eventHorizon", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, true);
 		}
 
 		if (lastEventHorizonNoise && !eventHorizonNoise) {
-			SoundHelper.stopSingleSoundAt("stargate:stargate.eventHorizon", x, y, z);
+			stopSoundAtCenter("stargate:stargate.eventHorizon");
 		}
 
 		lastEventHorizonNoise = eventHorizonNoise;
@@ -848,6 +848,35 @@ public class TileEntityStargateCore extends TileEntity {
 		} else {
 			SoundHelper.playSingleSoundAt(name, soundCategory, centerX, centerY, centerZ, volume, pitch);
 		}
+	}
+
+	private void stopSoundAtCenter(String name) {
+		Direction direction = getDirection();
+		Direction orientation = getOrientation();
+
+		float centerX, centerY, centerZ;
+
+		if (orientation == Direction.NORTH) {
+			centerX = x + 0.5f;
+			centerY = y + 3.5f;
+			centerZ = z + 0.5f;
+		} else {
+			centerX = x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
+			centerY = y + orientation.getOffsetY() * 0.5f;
+			centerZ = z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+
+			if (direction.getOffsetX() < 0) {
+				centerX += 1;
+				centerZ += 1;
+			}
+
+			if (direction.getOffsetZ() < 0) {
+				centerZ += 1;
+				centerX += 1;
+			}
+		}
+
+		SoundHelper.stopSingleSoundAt(name, centerX, centerY, centerZ);
 	}
 
 	private void teleportEntity(Entity entity, StargateSession session) {
@@ -1013,7 +1042,7 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		if (lastRingMove && !ringMove) {
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
+			stopSoundAtCenter("stargate:stargate.milkyway.roll");
 		}
 
 		lastRingMove = ringMove;
@@ -1176,7 +1205,7 @@ public class TileEntityStargateCore extends TileEntity {
 				state = StargateState.DIALLING;
 			}
 
-			SoundHelper.stopSingleSoundAt("stargate:stargate.milkyway.roll", x, y, z);
+			stopSoundAtCenter("stargate:stargate.milkyway.roll");
 			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
 		});
 	}
