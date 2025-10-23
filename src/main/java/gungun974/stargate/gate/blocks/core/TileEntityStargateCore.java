@@ -4,6 +4,7 @@ import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
+import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
@@ -15,7 +16,9 @@ import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
+import net.minecraft.server.entity.player.PlayerServer;
 import turniplabs.halplibe.helper.EnvironmentHelper;
+import turniplabs.halplibe.helper.network.NetworkHandler;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -220,6 +223,10 @@ public class TileEntityStargateCore extends TileEntity {
 	public static double angularDistance(double angle1, double angle2) {
 		double diff = Math.abs(angle1 - angle2) % 360.0;
 		return diff > 180.0 ? 360.0 - diff : diff;
+	}
+
+	private static void serverTeleport(Player entity, double newX, double newY, double newZ, float newYaw, float newPitch) {
+		((PlayerServer) entity).teleport(newX, newY, newZ, newYaw, newPitch);
 	}
 
 	public StargateState getState() {
@@ -560,7 +567,6 @@ public class TileEntityStargateCore extends TileEntity {
 		return lastEventHorizonTick + (eventHorizonTick - lastEventHorizonTick) * partialTicks;
 	}
 
-
 	public double interpolatedUnstableVortexDiameter(double partialTicks) {
 		if (animation != StargateAnimation.KAWOOSH) {
 			return 1;
@@ -641,7 +647,7 @@ public class TileEntityStargateCore extends TileEntity {
 		return (int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle);
 	}
 
-	private AABB getDetectionBox() {
+	public AABB getDetectionBox() {
 		Direction orientation = getOrientation();
 
 		double offset = 3.0;
@@ -673,96 +679,100 @@ public class TileEntityStargateCore extends TileEntity {
 		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
-
 	@Override
 	public void tick() {
-		if (!EnvironmentHelper.isClientWorld()) {
-			StargateSession session = StargateSessionManager.getInstance().getSession(this);
+		if (state == StargateState.CONNECTED && worldObj != null) {
+			Direction orientation = getOrientation();
 
-			if (state == StargateState.CONNECTED && session != null && worldObj != null) {
+			Direction direction = getDirection();
 
-				Direction orientation = getOrientation();
+			AABB detectionBox = this.getDetectionBox();
+			List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
-				Direction direction = getDirection();
+			for (Entity entity : list) {
+				double dx = direction.getOffsetX();
+				double dz = direction.getOffsetZ();
 
-				AABB detectionBox = this.getDetectionBox();
-				List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
+				double cx = x + 0.5;
+				double cy = y + 3.5;
+				double cz = z + 0.5;
 
-				for (Entity entity : list) {
-					double dx = direction.getOffsetX();
-					double dz = direction.getOffsetZ();
+				double x0 = entity.xo;
+				double y0 = entity.yo;
+				double z0 = entity.zo;
 
-					double cx = x + 0.5;
-					double cy = y + 3.5;
-					double cz = z + 0.5;
+				double x1 = entity.x;
+				double y1 = entity.y;
+				double z1 = entity.z;
 
-					double x0 = entity.xo;
-					double y0 = entity.yo;
-					double z0 = entity.zo;
+				double nx = dx;
+				double ny = 0;
+				double nz = dz;
 
-					double x1 = entity.x;
-					double y1 = entity.y;
-					double z1 = entity.z;
+				if (orientation != Direction.NORTH) {
+					cx = x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
+					cy = y + orientation.getOffsetY() * 0.5;
+					cz = z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
 
-					double nx = dx;
-					double ny = 0;
-					double nz = dz;
-
-					if (orientation != Direction.NORTH) {
-						cx = x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
-						cy = y + orientation.getOffsetY() * 0.5;
-						cz = z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
-
-						if (direction.getOffsetX() < 0) {
-							cx += 1;
-							cz += 1;
-						}
-
-						if (direction.getOffsetZ() < 0) {
-							cz += 1;
-							cx += 1;
-						}
-
-						nx = 0;
-						ny = -orientation.getOffsetY();
-						nz = 0;
+					if (direction.getOffsetX() < 0) {
+						cx += 1;
+						cz += 1;
 					}
 
-					double d0 = (x0 - cx) * nx + (y0 - cy) * ny + (z0 - cz) * nz;
-					double d1 = (x1 - cx) * nx + (y1 - cy) * ny + (z1 - cz) * nz;
+					if (direction.getOffsetZ() < 0) {
+						cz += 1;
+						cx += 1;
+					}
 
-					if (d0 * d1 < 0) {
-						double t = d0 / (d0 - d1);
-						double ix = x0 + t * (x1 - x0);
-						double iy = y0 + t * (y1 - y0);
-						double iz = z0 + t * (z1 - z0);
+					nx = 0;
+					ny = -orientation.getOffsetY();
+					nz = 0;
+				}
 
-						double dxIntersect = ix - cx;
-						double dyIntersect = iy - cy;
-						double dzIntersect = iz - cz;
-						double distanceSq = dxIntersect * dxIntersect + dyIntersect * dyIntersect + dzIntersect * dzIntersect;
+				double d0 = (x0 - cx) * nx + (y0 - cy) * ny + (z0 - cz) * nz;
+				double d1 = (x1 - cx) * nx + (y1 - cy) * ny + (z1 - cz) * nz;
 
-						if (distanceSq < 7.5) {
-							if (
-								(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
-									d0 > 0 && d1 < 0
-							) {
-								SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
-								if (entity instanceof Player) {
-									((Player) entity).killPlayer();
-								} else {
-									entity.remove();
+				if (d0 * d1 < 0) {
+					double t = d0 / (d0 - d1);
+					double ix = x0 + t * (x1 - x0);
+					double iy = y0 + t * (y1 - y0);
+					double iz = z0 + t * (z1 - z0);
+
+					double dxIntersect = ix - cx;
+					double dyIntersect = iy - cy;
+					double dzIntersect = iz - cz;
+					double distanceSq = dxIntersect * dxIntersect + dyIntersect * dyIntersect + dzIntersect * dzIntersect;
+
+					if (distanceSq < 7.5) {
+						if (entity instanceof Player && EnvironmentHelper.isClientWorld()) {
+							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(x, y, z, worldObj.dimension.id, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
+						} else {
+							StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+							if (session != null) {
+								if (
+									(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
+										d0 > 0 && d1 < 0
+								) {
+									SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
+									if (entity instanceof Player) {
+										((Player) entity).killPlayer();
+									} else {
+										entity.remove();
+									}
+								} else if (d0 < 0 && d1 > 0) {
+									this.teleportEntity(entity, session);
+									StargateSessionManager.getInstance().endSession(this);
 								}
-							} else if (d0 < 0 && d1 > 0) {
-								this.teleportEntity(entity, session);
-								StargateSessionManager.getInstance().endSession(this);
 							}
 						}
 					}
 				}
 			}
+		}
 
-			session = StargateSessionManager.getInstance().getSession(this);
+		if (!EnvironmentHelper.isClientWorld()) {
+			StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 			if (
 				(
@@ -879,7 +889,7 @@ public class TileEntityStargateCore extends TileEntity {
 		SoundHelper.stopSingleSoundAt(name, centerX, centerY, centerZ);
 	}
 
-	private void teleportEntity(Entity entity, StargateSession session) {
+	public void teleportEntity(Entity entity, StargateSession session) {
 		Direction originDirection = getDirection();
 		Direction originOrientation = getOrientation();
 
@@ -1032,9 +1042,12 @@ public class TileEntityStargateCore extends TileEntity {
 		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
 		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) newX, (float) newY, (float) newZ, 1.0f, 1.0f);
 
-		entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+		if (EnvironmentHelper.isServerEnvironment() && entity instanceof Player) {
+			serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch);
+		} else {
+			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+		}
 	}
-
 
 	private void updateRotation() {
 		if (!lastRingMove && ringMove) {
