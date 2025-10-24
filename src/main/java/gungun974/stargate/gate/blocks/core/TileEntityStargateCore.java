@@ -37,6 +37,7 @@ public class TileEntityStargateCore extends TileEntity {
 	private boolean ringMove = false;
 	private boolean lastEventHorizonNoise = false;
 	private boolean assembled = false;
+	private Direction direction = Direction.NORTH;
 	private Direction orientation = Direction.NORTH;
 	private StargateAnimation lastAnimation = StargateAnimation.NONE;
 	private StargateAnimation animation = StargateAnimation.NONE;
@@ -251,15 +252,18 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	public Direction getDirection() {
-		World world = worldObj;
-		if (world == null) {
-			return Direction.NORTH;
-		}
-
-		return BlockLogicStargateCore.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
+		return direction;
 	}
 
 	private boolean isValidStructure() {
+		World world = worldObj;
+
+		if (world == null) {
+			direction = Direction.NORTH;
+		} else {
+			direction = BlockLogicStargateCore.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
+		}
+
 		if (isValidStructureVertical()) {
 			orientation = Direction.NORTH;
 			return true;
@@ -405,6 +409,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void readFromNBT(CompoundTag compoundTag) {
 		assembled = compoundTag.getBooleanOrDefault("Assembled", false);
+		direction = Direction.values()[compoundTag.getIntegerOrDefault("Direction", Direction.NORTH.ordinal())];
 		orientation = Direction.values()[compoundTag.getIntegerOrDefault("Orientation", Direction.NORTH.ordinal())];
 
 		state = StargateState.values()[compoundTag.getIntegerOrDefault("State", StargateAnimation.NONE.ordinal())];
@@ -433,6 +438,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putBoolean("Assembled", assembled);
+		compoundTag.putInt("Direction", direction.ordinal());
 		compoundTag.putInt("Orientation", orientation.ordinal());
 
 		compoundTag.putInt("State", state.ordinal());
@@ -798,6 +804,16 @@ public class TileEntityStargateCore extends TileEntity {
 				state = StargateState.CONNECTED;
 				currentDialingAddressSize = session.dialingAddressSize;
 				currentDialingAddress = session.originAddress.encodeAddress();
+
+				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+			}
+
+			if ((state == StargateState.CONNECTED || state == StargateState.OPENING) && animation == StargateAnimation.CLOSING) {
+				animation = StargateAnimation.NONE;
+				animationTick = 0;
+				lastAnimationTick = 0;
 
 				if (worldObj != null) {
 					worldObj.markBlockNeedsUpdate(x, y, z);

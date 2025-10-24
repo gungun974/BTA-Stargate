@@ -8,6 +8,7 @@ import gungun974.stargate.IWorldDirNameAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.entity.TileEntityDispatcher;
+import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkLoaderLegacy;
@@ -27,8 +28,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 public class StargateChunkLoader {
-	static private final World dummyWorld = new World();
-
 	public static File getWorldDir() {
 		if (EnvironmentHelper.isServerEnvironment()) {
 			return new File(MinecraftServer.getInstance().getMinecraftDir(), ((IWorldDirNameAccess) MinecraftServer.getInstance()).bta_stargate$getWorldDirName());
@@ -76,7 +75,16 @@ public class StargateChunkLoader {
 				if (!tag.containsKey("Level")) {
 					return null;
 				}
-				return loadChunkFromCompound(tag.getCompound("Level"));
+
+				World dummyWorld = new World();
+
+				dummyWorld.dimension = Dimension.getDimensionList().get(dimension);
+
+				if (dummyWorld.dimension == null) {
+					return null;
+				}
+
+				return loadChunkFromCompound(tag.getCompound("Level"), dummyWorld);
 			} catch (IOException e) {
 				return null;
 			}
@@ -85,7 +93,7 @@ public class StargateChunkLoader {
 		return null;
 	}
 
-	static public Chunk loadChunkFromCompound(CompoundTag tag) {
+	static private Chunk loadChunkFromCompound(CompoundTag tag, World dummyWorld) {
 		int version = tag.getIntegerOrDefault("Version", -1);
 		ChunkReader reader = getChunkReaderByVersion(tag, version);
 		int x = reader.getX();
@@ -125,6 +133,7 @@ public class StargateChunkLoader {
 					TileEntity tileEntity = TileEntityDispatcher.createAndLoadEntity(tileEntityTag);
 					if (tileEntity != null) {
 						chunk.addTileEntity(tileEntity);
+						tileEntity.worldObj = dummyWorld;
 					}
 				}
 			}
