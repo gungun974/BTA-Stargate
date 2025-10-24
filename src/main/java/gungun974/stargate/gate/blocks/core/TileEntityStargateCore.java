@@ -5,6 +5,8 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.world.WorldClient;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
@@ -13,6 +15,7 @@ import net.minecraft.core.net.packet.PacketTileEntityData;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
+import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
@@ -226,8 +229,45 @@ public class TileEntityStargateCore extends TileEntity {
 		return diff > 180.0 ? 360.0 - diff : diff;
 	}
 
-	private static void serverTeleport(Player entity, double newX, double newY, double newZ, float newYaw, float newPitch) {
-		((PlayerServer) entity).teleport(newX, newY, newZ, newYaw, newPitch);
+	private static void serverTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch) {
+		((PlayerServer) player).teleport(newX, newY, newZ, newYaw, newPitch);
+	}
+
+	static private void singlePlayerTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
+		if (player.dimension == dimension) {
+			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			return;
+		}
+
+		Dimension lastDim = Dimension.getDimensionList().get(player.dimension);
+		Dimension newDim = Dimension.getDimensionList().get(dimension);
+
+		StargateMod.LOGGER.info("Switching to dimension \"{}\"!!", newDim.getTranslatedName());
+
+		player.dimension = dimension;
+
+		Minecraft mc = Minecraft.getMinecraft();
+
+		mc.currentWorld.setEntityDead(player);
+		mc.thePlayer.removed = false;
+		player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+		if (player.isAlive()) {
+			mc.currentWorld.updateEntityWithOptionalForce(player, false);
+		}
+
+		WorldClient world = new WorldClient(mc.currentWorld, newDim);
+		if (newDim == lastDim.homeDim) {
+			mc.changeWorld(world, "Leaving " + lastDim.getTranslatedName(), player);
+		} else {
+			mc.changeWorld(world, "Entering " + newDim.getTranslatedName(), player);
+		}
+
+		player.world = mc.currentWorld;
+		if (player.isAlive()) {
+			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			mc.currentWorld.updateEntityWithOptionalForce(player, false);
+		}
+
 	}
 
 	public StargateState getState() {
@@ -238,7 +278,6 @@ public class TileEntityStargateCore extends TileEntity {
 	public void invalidate() {
 		stopSoundAtCenter("stargate:stargate.milkyway.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
-		StargateSessionManager.getInstance().removeSession(this);
 		super.invalidate();
 	}
 
@@ -1060,8 +1099,10 @@ public class TileEntityStargateCore extends TileEntity {
 
 		if (EnvironmentHelper.isServerEnvironment() && entity instanceof Player) {
 			serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch);
+		} else if (EnvironmentHelper.isSinglePlayer() && entity instanceof Player) {
+			singlePlayerTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
 		} else {
-			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			entity.remove();
 		}
 	}
 
