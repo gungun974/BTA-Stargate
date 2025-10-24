@@ -817,6 +817,8 @@ public class TileEntityStargateCore extends TileEntity {
 		}
 
 		if (!EnvironmentHelper.isClientWorld()) {
+			StargateDematerializedManager.getInstance().materializeEntities(this);
+
 			StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 			if (
@@ -1102,7 +1104,8 @@ public class TileEntityStargateCore extends TileEntity {
 		} else if (EnvironmentHelper.isSinglePlayer() && entity instanceof Player) {
 			singlePlayerTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
 		} else {
-			entity.remove();
+			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			StargateDematerializedManager.getInstance().dematerializeEntity(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, entity);
 		}
 	}
 
