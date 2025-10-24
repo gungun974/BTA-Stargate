@@ -5,13 +5,15 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.WorldClient;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.net.packet.Packet;
-import net.minecraft.core.net.packet.PacketTileEntityData;
+import net.minecraft.core.net.packet.*;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
@@ -19,7 +21,10 @@ import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
+import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.player.PlayerServer;
+import net.minecraft.server.world.WorldServer;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 
@@ -229,10 +234,47 @@ public class TileEntityStargateCore extends TileEntity {
 		return diff > 180.0 ? 360.0 - diff : diff;
 	}
 
-	private static void serverTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch) {
-		((PlayerServer) player).teleport(newX, newY, newZ, newYaw, newPitch);
+	@Environment(EnvType.SERVER)
+	private static void serverTeleport(Player rawPlayer, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
+		PlayerServer player = (PlayerServer) rawPlayer;
+
+		if (player.dimension == dimension) {
+			player.teleport(newX, newY, newZ, newYaw, newPitch);
+			return;
+		}
+
+		MinecraftServer ms = MinecraftServer.getInstance();
+
+		WorldServer worldServerOrigin = ms.getDimensionWorld(player.dimension);
+		player.dimension = dimension;
+		WorldServer worldServerDestination = ms.getDimensionWorld(dimension);
+		player.playerNetServerHandler.sendPacket(new PacketRespawn((byte) dimension, (byte) Registries.WORLD_TYPES.getNumericIdOfItem(worldServerDestination.worldType)));
+		worldServerOrigin.removePlayer(player);
+		player.removed = false;
+		player.teleport(newX, newY, newZ, newYaw, newPitch);
+
+		player.dimensionEnterCoordinate = new ChunkCoordinates((int) newX, (int) newY, (int) newZ);
+
+		if (player.isAlive()) {
+			worldServerOrigin.updateEntityWithOptionalForce(player, false);
+		}
+
+		if (player.isAlive()) {
+			worldServerDestination.entityJoinedWorld(player);
+			player.teleport(newX, newY, newZ, newYaw, newPitch);
+			worldServerDestination.updateEntityWithOptionalForce(player, false);
+		}
+
+		ms.playerList.syncPlayerDimension(player);
+		player.playerNetServerHandler.teleportAndRotate(newX, newY, newZ, newYaw, newPitch);
+		ms.playerList.sendPacketToAllPlayers(new PacketPlayerGamemode(player.id, player.gamemode.getId()));
+		player.setWorld(worldServerDestination);
+		ms.playerList.setTime(player, worldServerDestination);
+		ms.playerList.initializePlayerObject(player);
+		player.playerNetServerHandler.sendPacket(new PacketGameRule(ms.getDimensionWorld(0).getLevelData().getGameRules()));
 	}
 
+	@Environment(EnvType.CLIENT)
 	static private void singlePlayerTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
 		if (player.dimension == dimension) {
 			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
@@ -1100,7 +1142,7 @@ public class TileEntityStargateCore extends TileEntity {
 		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) newX, (float) newY, (float) newZ, 1.0f, 1.0f);
 
 		if (EnvironmentHelper.isServerEnvironment() && entity instanceof Player) {
-			serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch);
+			serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
 		} else if (EnvironmentHelper.isSinglePlayer() && entity instanceof Player) {
 			singlePlayerTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
 		} else {
