@@ -4,6 +4,7 @@ import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.block.entity.TileEntityDispatcher;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.world.World;
@@ -53,6 +54,38 @@ public class StargateDematerializedManager {
 
 		rootTag.putCompound("Entities", dematerializedEntitiesTag);
 
+		CompoundTag dematerializedBlocksTag = new CompoundTag();
+
+		for (int i = 0; i < dematerializedBlocks.size(); i++) {
+			StargateDematerializedBlock dematerializedBlock = dematerializedBlocks.get(i);
+
+			CompoundTag dematerializedBlockTag = new CompoundTag();
+
+			dematerializedBlockTag.putInt("DestinationX", dematerializedBlock.destinationX);
+			dematerializedBlockTag.putInt("DestinationY", dematerializedBlock.destinationY);
+			dematerializedBlockTag.putInt("DestinationZ", dematerializedBlock.destinationZ);
+			dematerializedBlockTag.putInt("DestinationDim", dematerializedBlock.destinationDim);
+
+			dematerializedBlockTag.putInt("Id", dematerializedBlock.dematerializedId);
+			dematerializedBlockTag.putInt("Meta", dematerializedBlock.dematerializedMeta);
+
+			if (dematerializedBlock.dematerializedTile != null) {
+				CompoundTag dematerializedData = new CompoundTag();
+
+				dematerializedBlock.dematerializedTile.writeToNBT(dematerializedData);
+
+				dematerializedBlockTag.putCompound("Tile", dematerializedData);
+			}
+
+			dematerializedBlockTag.putInt("X", dematerializedBlock.dematerializedX);
+			dematerializedBlockTag.putInt("Y", dematerializedBlock.dematerializedY);
+			dematerializedBlockTag.putInt("Z", dematerializedBlock.dematerializedZ);
+
+			dematerializedBlocksTag.put(String.valueOf(i), dematerializedBlockTag);
+		}
+
+		rootTag.putCompound("Blocks", dematerializedBlocksTag);
+
 		return rootTag;
 	}
 
@@ -78,6 +111,46 @@ public class StargateDematerializedManager {
 						dematerializedEntityTag.getInteger("DestinationZ"),
 						dematerializedEntityTag.getInteger("DestinationDim"),
 						dematerializedEntityTag.getCompound("Entity")
+					));
+				} catch (Exception ignored) {
+				}
+			}
+		} catch (Exception ignored) {
+		}
+
+		dematerializedBlocks.clear();
+
+		try {
+			CompoundTag dematerializedBlocksTag = rootTag.getCompound("Blocks");
+
+			for (Map.Entry<String, Tag<?>> entry : dematerializedBlocksTag.getValue().entrySet()) {
+				try {
+					final Tag<?> tag = entry.getValue();
+					if (!(tag instanceof CompoundTag)) {
+						continue;
+					}
+
+					final CompoundTag dematerializedBlockTag = (CompoundTag) tag;
+
+					TileEntity tileEntity = null;
+
+					if (dematerializedBlockTag.containsKey("Tile")) {
+						tileEntity = TileEntityDispatcher.createAndLoadEntity(
+							dematerializedBlockTag.getCompound("Tile")
+						);
+					}
+
+					dematerializedBlocks.add(new StargateDematerializedBlock(
+						dematerializedBlockTag.getInteger("DestinationX"),
+						dematerializedBlockTag.getInteger("DestinationY"),
+						dematerializedBlockTag.getInteger("DestinationZ"),
+						dematerializedBlockTag.getInteger("DestinationDim"),
+						dematerializedBlockTag.getInteger("Id"),
+						dematerializedBlockTag.getInteger("Meta"),
+						tileEntity,
+						dematerializedBlockTag.getInteger("X"),
+						dematerializedBlockTag.getInteger("Y"),
+						dematerializedBlockTag.getInteger("Z")
 					));
 				} catch (Exception ignored) {
 				}
