@@ -9,13 +9,14 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.WorldClient;
-import net.minecraft.core.block.Blocks;
+import net.minecraft.core.block.*;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.packet.*;
 import net.minecraft.core.sound.SoundCategory;
+import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.Dimension;
@@ -1296,6 +1297,8 @@ public class TileEntityStargateCore extends TileEntity {
 
 				int id = worldObj.getBlockId(x, y, z);
 
+				int meta = worldObj.getBlockMetadata(x, y, z);
+
 				if (id == Blocks.PISTON_MOVING.id()) {
 					continue;
 				}
@@ -1310,6 +1313,78 @@ public class TileEntityStargateCore extends TileEntity {
 				int newX = destinationX + alpha * drx + beta * dux;
 				int newY = destinationY + alpha * dry + beta * duy;
 				int newZ = destinationZ + alpha * drz + beta * duz;
+
+				@Nullable Block<?> block = worldObj.getBlock(x, y, z);
+
+				if (block != null && block.getLogic() instanceof BlockLogicRotatable) {
+					Direction blockDirection = BlockLogicRotatable.getDirectionFromMeta(meta);
+
+					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
+						blockDirection = destinationDirection.getOpposite();
+					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
+						blockDirection = originDirection;
+					} else {
+						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+					}
+
+					int newMeta = BlockLogicRotatable.setDirection(meta, blockDirection);
+
+					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+				}
+
+				if (block != null && block.getLogic() instanceof BlockLogicVeryRotatable) {
+					Direction blockDirection = BlockLogicVeryRotatable.metaToDirection(meta);
+
+					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
+						blockDirection = destinationDirection.getOpposite();
+					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
+						blockDirection = originDirection;
+					} else {
+						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+					}
+
+					int newMeta = BlockLogicVeryRotatable.setDirection(meta, blockDirection);
+
+					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+				}
+
+				if (block != null && block.getLogic() instanceof BlockLogicFullyRotatable) {
+					Direction blockDirection = BlockLogicFullyRotatable.metaToDirection(meta);
+
+					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
+						blockDirection = destinationDirection.getOpposite();
+					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
+						blockDirection = originDirection;
+					} else {
+						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+					}
+
+					int newMeta = meta & -8 | BlockLogicFullyRotatable.directionToMeta(blockDirection);
+
+					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+				}
+
+				if (block != null && block.getLogic() instanceof BlockLogicAxisAligned) {
+					Axis blockAxis = BlockLogicAxisAligned.metaToAxis(meta);
+
+					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
+						blockAxis = destinationDirection.getAxis();
+					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
+						blockAxis = Axis.Y;
+					} else {
+						if (destinationDirection.getAxis() != originDirection.getAxis()) {
+							if (blockAxis == Axis.X) {
+								blockAxis = Axis.Z;
+							} else if (blockAxis == Axis.Z) {
+								blockAxis = Axis.X;
+							}
+						}
+					}
+
+					int newMeta = BlockLogicAxisAligned.axisToMeta(blockAxis);
+
+					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+				}
 
 				StargateDematerializedManager.getInstance().dematerializeBlock(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, worldObj, x, y, z, newX, newY, newZ);
 				StargateSessionManager.getInstance().endSession(this);

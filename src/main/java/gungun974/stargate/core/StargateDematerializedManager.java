@@ -158,7 +158,9 @@ public class StargateDematerializedManager {
 		world.removeBlockTileEntity(sourceX, sourceY, sourceZ);
 		world.setBlockWithNotify(sourceX, sourceY, sourceZ, 0);
 
-		tileEntity.validate();
+		if (tileEntity != null) {
+			tileEntity.validate();
+		}
 
 		dematerializedBlocks.add(new StargateDematerializedBlock(
 			destinationX,
