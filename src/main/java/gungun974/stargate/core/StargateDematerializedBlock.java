@@ -1,6 +1,6 @@
 package gungun974.stargate.core;
 
-import com.mojang.nbt.tags.CompoundTag;
+import net.minecraft.core.block.entity.TileEntity;
 
 import javax.annotation.Nullable;
 
@@ -13,7 +13,7 @@ public class StargateDematerializedBlock {
 	final public int dematerializedId;
 	final public int dematerializedMeta;
 	@Nullable
-	final public CompoundTag dematerializedData;
+	final public TileEntity dematerializedTile;
 	final public int dematerializedX;
 	final public int dematerializedY;
 	final public int dematerializedZ;
@@ -25,7 +25,7 @@ public class StargateDematerializedBlock {
 		int destinationDim,
 		int dematerializedId,
 		int dematerializedMeta,
-		@Nullable CompoundTag dematerializedData,
+		@Nullable TileEntity dematerializedTile,
 		int dematerializedX,
 		int dematerializedY,
 		int dematerializedZ
@@ -36,7 +36,7 @@ public class StargateDematerializedBlock {
 		this.destinationDim = destinationDim;
 		this.dematerializedId = dematerializedId;
 		this.dematerializedMeta = dematerializedMeta;
-		this.dematerializedData = dematerializedData;
+		this.dematerializedTile = dematerializedTile;
 		this.dematerializedX = dematerializedX;
 		this.dematerializedY = dematerializedY;
 		this.dematerializedZ = dematerializedZ;
