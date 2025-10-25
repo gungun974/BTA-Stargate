@@ -10,7 +10,7 @@
   ],
   "client": [
     "MinecraftMixin",
-    "WorldClientMixin"
+    "WorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
