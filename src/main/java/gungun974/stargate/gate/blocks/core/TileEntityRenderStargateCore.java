@@ -71,10 +71,6 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		GL11.glTranslatef((float) x, (float) y, (float) z);
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
-		}
-
 		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -146,11 +142,24 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 
 		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/stargate.png");
 
+		if (LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
+		}
+
 		renderOuterRing(tessellator);
 		renderSymbolRing(tessellator, tileEntity, partialTicks);
 		renderInnerRing(tessellator, tileEntity, partialTicks);
 		renderChevrons(tessellator, tileEntity, partialTicks);
+
+		if (LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
+		}
+
 		renderIris(tessellator, tileEntity, partialTicks);
+
+		if (LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
+		}
 		switch (tileEntity.getState()) {
 			case OPENING:
 			case CONNECTED:
@@ -370,6 +379,15 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 			GL11.glTranslated(chevronDistance, 0, 0);
 		}
 
+		if (LightmapHelper.isLightmapEnabled()) {
+			int lightmap = stargateCore.getLightmap();
+			if (chevronActive) {
+				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.min(((lightmap >> 4) & 0xF) + 1, 15)));
+			} else {
+				LightmapHelper.setLightmapCoord(lightmap);
+			}
+		}
+
 		tessellator.startDrawingQuads();
 
 		GL11.glDisable(GL11.GL_LIGHTING);
@@ -438,6 +456,11 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 		if (!chevronActive) {
 			GL11.glColor3d(0.4, 0.4, 0.4);
 		}
+
+		if (chevronActive && LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
+		}
+
 		tessellator.startDrawingQuads();
 
 		// Face 4

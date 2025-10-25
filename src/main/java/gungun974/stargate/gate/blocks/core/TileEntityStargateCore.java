@@ -8,6 +8,7 @@ import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.world.WorldClient;
 import net.minecraft.core.block.*;
 import net.minecraft.core.block.entity.TileEntity;
@@ -1665,5 +1666,38 @@ public class TileEntityStargateCore extends TileEntity {
 
 	public StargateAddress getAddress() {
 		return StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
+	}
+
+	public int getLightmap() {
+		if (worldObj == null) {
+			return LightmapHelper.getLightmapCoord(15, 15);
+		}
+
+		Direction originDirection = getDirection();
+		Direction originOrientation = getOrientation();
+
+		int originX, originY, originZ;
+
+		if (originOrientation == Direction.NORTH) {
+			originX = x;
+			originY = y + 3;
+			originZ = z;
+		} else {
+			originX = x + originDirection.getOffsetX() * 3;
+			originY = y;
+			originZ = z + originDirection.getOffsetZ() * 3;
+
+			if (originDirection.getOffsetX() < 0) {
+				originX += 1;
+				originZ += 1;
+			}
+
+			if (originDirection.getOffsetZ() < 0) {
+				originZ += 1;
+				originX += 1;
+			}
+		}
+
+		return worldObj.getLightmapCoord(originX, originY, originZ, worldObj.getBlockLightValue(originX, originY, originZ));
 	}
 }
