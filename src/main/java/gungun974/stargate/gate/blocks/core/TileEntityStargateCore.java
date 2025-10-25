@@ -9,6 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.WorldClient;
+import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
@@ -769,6 +770,7 @@ public class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void tick() {
 		if (state == StargateState.CONNECTED && worldObj != null) {
+			this.teleportBlocks();
 			Direction orientation = getOrientation();
 
 			Direction direction = getDirection();
@@ -860,6 +862,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 		if (!EnvironmentHelper.isClientWorld()) {
 			StargateDematerializedManager.getInstance().materializeEntities(this);
+			StargateDematerializedManager.getInstance().materializeBlocks(this);
 
 			StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
@@ -1148,6 +1151,169 @@ public class TileEntityStargateCore extends TileEntity {
 		} else {
 			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
 			StargateDematerializedManager.getInstance().dematerializeEntity(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, entity);
+		}
+	}
+
+	private void teleportBlocks() {
+		if (EnvironmentHelper.isClientWorld()) {
+			return;
+		}
+
+		if (worldObj == null) {
+			return;
+		}
+
+		StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+		if (session == null) {
+			return;
+		}
+
+		if (session.destinationX == x && session.destinationY == y && session.destinationZ == z) {
+			return;
+		}
+
+
+		Direction originDirection = getDirection();
+		Direction originOrientation = getOrientation();
+
+		Direction destinationDirection = session.destinationDirection;
+		Direction destinationOrientation = session.destinationOrientation;
+
+		int originX, originY, originZ;
+		int destinationX, destinationY, destinationZ;
+
+		if (originOrientation == Direction.NORTH) {
+			originX = x;
+			originY = y + 3;
+			originZ = z;
+		} else {
+			originX = x + originDirection.getOffsetX() * 3;
+			originY = y;
+			originZ = z + originDirection.getOffsetZ() * 3;
+
+			if (originDirection.getOffsetX() < 0) {
+				originX += 1;
+				originZ += 1;
+			}
+
+			if (originDirection.getOffsetZ() < 0) {
+				originZ += 1;
+				originX += 1;
+			}
+		}
+
+		if (destinationOrientation == Direction.NORTH) {
+			destinationX = session.destinationX;
+			destinationY = session.destinationY + 3;
+			destinationZ = session.destinationZ;
+		} else {
+			destinationX = session.destinationX + destinationDirection.getOffsetX() * 3;
+			destinationY = session.destinationY;
+			destinationZ = session.destinationZ + destinationDirection.getOffsetZ() * 3;
+
+			if (destinationDirection.getOffsetX() < 0) {
+				destinationX += 1;
+				destinationZ += 1;
+			}
+
+			if (destinationDirection.getOffsetZ() < 0) {
+				destinationZ += 1;
+				destinationX += 1;
+			}
+		}
+
+		int onx, ony, onz;
+		if (originOrientation == Direction.NORTH) {
+			onx = originDirection.getOffsetX();
+			ony = 0;
+			onz = originDirection.getOffsetZ();
+		} else {
+			onx = 0;
+			ony = -originOrientation.getOffsetY();
+			onz = 0;
+		}
+
+		int oux, ouy, ouz;
+		if (ony != 0) {
+			oux = originDirection.getOffsetX();
+			ouy = 0;
+			ouz = originDirection.getOffsetZ();
+		} else {
+			oux = 0;
+			ouy = 1;
+			ouz = 0;
+		}
+
+		int orx = ony * ouz - onz * ouy;
+		int ory = 0;
+		int orz = onx * ouy - ony * oux;
+
+		int ddx, ddy, ddz;
+		if (destinationOrientation != Direction.NORTH) {
+			ddx = 0;
+			ddy = destinationOrientation.getOffsetY();
+			ddz = 0;
+		} else {
+			ddx = -destinationDirection.getOffsetX();
+			ddy = 0;
+			ddz = -destinationDirection.getOffsetZ();
+		}
+
+		int dux, duy, duz;
+		if (Math.abs(ddy) == 1) {
+			dux = destinationDirection.getOffsetX();
+			duy = 0;
+			duz = destinationDirection.getOffsetZ();
+		} else {
+			dux = 0;
+			duy = 1;
+			duz = 0;
+		}
+		int drx = ddy * duz - ddz * duy;
+		int dry = 0;
+		int drz = ddx * duy - ddy * dux;
+
+		for (int i = -2; i <= 2; i++) {
+			for (int j = -2; j <= 2; j++) {
+				if ((i == -2 || i == 2) && (j == -2 || j == 2)) {
+					continue;
+				}
+
+				int x = originX + i * originDirection.getOffsetZ();
+				int y = originY + j;
+				int z = originZ + i * originDirection.getOffsetX();
+
+				if (originOrientation != Direction.NORTH) {
+					x = originX + i * originDirection.getOffsetZ() + j * originDirection.getOffsetX();
+					y = originY;
+					z = originZ + i * originDirection.getOffsetX() + j * originDirection.getOffsetZ();
+				}
+
+				if (worldObj.isAirBlock(x, y, z)) {
+					continue;
+				}
+
+				int id = worldObj.getBlockId(x, y, z);
+
+				if (id == Blocks.PISTON_MOVING.id()) {
+					continue;
+				}
+
+				int dx = x - originX;
+				int dy = y - originY;
+				int dz = z - originZ;
+
+				int alpha = dx * orx + dy * ory + dz * orz;
+				int beta = dx * oux + dy * ouy + dz * ouz;
+
+				int newX = destinationX + alpha * drx + beta * dux;
+				int newY = destinationY + alpha * dry + beta * duy;
+				int newZ = destinationZ + alpha * drz + beta * duz;
+
+				StargateDematerializedManager.getInstance().dematerializeBlock(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, worldObj, x, y, z, newX, newY, newZ);
+				StargateSessionManager.getInstance().endSession(this);
+			}
 		}
 	}
 

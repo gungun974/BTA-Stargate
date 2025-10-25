@@ -3,8 +3,11 @@ package gungun974.stargate.core;
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.block.entity.TileEntityDispatcher;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
+import net.minecraft.core.world.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -16,6 +19,7 @@ public class StargateDematerializedManager {
 	private static StargateDematerializedManager instance;
 
 	private final List<StargateDematerializedEntity> dematerializedEntities = new ArrayList<>();
+	private final List<StargateDematerializedBlock> dematerializedBlocks = new ArrayList<>();
 
 	private StargateDematerializedManager() {
 	}
@@ -132,6 +136,111 @@ public class StargateDematerializedManager {
 
 			iterator.remove();
 		}
+	}
 
+	public void dematerializeBlock(
+		int destinationX,
+		int destinationY,
+		int destinationZ,
+		int destinationDim,
+		World world,
+		int sourceX,
+		int sourceY,
+		int sourceZ,
+		int targetX,
+		int targetY,
+		int targetZ
+	) {
+		int id = world.getBlockId(sourceX, sourceY, sourceZ);
+		int meta = world.getBlockMetadata(sourceX, sourceY, sourceZ);
+
+		CompoundTag dematerializedData = null;
+
+		TileEntity tileEntity = world.getTileEntity(sourceX, sourceY, sourceZ);
+
+		if (tileEntity != null) {
+			dematerializedData = new CompoundTag();
+			tileEntity.writeToNBT(dematerializedData);
+		}
+
+		world.removeBlockTileEntity(sourceX, sourceY, sourceZ);
+		world.setBlock(sourceX, sourceY, sourceZ, 0);
+
+		dematerializedBlocks.add(new StargateDematerializedBlock(
+			destinationX,
+			destinationY,
+			destinationZ,
+			destinationDim,
+			id,
+			meta,
+			dematerializedData,
+			targetX,
+			targetY,
+			targetZ
+		));
+	}
+
+	public void materializeBlocks(TileEntityStargateCore gate) {
+		if (gate == null) {
+			return;
+		}
+
+		if (gate.worldObj == null) {
+			return;
+		}
+
+		int dim = gate.worldObj.dimension.id;
+
+		Iterator<StargateDematerializedBlock> iterator = dematerializedBlocks.iterator();
+
+		while (iterator.hasNext()) {
+			StargateDematerializedBlock dematerializedBlock = iterator.next();
+
+			if (gate.x != dematerializedBlock.destinationX || gate.y != dematerializedBlock.destinationY || gate.z != dematerializedBlock.destinationZ || dim != dematerializedBlock.destinationDim) {
+				continue;
+			}
+
+			int id = gate.worldObj.getBlockId(
+				dematerializedBlock.dematerializedX,
+				dematerializedBlock.dematerializedY,
+				dematerializedBlock.dematerializedZ
+			);
+
+			int meta = gate.worldObj.getBlockMetadata(
+				dematerializedBlock.dematerializedX,
+				dematerializedBlock.dematerializedY,
+				dematerializedBlock.dematerializedZ
+			);
+
+			if (id == dematerializedBlock.dematerializedId && meta == dematerializedBlock.dematerializedId && dematerializedBlock.dematerializedData == null) {
+				iterator.remove();
+				continue;
+			}
+
+			gate.worldObj.setBlockAndMetadataRaw(
+				dematerializedBlock.dematerializedX,
+				dematerializedBlock.dematerializedY,
+				dematerializedBlock.dematerializedZ,
+				dematerializedBlock.dematerializedId,
+				dematerializedBlock.dematerializedMeta
+			);
+			gate.worldObj.notifyBlockChange(
+				dematerializedBlock.dematerializedX,
+				dematerializedBlock.dematerializedY,
+				dematerializedBlock.dematerializedZ,
+				dematerializedBlock.dematerializedId
+			);
+
+			if (dematerializedBlock.dematerializedData != null) {
+				gate.worldObj.replaceBlockTileEntity(
+					dematerializedBlock.dematerializedX,
+					dematerializedBlock.dematerializedY,
+					dematerializedBlock.dematerializedZ,
+					TileEntityDispatcher.createAndLoadEntity(dematerializedBlock.dematerializedData)
+				);
+			}
+
+			iterator.remove();
+		}
 	}
 }
