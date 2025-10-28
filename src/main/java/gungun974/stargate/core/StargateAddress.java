@@ -107,7 +107,7 @@ public class StargateAddress {
 
 	@Nullable
 	static public StargateAddress createAddressFromEncoded(int[] address) {
-		if (address == null || address.length < 8) {
+		if (address == null || address.length < 7) {
 			return null;
 		}
 
@@ -163,8 +163,7 @@ public class StargateAddress {
 
 		int idxLocal = symbols.indexOf(address[7]);
 		if (idxLocal < 0) {
-			StargateMod.LOGGER.info("G");
-			return null;
+			return new StargateAddress(x, z, dim, 2, 2);
 		}
 
 		int gx = idxLocal / 5;

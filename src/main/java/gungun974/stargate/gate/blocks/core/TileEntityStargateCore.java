@@ -1575,16 +1575,26 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			StargateAddress stargateAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress);
+			if (currentDialingAddressSize < 7) {
+				cancelDial(x, y, z);
+				return;
+			}
 
-			if (stargateAddress == null) {
-				state = StargateState.IDLE;
-				currentDialingAddressSize = 0;
+			if (currentDialingAddressSize == 7) {
+				int[] originAddress = this.getAddress().encodeAddress();
 
-				if (worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
-				}
+				currentDialingAddress[6] = originAddress[6];
+				currentDialingAddress[7] = -1;
+				currentDialingAddress[8] = 0;
+			} else if (currentDialingAddressSize == 8) {
+				currentDialingAddress[7] = -1;
+				currentDialingAddress[8] = 0;
+			}
 
+			StargateAddress destinationAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress);
+
+			if (destinationAddress == null) {
+				cancelDial(x, y, z);
 				return;
 			}
 
@@ -1593,11 +1603,11 @@ public class TileEntityStargateCore extends TileEntity {
 			int x = 0;
 			int y = 0;
 			int z = 0;
-			int dim = stargateAddress.dim;
+			int dim = destinationAddress.dim;
 
 			main_loop:
-			for (int cx = stargateAddress.getStartChunkX(); cx <= stargateAddress.getEndChunkX(); cx++) {
-				for (int cz = stargateAddress.getStartChunkZ(); cz <= stargateAddress.getEndChunkZ(); cz++) {
+			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
+				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
 					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, cx, cz);
 
 					if (chunk == null) {
@@ -1621,13 +1631,7 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 
 			if (!found) {
-				state = StargateState.IDLE;
-				currentDialingAddressSize = 0;
-
-				if (worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
-				}
-
+				cancelDial(x, y, z);
 				return;
 			}
 
@@ -1635,14 +1639,14 @@ public class TileEntityStargateCore extends TileEntity {
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
 
 			if (chunk == null) {
-				state = StargateState.IDLE;
+				cancelDial(x, y, z);
 				return;
 			}
 
 			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(x & 15, y, z & 15);
 
 			if (this == destinationGate || destinationGate == null || !destinationGate.isAssembled()) {
-				state = StargateState.IDLE;
+				cancelDial(x, y, z);
 				return;
 			}
 
@@ -1651,6 +1655,15 @@ public class TileEntityStargateCore extends TileEntity {
 			destinationGate.openGate();
 			openGate();
 		});
+	}
+
+	private void cancelDial(int x, int y, int z) {
+		state = StargateState.IDLE;
+		currentDialingAddressSize = 0;
+
+		if (worldObj != null) {
+			worldObj.markBlockNeedsUpdate(x, y, z);
+		}
 	}
 
 	private void openGate() {
@@ -1699,8 +1712,8 @@ public class TileEntityStargateCore extends TileEntity {
 			fastEncode(13);
 			fastEncode(34);
 			fastEncode(9);
-			fastEncode(1);
-			fastEncode(38);
+			//fastEncode(1);
+			//fastEncode(38);
 			fastEncode(0);
 		} else {
 			fastEncode(17);
@@ -1709,8 +1722,8 @@ public class TileEntityStargateCore extends TileEntity {
 			fastEncode(27);
 			fastEncode(26);
 			fastEncode(21);
-			fastEncode(1);
-			fastEncode(9);
+			//fastEncode(1);
+			//fastEncode(9);
 			fastEncode(0);
 		}
 
