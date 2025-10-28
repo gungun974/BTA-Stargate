@@ -25,6 +25,7 @@ import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.core.world.chunk.ChunkPosition;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.player.PlayerServer;
 import net.minecraft.server.world.WorldServer;
@@ -34,6 +35,7 @@ import turniplabs.halplibe.helper.network.NetworkHandler;
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 public class TileEntityStargateCore extends TileEntity {
@@ -1573,16 +1575,62 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			int x = -23;
-			int y = 7;
-			int z = -14;
-			int dim = 0;
+			StargateAddress stargateAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress);
 
-			if (EnvironmentHelper.isSinglePlayer()) {
-				x = -3;
-				y = 7;
-				z = 6;
+			if (stargateAddress == null) {
+				state = StargateState.IDLE;
+				currentDialingAddressSize = 0;
+
+				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+
+				return;
 			}
+
+			boolean found = false;
+
+			int x = 0;
+			int y = 0;
+			int z = 0;
+			int dim = stargateAddress.dim;
+
+			main_loop:
+			for (int cx = stargateAddress.getStartChunkX(); cx <= stargateAddress.getEndChunkX(); cx++) {
+				for (int cz = stargateAddress.getStartChunkZ(); cz <= stargateAddress.getEndChunkZ(); cz++) {
+					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, cx, cz);
+
+					if (chunk == null) {
+						continue;
+					}
+
+					for (Map.Entry<ChunkPosition, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
+						TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
+
+						if (tileEntity instanceof TileEntityStargateCore) {
+							found = true;
+
+							x = tileEntity.x;
+							y = tileEntity.y;
+							z = tileEntity.z;
+
+							break main_loop;
+						}
+					}
+				}
+			}
+
+			if (!found) {
+				state = StargateState.IDLE;
+				currentDialingAddressSize = 0;
+
+				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+
+				return;
+			}
+
 
 			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
 
@@ -1644,13 +1692,28 @@ public class TileEntityStargateCore extends TileEntity {
 //		moveToSymbol(0);
 //		encode();
 
-		fastEncode(26);
-		fastEncode(6);
-		fastEncode(14);
-		fastEncode(31);
-		fastEncode(11);
-		fastEncode(29);
-		fastEncode(0);
+		if (x == 9989 && y == 7 && z == 9) {
+			fastEncode(27);
+			fastEncode(31);
+			fastEncode(36);
+			fastEncode(13);
+			fastEncode(34);
+			fastEncode(9);
+			fastEncode(1);
+			fastEncode(38);
+			fastEncode(0);
+		} else {
+			fastEncode(17);
+			fastEncode(8);
+			fastEncode(31);
+			fastEncode(27);
+			fastEncode(26);
+			fastEncode(21);
+			fastEncode(1);
+			fastEncode(9);
+			fastEncode(0);
+		}
+
 		dial();
 
 		StargateMod.LOGGER.info("State: {}", state);

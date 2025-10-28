@@ -120,7 +120,6 @@ public class StargateAddress {
 		final long plane = S * S;
 
 		if (partialPermutation(N, 6) < plane || (N - 6) < (DIM_MAX - DIM_MIN + 1)) {
-			StargateMod.LOGGER.info("B");
 			return null;
 		}
 
@@ -130,7 +129,6 @@ public class StargateAddress {
 			int base = symbols.size();
 			int idx = symbols.indexOf(address[i]);
 			if (idx < 0) {
-				StargateMod.LOGGER.info("C");
 				return null;
 			}
 			rankXZ += (long) idx * mult;
@@ -139,18 +137,16 @@ public class StargateAddress {
 		}
 
 		if (rankXZ < 0 || rankXZ >= plane) {
-			StargateMod.LOGGER.info("D");
 			return null;
 		}
 
 		int idxDim = symbols.indexOf(address[6]);
 		if (idxDim < 0) {
-			StargateMod.LOGGER.info("E");
+			StargateMod.LOGGER.info("{}", idxDim);
 			return null;
 		}
 		int dim = idxDim + DIM_MIN;
 		if (dim > DIM_MAX) {
-			StargateMod.LOGGER.info("F");
 			return null;
 		}
 		symbols.remove(idxDim);
@@ -178,11 +174,27 @@ public class StargateAddress {
 	}
 
 	public int getBlockX() {
-		return x * distanceBetweenGate();
+		return x * distanceBetweenGate() + distanceBetweenGate() / 2;
 	}
 
 	public int getBlockZ() {
-		return z * distanceBetweenGate();
+		return z * distanceBetweenGate() + distanceBetweenGate() / 2;
+	}
+
+	public int getStartChunkX() {
+		return x * distanceBetweenGate() / 16;
+	}
+
+	public int getStartChunkZ() {
+		return z * distanceBetweenGate() / 16;
+	}
+
+	public int getEndChunkX() {
+		return (x + 1) * distanceBetweenGate() / 16 - 1;
+	}
+
+	public int getEndChunkZ() {
+		return (z + 1) * distanceBetweenGate() / 16 - 1;
 	}
 
 	public int[] encodeAddress() {
