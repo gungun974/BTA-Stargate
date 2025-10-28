@@ -892,10 +892,17 @@ public class TileEntityStargateCore extends TileEntity {
 
 			if (state != StargateState.CONNECTED && session != null && animation != StargateAnimation.KAWOOSH) {
 				state = StargateState.CONNECTED;
-				currentDialingAddressSize = session.dialingAddressSize;
-				currentDialingAddress = session.originAddress.encodeAddress();
 
 				if (worldObj != null) {
+					worldObj.markBlockNeedsUpdate(x, y, z);
+				}
+			}
+
+			if (state == StargateState.CONNECTED && session != null && animation != StargateAnimation.KAWOOSH) {
+				boolean needUpdate = currentDialingAddressSize != session.dialingAddressSize;
+				currentDialingAddressSize = session.dialingAddressSize;
+
+				if (needUpdate && worldObj != null) {
 					worldObj.markBlockNeedsUpdate(x, y, z);
 				}
 			}
@@ -1712,8 +1719,8 @@ public class TileEntityStargateCore extends TileEntity {
 			fastEncode(13);
 			fastEncode(34);
 			fastEncode(9);
-			//fastEncode(1);
-			//fastEncode(38);
+			fastEncode(1);
+			fastEncode(38);
 			fastEncode(0);
 		} else {
 			fastEncode(17);
