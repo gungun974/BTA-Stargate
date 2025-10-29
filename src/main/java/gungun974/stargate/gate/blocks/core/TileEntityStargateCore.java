@@ -555,21 +555,21 @@ public class TileEntityStargateCore extends TileEntity {
 	}
 
 	public boolean interpolatedChevronActive(int chevron, double partialTicks) {
-		int currentEncodedChevron = 6 < currentDialingAddressSize ? currentDialingAddressSize + 1 : currentDialingAddressSize;
-
 		boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
 
-		currentEncodedChevron = isLastChevronActive && currentDialingAddressSize != 9 ? currentEncodedChevron - 1 : currentEncodedChevron;
+		final int[] ORDER = {0, 1, 2, 3, 4, 5, 7, 8, 6};
 
-		if (animation == StargateAnimation.ENCODE_CHEVRON) {
-			if (chevron < currentEncodedChevron - 1 && chevron != 6) {
-				return true;
-			}
+		if (currentDialingAddressSize == 0) {
+			return false;
+		}
 
-			if (chevron != currentEncodedChevron - 1 && chevron != 6) {
-				return false;
-			}
+		int currentEncodedChevron = ORDER[currentDialingAddressSize - 1];
 
+		if (isLastChevronActive) {
+			currentEncodedChevron -= 1;
+		}
+
+		if (animation == StargateAnimation.ENCODE_CHEVRON && ((!isLastChevronActive && chevron == currentEncodedChevron) || chevron == 6)) {
 			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
 
 			if (chevron == 6) {
@@ -580,29 +580,21 @@ public class TileEntityStargateCore extends TileEntity {
 			}
 
 			return currentAnimationTick > 30.67;
-		} else if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
-			if (chevron < currentEncodedChevron - 1 && chevron != 6) {
-				return true;
-			}
-
-			if (chevron != currentEncodedChevron - 1 && chevron != 6) {
-				return false;
-			}
-
+		} else if (animation == StargateAnimation.FAST_ENCODE_CHEVRON && ((!isLastChevronActive && chevron == currentEncodedChevron && chevron != 6) || (isLastChevronActive && chevron == 6))) {
 			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
 
-			if (chevron == 6 && !isLastChevronActive) {
-				return false;
-			}
-
 			return currentAnimationTick > (double) StargateAnimation.FAST_ENCODE_CHEVRON.duration / 2;
-		} else {
-			if (chevron == 6) {
-				return isLastChevronActive;
-			}
-
-			return chevron < currentEncodedChevron;
 		}
+
+		if (currentDialingAddressSize == 9) {
+			return true;
+		}
+
+		if (chevron == 6) {
+			return isLastChevronActive;
+		}
+
+		return chevron <= currentEncodedChevron;
 
 	}
 
@@ -1423,7 +1415,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 		ringMove = true;
 
-		double angleSpeed = Math.min(angleDistance, 1);
+		double angleSpeed = Math.min(angleDistance, 1.5);
 
 		if (ringDirection) {
 			currentAngle -= angleSpeed;
