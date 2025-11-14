@@ -33,10 +33,7 @@ import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 
 import javax.annotation.Nullable;
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 public class TileEntityStargateCore extends TileEntity {
 	public final static double symbolAngle = 360.0 / StargateAddress.NUMBER_OF_SYMBOL;
@@ -1597,17 +1594,11 @@ public class TileEntityStargateCore extends TileEntity {
 				return;
 			}
 
-			boolean found = false;
+			List<StargateLocation> locations = new ArrayList<>();
 
-			int x = 0;
-			int y = 0;
-			int z = 0;
-			int dim = destinationAddress.dim;
-
-			main_loop:
 			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
 				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
-					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, cx, cz);
+					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, destinationAddress.dim, cx, cz);
 
 					if (chunk == null) {
 						continue;
@@ -1617,37 +1608,50 @@ public class TileEntityStargateCore extends TileEntity {
 						TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
 
 						if (tileEntity instanceof TileEntityStargateCore) {
-							found = true;
+							TileEntityStargateCore destinationGate = (TileEntityStargateCore) tileEntity;
 
-							x = tileEntity.x;
-							y = tileEntity.y;
-							z = tileEntity.z;
-
-							break main_loop;
+							if (this != destinationGate && destinationGate.isAssembled()) {
+								locations.add(new StargateLocation(
+									tileEntity.x,
+									tileEntity.y,
+									tileEntity.z,
+									destinationAddress.dim,
+									destinationAddress
+								));
+							}
 						}
 					}
 				}
 			}
 
-			if (!found) {
+			if (locations.isEmpty()) {
 				cancelDial(x, y, z);
 				return;
 			}
 
+			StargateLocation target = locations.get(0);
+			int closestDistance = Integer.MAX_VALUE;
 
-			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, dim, Math.floorDiv(x, 16), Math.floorDiv(z, 16));
+			for (StargateLocation location : locations) {
+				int diffX = destinationAddress.getBlockX() - location.x;
+				int diffY = 255 - location.y;
+				int diffZ = destinationAddress.getBlockZ() - location.z;
+				int distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+
+				if (distance < closestDistance) {
+					target = location;
+					closestDistance = distance;
+				}
+			}
+
+			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
 
 			if (chunk == null) {
 				cancelDial(x, y, z);
 				return;
 			}
 
-			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(x & 15, y, z & 15);
-
-			if (this == destinationGate || destinationGate == null || !destinationGate.isAssembled()) {
-				cancelDial(x, y, z);
-				return;
-			}
+			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(target.x & 15, target.y, target.z & 15);
 
 			StargateSessionManager.getInstance().createSession(this, destinationGate, currentDialingAddressSize);
 

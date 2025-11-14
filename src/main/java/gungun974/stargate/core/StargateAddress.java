@@ -173,11 +173,11 @@ public class StargateAddress {
 	}
 
 	public int getBlockX() {
-		return x * distanceBetweenGate() + distanceBetweenGate() / 2;
+		return x * distanceBetweenGate() + distanceBetweenGate() * gx / 5;
 	}
 
 	public int getBlockZ() {
-		return z * distanceBetweenGate() + distanceBetweenGate() / 2;
+		return z * distanceBetweenGate() + distanceBetweenGate() * gz / 5;
 	}
 
 	public int getStartChunkX() {
