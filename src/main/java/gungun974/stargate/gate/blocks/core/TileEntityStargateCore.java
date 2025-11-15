@@ -1653,6 +1653,13 @@ public class TileEntityStargateCore extends TileEntity {
 
 			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(target.x & 15, target.y, target.z & 15);
 
+			StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
+
+			if (currentPresentSession != null) {
+				cancelDial(x, y, z);
+				return;
+			}
+
 			StargateSessionManager.getInstance().createSession(this, destinationGate, currentDialingAddressSize);
 
 			destinationGate.openGate();
