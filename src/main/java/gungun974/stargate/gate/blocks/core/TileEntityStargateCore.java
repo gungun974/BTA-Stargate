@@ -1435,6 +1435,9 @@ public class TileEntityStargateCore extends TileEntity {
 			if (animation == StargateAnimation.CLOSING) {
 				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
+			if (animation == StargateAnimation.CANCEL) {
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
 		}
 
 		lastAnimation = animation;
@@ -1674,6 +1677,8 @@ public class TileEntityStargateCore extends TileEntity {
 		if (worldObj != null) {
 			worldObj.markBlockNeedsUpdate(x, y, z);
 		}
+
+		playAnimation(StargateAnimation.CANCEL);
 	}
 
 	private void openGate() {

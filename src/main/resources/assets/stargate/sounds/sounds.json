@@ -3,8 +3,6 @@
     "sounds": [
       {
         "name": "milkyway/roll_long.ogg",
-        "volume": 1,
-        "attenuation_distance": 128,
         "stream": true
       }
     ]
@@ -34,6 +32,11 @@
       "milkyway/fast_encode5.ogg",
       "milkyway/fast_encode6.ogg",
       "milkyway/fast_encode7.ogg"
+    ]
+  },
+  "stargate.milkyway.dial.fail": {
+    "sounds": [
+      "milkyway/dial_fail.ogg"
     ]
   },
   "stargate.evenHorizon.open": {

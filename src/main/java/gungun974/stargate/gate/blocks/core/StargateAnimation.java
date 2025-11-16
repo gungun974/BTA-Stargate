@@ -5,7 +5,8 @@ public enum StargateAnimation {
 	ENCODE_CHEVRON(48),
 	FAST_ENCODE_CHEVRON(8),
 	KAWOOSH(56),
-	CLOSING(56);
+	CLOSING(56),
+	CANCEL(40);
 
 	final int duration;
 
