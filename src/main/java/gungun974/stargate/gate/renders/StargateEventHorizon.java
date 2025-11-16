@@ -1,4 +1,4 @@
-package gungun974.stargate.gate.blocks.core;
+package gungun974.stargate.gate.renders;
 
 import java.util.Random;
 
@@ -46,7 +46,7 @@ public class StargateEventHorizon {
 		return eventHorizonGrid;
 	}
 
-	void applyRandomImpulse() {
+	public void applyRandomImpulse() {
 		double[][] v = getEventHorizonGrid()[1];
 		int m = TileEntityRenderStargateCore.eventHorizonGridRadialSize;
 		int n = TileEntityRenderStargateCore.eventHorizonGridPolarSize;
@@ -55,7 +55,7 @@ public class StargateEventHorizon {
 		v[j][i] += 0.02 * random.nextGaussian();
 	}
 
-	void updateEventHorizon() {
+	public void updateEventHorizon() {
 		double[][][] grid = getEventHorizonGrid();
 		double[][] u = grid[0];
 		double[][] v = grid[1];

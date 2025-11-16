@@ -2,7 +2,7 @@ package gungun974.stargate.core;
 
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.core.util.helper.Direction;
 import org.jetbrains.annotations.NotNull;
 import turniplabs.halplibe.helper.EnvironmentHelper;

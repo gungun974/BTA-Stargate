@@ -1,6 +1,6 @@
-package gungun974.stargate.gate.blocks.ring;
+package gungun974.stargate.gate.renders;
 
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.client.render.block.model.BlockModelStandard;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.texture.stitcher.IconCoordinate;

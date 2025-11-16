@@ -1,9 +1,11 @@
-package gungun974.stargate.gate.blocks.core;
+package gungun974.stargate.gate.tiles;
 
 import com.mojang.nbt.tags.CompoundTag;
-import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
+import gungun974.stargate.gate.blocks.BlockLogicStargateCore;
+import gungun974.stargate.gate.blocks.BlockLogicStargateRing;
+import gungun974.stargate.gate.renders.StargateEventHorizon;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -396,7 +398,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 				int id = world.getBlockId(px, py, pz);
 
-				if (id != StargateBlocks.STARGATE_RING.id()) {
+				if (id != this.getRingBlock().id()) {
 					return false;
 				}
 
@@ -452,7 +454,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 				int id = world.getBlockId(px, py, pz);
 
-				if (id != StargateBlocks.STARGATE_RING.id()) {
+				if (id != this.getRingBlock().id()) {
 					return false;
 				}
 
@@ -1752,6 +1754,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	}
 
 	public abstract StargateFamily getFamily();
+
+	public abstract Block<BlockLogicStargateRing> getRingBlock();
 
 	public Direction getOrientation() {
 		return orientation;

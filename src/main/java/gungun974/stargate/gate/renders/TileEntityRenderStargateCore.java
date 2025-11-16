@@ -1,26 +1,13 @@
-package gungun974.stargate.gate.blocks.core;
+package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.StargateState;
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
 import net.minecraft.core.util.helper.Direction;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-
-enum TextureIndex {
-	RING_FACE(1),
-	RING(0),
-	RING_SYMBOL(32),
-	CHEVRON(3),
-	CHEVRON_LIT(2);
-
-	public final int index;
-
-	TextureIndex(int index) {
-		this.index = index;
-	}
-}
 
 public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityStargateCore> {
 	public final static int eventHorizonGridRadialSize = 8;

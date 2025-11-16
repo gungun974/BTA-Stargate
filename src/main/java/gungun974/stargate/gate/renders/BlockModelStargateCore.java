@@ -1,5 +1,6 @@
-package gungun974.stargate.gate.blocks.core;
+package gungun974.stargate.gate.renders;
 
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.client.render.block.model.BlockModelHorizontalRotation;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.block.Block;

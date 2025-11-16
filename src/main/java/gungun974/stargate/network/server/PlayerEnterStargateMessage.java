@@ -2,7 +2,7 @@ package gungun974.stargate.network.server;
 
 import gungun974.stargate.core.StargateSession;
 import gungun974.stargate.core.StargateSessionManager;
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.block.entity.TileEntity;

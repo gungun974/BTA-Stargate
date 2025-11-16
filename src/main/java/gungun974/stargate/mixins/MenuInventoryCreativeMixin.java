@@ -37,7 +37,19 @@ public class MenuInventoryCreativeMixin {
 			return;
 		}
 
-		if (block.id() == StargateBlocks.STARGATE_RING.id()) {
+		if (block.id() == StargateBlocks.STARGATE_RING_MILKYWAY.id()) {
+			int before = creativeItems.size();
+			creativeItems.add(new ItemStack(block, 1, 1));
+			extraCount += creativeItems.size() - before;
+		}
+
+		if (block.id() == StargateBlocks.STARGATE_RING_PEGASUS.id()) {
+			int before = creativeItems.size();
+			creativeItems.add(new ItemStack(block, 1, 1));
+			extraCount += creativeItems.size() - before;
+		}
+
+		if (block.id() == StargateBlocks.STARGATE_RING_UNIVERSE.id()) {
 			int before = creativeItems.size();
 			creativeItems.add(new ItemStack(block, 1, 1));
 			extraCount += creativeItems.size() - before;

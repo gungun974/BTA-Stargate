@@ -1,36 +1,19 @@
-package gungun974.stargate.gate.blocks.ring;
+package gungun974.stargate.gate.blocks;
 
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.core.block.Block;
-import net.minecraft.core.block.BlockLogic;
+import net.minecraft.core.block.BlockLogicRotatable;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
-public class BlockLogicStargateRing extends BlockLogic {
-	public BlockLogicStargateRing(Block<?> block, Material material) {
+public class BlockLogicStargateCore extends BlockLogicRotatable {
+	public BlockLogicStargateCore(Block<?> block, Material material) {
 		super(block, material);
-	}
-
-	public String getLanguageKey(int meta) {
-		if (meta == 1) {
-			return "tile.stargate.stargate.chevron";
-		}
-		return this.block.getKey();
-	}
-
-	@Override
-	public int getPlacedBlockMetadata(@Nullable Player player, ItemStack stack, World world, int x, int y, int z, Side side, double xPlaced, double yPlaced) {
-		if (stack.getMetadata() == 1) {
-			return 1;
-		}
-		return 0;
 	}
 
 	@Override

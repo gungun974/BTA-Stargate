@@ -1,3 +1,11 @@
-tile.stargate.stargate.core.name = Stargate Core
-tile.stargate.stargate.ring.name = Stargate Ring
-tile.stargate.stargate.chevron.name = Stargate Chevron
+tile.stargate.stargate.core.milkyway.name = Milky Way Stargate Core
+tile.stargate.stargate.ring.milkyway.name = Milky Way Stargate Ring
+tile.stargate.stargate.chevron.milkyway.name = Milky Way Stargate Chevron
+
+tile.stargate.stargate.core.pegasus.name = Pegasus Stargate Core
+tile.stargate.stargate.ring.pegasus.name = Pegasus Stargate Ring
+tile.stargate.stargate.chevron.pegasus.name = Pegasus Stargate Chevron
+
+tile.stargate.stargate.core.universe.name = Universe Stargate Core
+tile.stargate.stargate.ring.universe.name = Universe Stargate Ring
+tile.stargate.stargate.chevron.universe.name = Universe Stargate Chevron
