@@ -1,8 +1,8 @@
 package gungun974.stargate;
 
 import gungun974.stargate.gate.blocks.core.BlockModelStargateCore;
-import gungun974.stargate.gate.blocks.core.TileEntityRenderStargateCore;
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.blocks.core.TileEntityRenderStargateMilkyWay;
+import gungun974.stargate.gate.blocks.core.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.blocks.ring.BlockModelStargateRing;
 import net.minecraft.client.render.EntityRenderDispatcher;
 import net.minecraft.client.render.TileEntityRenderDispatcher;
@@ -40,7 +40,7 @@ public class StargateModels implements ModelEntrypoint {
 
 	@Override
 	public void initTileEntityModels(TileEntityRenderDispatcher dispatcher) {
-		ModelHelper.setTileEntityModel(TileEntityStargateCore.class, TileEntityRenderStargateCore::new);
+		ModelHelper.setTileEntityModel(TileEntityStargateMilkyWay.class, TileEntityRenderStargateMilkyWay::new);
 
 		StargateMod.LOGGER.info("Tile Entity Models initialized.");
 	}

@@ -56,6 +56,7 @@ public class StargateSessionManager {
 			sessionTag.putInt("OriginAddress5", originAddress[5]);
 			sessionTag.putInt("OriginAddress6", originAddress[6]);
 			sessionTag.putInt("OriginAddress7", originAddress[7]);
+			sessionTag.putInt("OriginAddressFamily", session.originAddress.getFamily().ordinal());
 
 			sessionTag.putInt("DestinationX", session.destinationX);
 			sessionTag.putInt("DestinationY", session.destinationY);
@@ -74,6 +75,7 @@ public class StargateSessionManager {
 			sessionTag.putInt("DestinationAddress5", destinationAddress[5]);
 			sessionTag.putInt("DestinationAddress6", destinationAddress[6]);
 			sessionTag.putInt("DestinationAddress7", destinationAddress[7]);
+			sessionTag.putInt("DestinationFamily", session.destinationAddress.getFamily().ordinal());
 
 			sessionTag.putShort("DialingAddressSize", session.dialingAddressSize);
 
@@ -106,15 +108,17 @@ public class StargateSessionManager {
 					Direction.values()[sessionTag.getInteger("OriginDirection")],
 					Direction.values()[sessionTag.getInteger("OriginOrientation")],
 					StargateAddress.createAddressFromEncoded(new int[]{
-						sessionTag.getInteger("OriginAddress0"),
-						sessionTag.getInteger("OriginAddress1"),
-						sessionTag.getInteger("OriginAddress2"),
-						sessionTag.getInteger("OriginAddress3"),
-						sessionTag.getInteger("OriginAddress4"),
-						sessionTag.getInteger("OriginAddress5"),
-						sessionTag.getInteger("OriginAddress6"),
-						sessionTag.getInteger("OriginAddress7")
-					}),
+							sessionTag.getInteger("OriginAddress0"),
+							sessionTag.getInteger("OriginAddress1"),
+							sessionTag.getInteger("OriginAddress2"),
+							sessionTag.getInteger("OriginAddress3"),
+							sessionTag.getInteger("OriginAddress4"),
+							sessionTag.getInteger("OriginAddress5"),
+							sessionTag.getInteger("OriginAddress6"),
+							sessionTag.getInteger("OriginAddress7")
+						},
+						StargateFamily.values()[sessionTag.getInteger("OriginAddressFamily")]
+					),
 					sessionTag.getInteger("DestinationX"),
 					sessionTag.getInteger("DestinationY"),
 					sessionTag.getInteger("DestinationZ"),
@@ -122,15 +126,17 @@ public class StargateSessionManager {
 					Direction.values()[sessionTag.getInteger("DestinationDirection")],
 					Direction.values()[sessionTag.getInteger("DestinationOrientation")],
 					StargateAddress.createAddressFromEncoded(new int[]{
-						sessionTag.getInteger("DestinationAddress0"),
-						sessionTag.getInteger("DestinationAddress1"),
-						sessionTag.getInteger("DestinationAddress2"),
-						sessionTag.getInteger("DestinationAddress3"),
-						sessionTag.getInteger("DestinationAddress4"),
-						sessionTag.getInteger("DestinationAddress5"),
-						sessionTag.getInteger("DestinationAddress6"),
-						sessionTag.getInteger("DestinationAddress7")
-					}),
+							sessionTag.getInteger("DestinationAddress0"),
+							sessionTag.getInteger("DestinationAddress1"),
+							sessionTag.getInteger("DestinationAddress2"),
+							sessionTag.getInteger("DestinationAddress3"),
+							sessionTag.getInteger("DestinationAddress4"),
+							sessionTag.getInteger("DestinationAddress5"),
+							sessionTag.getInteger("DestinationAddress6"),
+							sessionTag.getInteger("DestinationAddress7"),
+						},
+						StargateFamily.values()[sessionTag.getInteger("DestinationAddressFamily")]
+					),
 					sessionTag.getShort("DialingAddressSize"),
 					sessionTag.getInteger("RemainingTick")
 				));

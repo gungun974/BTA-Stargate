@@ -35,8 +35,8 @@ import turniplabs.halplibe.helper.network.NetworkHandler;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class TileEntityStargateCore extends TileEntity {
-	public final static double symbolAngle = 360.0 / StargateAddress.NUMBER_OF_SYMBOL;
+public abstract class TileEntityStargateCore extends TileEntity {
+	public final static double symbolAngle = 360.0 / StargateMilkyWayAddress.NUMBER_OF_SYMBOL;
 	private final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
 	private double currentAngle = 0;
@@ -1590,7 +1590,7 @@ public class TileEntityStargateCore extends TileEntity {
 				currentDialingAddress[8] = 0;
 			}
 
-			StargateAddress destinationAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress);
+			StargateAddress destinationAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress, getFamily());
 
 			if (destinationAddress == null) {
 				cancelDial(x, y, z);
@@ -1601,7 +1601,7 @@ public class TileEntityStargateCore extends TileEntity {
 
 			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
 				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
-					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, destinationAddress.dim, cx, cz);
+					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, destinationAddress.getDim(), cx, cz);
 
 					if (chunk == null) {
 						continue;
@@ -1618,7 +1618,7 @@ public class TileEntityStargateCore extends TileEntity {
 									tileEntity.x,
 									tileEntity.y,
 									tileEntity.z,
-									destinationAddress.dim,
+									destinationAddress.getDim(),
 									destinationAddress
 								));
 							}
@@ -1746,17 +1746,23 @@ public class TileEntityStargateCore extends TileEntity {
 
 		StargateMod.LOGGER.info("State: {}", state);
 
-		StargateAddress stargateAddress = StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
-
-		StargateMod.LOGGER.info("Gate address : {}", stargateAddress.encodeAddress());
+		StargateMod.LOGGER.info("MilkyWay : {}", this.getAddressWithFamily(StargateFamily.MilkyWay).encodeAddress());
+		StargateMod.LOGGER.info("Pegasus : {}", this.getAddressWithFamily(StargateFamily.Pegasus).encodeAddress());
+		StargateMod.LOGGER.info("Universe : {}", this.getAddressWithFamily(StargateFamily.Universe).encodeAddress());
 	}
+
+	public abstract StargateFamily getFamily();
 
 	public Direction getOrientation() {
 		return orientation;
 	}
 
 	public StargateAddress getAddress() {
-		return StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id);
+		return getAddressWithFamily(getFamily());
+	}
+
+	public StargateAddress getAddressWithFamily(StargateFamily family) {
+		return StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id, family);
 	}
 
 	public int getLightmap() {

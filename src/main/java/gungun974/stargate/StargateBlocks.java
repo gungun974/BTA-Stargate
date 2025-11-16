@@ -1,7 +1,7 @@
 package gungun974.stargate;
 
 import gungun974.stargate.gate.blocks.core.BlockLogicStargateCore;
-import gungun974.stargate.gate.blocks.core.TileEntityStargateCore;
+import gungun974.stargate.gate.blocks.core.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.blocks.ring.BlockLogicStargateRing;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.material.Material;
@@ -26,15 +26,15 @@ public class StargateBlocks {
 	public static void RegisterBlocks() {
 		currentGeneratedId = StargateMod.startBlockID;
 
-		EntityHelper.createTileEntity(TileEntityStargateCore.class, NamespaceID.getPermanent(MOD_ID, "stargate"));
+		EntityHelper.createTileEntity(TileEntityStargateMilkyWay.class, NamespaceID.getPermanent(MOD_ID, "stargate_milkyway"));
 
 		STARGATE_CORE = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)
 			.setResistance(5.0f)
 			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
-			.setTileEntity(TileEntityStargateCore::new)
+			.setTileEntity(TileEntityStargateMilkyWay::new)
 			.setBlockSound(BlockSounds.WOOD)
-			.build("stargate_core", generateNexId(), b -> new BlockLogicStargateCore(b, Material.wood));
+			.build("stargate_core_milkyway", generateNexId(), b -> new BlockLogicStargateCore(b, Material.wood));
 
 		STARGATE_RING = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)

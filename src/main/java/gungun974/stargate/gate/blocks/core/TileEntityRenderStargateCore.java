@@ -22,7 +22,7 @@ enum TextureIndex {
 	}
 }
 
-public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityStargateCore> {
+public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityStargateCore> {
 	public final static int eventHorizonGridRadialSize = 8;
 	final static int numRingSegments = 39 * 2;
 	public final static int eventHorizonGridPolarSize = numRingSegments;
@@ -49,7 +49,6 @@ public class TileEntityRenderStargateCore extends TileEntityRenderer<TileEntityS
 	final static double ringSymbolSegmentWidth = ringSymbolTextureLength / numRingSegments;
 	static double[] ringSinValues = new double[numRingSegments + 1];
 	static double[] ringCosValues = new double[numRingSegments + 1];
-
 
 	static {
 		for (int i = 0; i <= numRingSegments; i++) {
