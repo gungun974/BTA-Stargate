@@ -1,6 +1,7 @@
 package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.StargateState;
+import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.gate.tiles.TileEntityStargateCore;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
@@ -34,6 +35,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 	final static double ringSymbolTextureLength = 512.0;
 	final static double ringSymbolTextureHeight = 16.0;
 	final static double ringSymbolSegmentWidth = ringSymbolTextureLength / numRingSegments;
+	static private final WavefrontLoader MilkywayRing = new WavefrontLoader("/home/gungun974/lab/bta/BTA-Stargate/src/main/resources/assets/stargate/models/MilkywayRing.obj");
 	static double[] ringSinValues = new double[numRingSegments + 1];
 	static double[] ringCosValues = new double[numRingSegments + 1];
 
@@ -126,15 +128,15 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 
 		GL11.glScaled(1.4, 1.4, 1.4);
 
-		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/stargate.png");
-
 		if (LightmapHelper.isLightmapEnabled()) {
 			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
 		}
 
-		renderOuterRing(tessellator);
+		renderFrame(tessellator);
+
+		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/stargate.png");
+
 		renderSymbolRing(tessellator, tileEntity, partialTicks);
-		renderInnerRing(tessellator, tileEntity, partialTicks);
 		renderChevrons(tessellator, tileEntity, partialTicks);
 
 		if (LightmapHelper.isLightmapEnabled()) {
@@ -204,44 +206,8 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		GL11.glPopMatrix();
 	}
 
-	private void renderOuterRing(Tessellator tessellator) {
-		double z = ringDepth / 2 + ringZOffset;
-		double u, du, dv;
-		tessellator.startDrawingQuads();
-		tessellator.setNormal(0, 1, 0);
-		for (int i = 0; i < numRingSegments; i++) {
-			selectTile(TextureIndex.RING);
-			tessellator.setNormal((float) ringCosValues[i], (float) ringSinValues[i], 0);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i], ringOuterRadius * ringSinValues[i], z, 0, 0);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i], ringOuterRadius * ringSinValues[i], -z, 0, 16);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i + 1], ringOuterRadius * ringSinValues[i + 1], -z, 16, 16);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i + 1], ringOuterRadius * ringSinValues[i + 1], z, 16, 0);
-
-			tessellator.setNormal((float) -ringCosValues[i], (float) -ringSinValues[i], 0);
-			vertex(tessellator, ringMidRadius * ringCosValues[i], ringMidRadius * ringSinValues[i], -z, 0, 0);
-			vertex(tessellator, ringMidRadius * ringCosValues[i], ringMidRadius * ringSinValues[i], z, 0, 16);
-			vertex(tessellator, ringMidRadius * ringCosValues[i + 1], ringMidRadius * ringSinValues[i + 1], z, 16, 16);
-			vertex(tessellator, ringMidRadius * ringCosValues[i + 1], ringMidRadius * ringSinValues[i + 1], -z, 16, 0);
-
-			// Back
-			tessellator.setNormal(0, 0, -1);
-			selectTile(TextureIndex.RING_FACE);
-			vertex(tessellator, (ringMidRadius - ringOverlap) * ringCosValues[i], (ringMidRadius - ringOverlap) * ringSinValues[i], -z, 0, 16);
-			vertex(tessellator, (ringMidRadius - ringOverlap) * ringCosValues[i + 1], (ringMidRadius - ringOverlap) * ringSinValues[i + 1], -z, 16, 16);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i + 1], ringOuterRadius * ringSinValues[i + 1], -z, 16, 0);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i], ringOuterRadius * ringSinValues[i], -z, 0, 0);
-			// Front
-			tessellator.setNormal(0, 0, 1);
-			u = 0;
-			du = 16;
-			dv = 16;
-			vertex(tessellator, (ringMidRadius - ringOverlap) * ringCosValues[i], (ringMidRadius - ringOverlap) * ringSinValues[i], z, u + du, dv);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i], ringOuterRadius * ringSinValues[i], z, u + du, 0);
-			vertex(tessellator, ringOuterRadius * ringCosValues[i + 1], ringOuterRadius * ringSinValues[i + 1], z, u, 0);
-			vertex(tessellator, (ringMidRadius - ringOverlap) * ringCosValues[i + 1], (ringMidRadius - ringOverlap) * ringSinValues[i + 1], z, u, dv);
-		}
-
-		tessellator.draw();
+	private void renderFrame(Tessellator tessellator) {
+		MilkywayRing.render(tessellator);
 	}
 
 	void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
@@ -271,50 +237,6 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 			vertex(tessellator, ringMidRadius * ringCosValues[i], ringMidRadius * ringSinValues[i], z, u + du, 0);
 			vertex(tessellator, ringMidRadius * ringCosValues[i + 1], ringMidRadius * ringSinValues[i + 1], z, u, 0);
 			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], z, u, dv);
-		}
-
-		tessellator.draw();
-
-		GL11.glPopMatrix();
-	}
-
-	void renderInnerRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
-		GL11.glPushMatrix();
-
-		final double ringEndRadius = 1.92;
-
-		double z = ringDepth / 2 + ringZOffset;
-		double u = 0, du = 0, dv = 0;
-		tessellator.startDrawingQuads();
-		tessellator.setNormal(0, 1, 0);
-		for (int i = 0; i < numRingSegments; i++) {
-			selectTile(TextureIndex.RING);
-			tessellator.setNormal((float) ringCosValues[i], (float) ringSinValues[i], 0);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], z, 0, 0);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], -z, 0, 16);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], -z, 16, 16);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], z, 16, 0);
-
-			tessellator.setNormal((float) -ringCosValues[i], (float) -ringSinValues[i], 0);
-			vertex(tessellator, ringEndRadius * ringCosValues[i], ringEndRadius * ringSinValues[i], -z, 0, 0);
-			vertex(tessellator, ringEndRadius * ringCosValues[i], ringEndRadius * ringSinValues[i], z, 0, 16);
-			vertex(tessellator, ringEndRadius * ringCosValues[i + 1], ringEndRadius * ringSinValues[i + 1], z, 16, 16);
-			vertex(tessellator, ringEndRadius * ringCosValues[i + 1], ringEndRadius * ringSinValues[i + 1], -z, 16, 0);
-
-			// Back
-			selectTile(TextureIndex.RING_FACE);
-			tessellator.setNormal(0, 0, -1);
-			vertex(tessellator, ringEndRadius * ringCosValues[i], ringEndRadius * ringSinValues[i], -z, 16, 0);
-			vertex(tessellator, ringEndRadius * ringCosValues[i + 1], ringEndRadius * ringSinValues[i + 1], -z, 0, 0);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], -z, 0, 16);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], -z, 16, 16);
-			// Front
-			tessellator.setNormal(0, 0, 1);
-			selectTile(TextureIndex.RING_FACE);
-			vertex(tessellator, ringEndRadius * ringCosValues[i], ringEndRadius * ringSinValues[i], z, 0, 0);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], z, 0, 16);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], z, 16, 16);
-			vertex(tessellator, ringEndRadius * ringCosValues[i + 1], ringEndRadius * ringSinValues[i + 1], z, 16, 0);
 		}
 
 		tessellator.draw();
