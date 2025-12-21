@@ -1,37 +1,40 @@
 package gungun974.stargate.core;
 
+import gungun974.stargate.StargateMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.TextureManager;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.texturepack.TexturePack;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class WavefrontLoader {
 	private final List<WavefrontMaterial> materials = new ArrayList<>();
+	private final Map<String, String> mappedMaterials = new HashMap<>();
+	private final String wavefrontPath;
 
-	private float[] vertices = new float[10000 * 3];
+	private float[] vertices = new float[0];
 	private int verticesSize = 0;
 
-	private float[] normals = new float[10000 * 3];
+	private float[] normals = new float[0];
 	private int normalsSize = 0;
 
-	private float[] textureCoordinates = new float[10000 * 3];
+	private float[] textureCoordinates = new float[0];
 	private int textureCoordinatesSize = 0;
 
-	private int[] elements = new int[10000 * 3];
+	private int[] elements = new int[0];
 	private int elementsSize = 0;
 
-	public WavefrontLoader(String path) {
-		loadModel(path);
+	public WavefrontLoader(String wavefrontPath) {
+		this.wavefrontPath = wavefrontPath;
+		loadModel();
 	}
 
 	private static int newLength(int oldLength, int minGrowth, int prefGrowth) {
@@ -42,8 +45,15 @@ public class WavefrontLoader {
 		return newLength;
 	}
 
-	private void loadModel(String path) {
-		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+	private void loadModel() {
+		Minecraft mc = Minecraft.getMinecraft();
+		TexturePack pack = mc.texturePackList.getHighestPriorityTexturePackWithFile(wavefrontPath);
+		if (pack == null) {
+			StargateMod.LOGGER.error("Wavefront file not found {}", wavefrontPath);
+			return;
+		}
+
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(pack.getResourceAsStream(wavefrontPath)))) {
 			for (String line = br.readLine(); line != null; line = br.readLine()) {
 				String[] elements = line.split(" ");
 				if (elements.length == 0) {
@@ -112,7 +122,7 @@ public class WavefrontLoader {
 						continue;
 					}
 
-					Path mtl = Paths.get(path).getParent().resolve(elements[1]);
+					Path mtl = Paths.get(wavefrontPath).getParent().resolve(elements[1]);
 
 					loadMaterials(mtl.toString());
 				}
@@ -149,7 +159,14 @@ public class WavefrontLoader {
 	}
 
 	private void loadMaterials(String path) {
-		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+		Minecraft mc = Minecraft.getMinecraft();
+		TexturePack pack = mc.texturePackList.getHighestPriorityTexturePackWithFile(path);
+		if (pack == null) {
+			StargateMod.LOGGER.error("Wavefront material file not found {}", path);
+			return;
+		}
+
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(pack.getResourceAsStream(path)))) {
 			WavefrontMaterial currentMaterial = null;
 
 			for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -189,6 +206,10 @@ public class WavefrontLoader {
 		}
 	}
 
+	public void mapMaterial(String original, String mapped) {
+		this.mappedMaterials.put(original, mapped);
+	}
+
 	public void render(Tessellator tessellator) {
 		tessellator.startDrawing(GL11.GL_TRIANGLES);
 
@@ -206,10 +227,25 @@ public class WavefrontLoader {
 				WavefrontMaterial currentMaterial = materials.get(materialIndex);
 
 				if (currentMaterial.texture != null) {
+					if (this.mappedMaterials.containsKey(currentMaterial.name)) {
+						String mappedName = this.mappedMaterials.get(currentMaterial.name);
+						for (WavefrontMaterial material : materials) {
+							if (material.name.equals(mappedName)) {
+								currentMaterial = material;
+								break;
+							}
+						}
+					}
+
 					tessellator.draw();
 					tessellator.startDrawing(GL11.GL_TRIANGLES);
-					TextureManager textureManager = Minecraft.getMinecraft().textureManager;
-					textureManager.bindTexture(textureManager.loadTexture("/assets/stargate/models/" + currentMaterial.texture));
+
+					if (currentMaterial.texture != null) {
+						Path texture = Paths.get(wavefrontPath).getParent().resolve(currentMaterial.texture);
+
+						TextureManager textureManager = Minecraft.getMinecraft().textureManager;
+						textureManager.bindTexture(textureManager.loadTexture(texture.toString()));
+					}
 				}
 
 				continue;
@@ -224,7 +260,7 @@ public class WavefrontLoader {
 			}
 
 			if (textureCoordinateIndex >= 0) {
-				tessellator.addVertexWithUV(vertices[vertexIndex * 3], vertices[vertexIndex * 3 + 1], vertices[vertexIndex * 3 + 2], 1 - textureCoordinates[textureCoordinateIndex * 2], 1 - textureCoordinates[textureCoordinateIndex * 2 + 1]);
+				tessellator.addVertexWithUV(vertices[vertexIndex * 3], vertices[vertexIndex * 3 + 1], vertices[vertexIndex * 3 + 2], textureCoordinates[textureCoordinateIndex * 2], 1 - textureCoordinates[textureCoordinateIndex * 2 + 1]);
 			} else {
 				tessellator.addVertex(vertices[vertexIndex * 3], vertices[vertexIndex * 3 + 1], vertices[vertexIndex * 3 + 2]);
 			}
@@ -235,46 +271,42 @@ public class WavefrontLoader {
 	}
 
 	private void ensureVerticesCapacity(int minCapacity) {
-		if (true) {
-			return;
-		}
 		int oldCapacity = this.vertices.length;
 		if (minCapacity > oldCapacity) {
 			int newCapacity = newLength(oldCapacity, minCapacity - oldCapacity, oldCapacity);
-			this.vertices = new float[newCapacity];
+			float[] newArray = new float[newCapacity];
+			System.arraycopy(this.vertices, 0, newArray, 0, oldCapacity);
+			this.vertices = newArray;
 		}
 	}
 
 	private void ensureNormalsCapacity(int minCapacity) {
-		if (true) {
-			return;
-		}
 		int oldCapacity = this.normals.length;
 		if (minCapacity > oldCapacity) {
 			int newCapacity = newLength(oldCapacity, minCapacity - oldCapacity, oldCapacity);
-			this.normals = new float[newCapacity];
+			float[] newArray = new float[newCapacity];
+			System.arraycopy(this.normals, 0, newArray, 0, oldCapacity);
+			this.normals = newArray;
 		}
 	}
 
 	private void ensureTextureCoordinatesCapacity(int minCapacity) {
-		if (true) {
-			return;
-		}
 		int oldCapacity = this.textureCoordinates.length;
 		if (minCapacity > oldCapacity) {
 			int newCapacity = newLength(oldCapacity, minCapacity - oldCapacity, oldCapacity);
-			this.textureCoordinates = new float[newCapacity];
+			float[] newArray = new float[newCapacity];
+			System.arraycopy(this.textureCoordinates, 0, newArray, 0, oldCapacity);
+			this.textureCoordinates = newArray;
 		}
 	}
 
 	private void ensureElementsCapacity(int minCapacity) {
-		if (true) {
-			return;
-		}
 		int oldCapacity = this.elements.length;
 		if (minCapacity > oldCapacity) {
 			int newCapacity = newLength(oldCapacity, minCapacity - oldCapacity, oldCapacity);
-			this.elements = new int[newCapacity];
+			int[] newElements = new int[newCapacity];
+			System.arraycopy(this.elements, 0, newElements, 0, oldCapacity);
+			this.elements = newElements;
 		}
 	}
 
