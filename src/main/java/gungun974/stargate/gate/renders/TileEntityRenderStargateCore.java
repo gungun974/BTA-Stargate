@@ -1,8 +1,9 @@
 package gungun974.stargate.gate.renders;
 
+import gungun974.stargate.core.CustomLighting;
 import gungun974.stargate.core.StargateState;
-import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import net.minecraft.client.render.Lighting;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
@@ -18,24 +19,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 	public final static double eventHorizonBandWidth = ringInnerRadius / eventHorizonGridRadialSize;
 	public final static double eventHorizonVortexBaseWidth = ringInnerRadius * 0.48;
 	public final static double eventHorizonVortexMaxDepth = ringInnerRadius * 1.55;
-	final static double ringMidRadius = 2.27;
-	final static double ringOuterRadius = 2.5;
-	final static double ringDepth = 0.4;
-	final static double ringOverlap = 1 / 64.0;
-	final static double ringZOffset = 0.0001;
-	final static double chevronInnerRadius = 2.25;
-	final static double chevronOuterRadius = ringOuterRadius + 1 / 16.0;
-	final static double chevronWidth = (chevronOuterRadius - chevronInnerRadius) * 1.5;
-	final static double chevronBorderWidth = chevronWidth / 6;
-	final static double chevronDepth = 0.125;
-	final static int textureTilesWide = 32;
-	final static int textureTilesHigh = 2;
-	final static double textureScaleU = 1.0 / (textureTilesWide * 16);
-	final static double textureScaleV = 1.0 / (textureTilesHigh * 16);
-	final static double ringSymbolTextureLength = 512.0;
-	final static double ringSymbolTextureHeight = 16.0;
-	final static double ringSymbolSegmentWidth = ringSymbolTextureLength / numRingSegments;
-	static private final WavefrontLoader MilkywayRing = new WavefrontLoader("/home/gungun974/lab/bta/BTA-Stargate/src/main/resources/assets/stargate/models/MilkywayRing.obj");
+
 	static double[] ringSinValues = new double[numRingSegments + 1];
 	static double[] ringCosValues = new double[numRingSegments + 1];
 
@@ -54,6 +38,8 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		if (!tileEntity.isAssembled()) {
 			return;
 		}
+
+		CustomLighting.enableLight();
 
 		GL11.glPushMatrix();
 
@@ -126,22 +112,24 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 			}
 		}
 
-		GL11.glScaled(1.4, 1.4, 1.4);
+		GL11.glPushMatrix();
 
 		if (LightmapHelper.isLightmapEnabled()) {
 			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
 		}
 
 		renderFrame(tessellator);
-
-		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/stargate.png");
-
 		renderSymbolRing(tessellator, tileEntity, partialTicks);
 		renderChevrons(tessellator, tileEntity, partialTicks);
+
+		GL11.glPopMatrix();
+
+		GL11.glScaled(1.4, 1.4, 1.4);
 
 		if (LightmapHelper.isLightmapEnabled()) {
 			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
 		}
+
 
 		renderIris(tessellator, tileEntity, partialTicks);
 
@@ -157,6 +145,8 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 				float exposure = tileEntity.interpolatedEventHorizonExposure(partialTicks);
 
 				if (exposure > 0f) {
+					GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_ENABLE_BIT);
+
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
 
@@ -165,7 +155,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 					renderEventHorizon(tessellator, tileEntity, partialTicks);
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
 
-					GL11.glDisable(GL11.GL_BLEND);
+					GL11.glPopAttrib();
 				}
 
 				if (tileEntity.getState() == StargateState.CONNECTED && tileEntity.getOrientation() == Direction.NORTH) {
@@ -204,56 +194,25 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 
 		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 		GL11.glPopMatrix();
+		Lighting.enableLight();
 	}
 
-	private void renderFrame(Tessellator tessellator) {
-		MilkywayRing.render(tessellator);
+	protected void renderFrame(Tessellator tessellator) {
 	}
 
-	void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
-		GL11.glPushMatrix();
-
-		GL11.glRotatef((float) (stargateCore.interpolatedRingAngle(partialTicks) + TileEntityStargateCore.symbolAngle / 2 + 90), 0, 0, 1);
-
-		double z = ringDepth / 2 - 0.05;
-		double u = 0, du = 0, dv = 0;
-		tessellator.startDrawingQuads();
-		tessellator.setNormal(0, 1, 0);
-		for (int i = 0; i < numRingSegments; i++) {
-			selectTile(TextureIndex.RING);
-			tessellator.setNormal(0, 0, -1);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], -z, 0, 16);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], -z, 16, 16);
-			vertex(tessellator, ringMidRadius * ringCosValues[i + 1], ringMidRadius * ringSinValues[i + 1], -z, 16, 0);
-			vertex(tessellator, ringMidRadius * ringCosValues[i], ringMidRadius * ringSinValues[i], -z, 0, 0);
-
-			selectTile(TextureIndex.RING_SYMBOL);
-			u = ringSymbolTextureLength - (i + 1) * ringSymbolSegmentWidth;
-			du = ringSymbolSegmentWidth;
-			dv = ringSymbolTextureHeight;
-
-			tessellator.setNormal(0, 0, 1);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i], ringInnerRadius * ringSinValues[i], z, u + du, dv);
-			vertex(tessellator, ringMidRadius * ringCosValues[i], ringMidRadius * ringSinValues[i], z, u + du, 0);
-			vertex(tessellator, ringMidRadius * ringCosValues[i + 1], ringMidRadius * ringSinValues[i + 1], z, u, 0);
-			vertex(tessellator, ringInnerRadius * ringCosValues[i + 1], ringInnerRadius * ringSinValues[i + 1], z, u, dv);
-		}
-
-		tessellator.draw();
-
-		GL11.glPopMatrix();
+	protected void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 	}
 
-	void renderChevrons(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	private void renderChevrons(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 		for (int i = 0; i < 9; i++) {
 			renderChevronAtPosition(tessellator, i, stargateCore, partialTicks);
 		}
 	}
 
-	void renderChevronAtPosition(Tessellator tessellator, int chevronNumber, TileEntityStargateCore stargateCore, float partialTicks) {
+	private void renderChevronAtPosition(Tessellator tessellator, int chevronNumber, TileEntityStargateCore stargateCore, float partialTicks) {
 		GL11.glPushMatrix();
 
-		GL11.glRotatef(90 - (chevronNumber + 1) * (float) 40.0, 0, 0, 1);
+		GL11.glRotatef(-(chevronNumber + 1) * (float) 40.0, 0, 0, 1);
 
 		int chevron = chevronNumber;
 
@@ -271,139 +230,10 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		GL11.glPopMatrix();
 	}
 
-	void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
-		double z2 = ringDepth / 2;
-		double z1 = z2 + chevronDepth;
-		double w1 = chevronBorderWidth;
-		double w2 = w1 * 1.25;
-		double x1 = chevronInnerRadius, y1 = chevronWidth / 4;
-		double x2 = chevronOuterRadius, y2 = chevronWidth / 2;
-
-		double chevronDistance = stargateCore.interpolatedChevronDistance(chevron, partialTicks);
-
-		boolean chevronActive = stargateCore.interpolatedChevronActive(chevron, partialTicks);
-
-		if (chevronDistance != 0) {
-			GL11.glTranslated(chevronDistance, 0, 0);
-		}
-
-		if (LightmapHelper.isLightmapEnabled()) {
-			int lightmap = stargateCore.getLightmap();
-			if (chevronActive) {
-				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.min(((lightmap >> 4) & 0xF) + 1, 15)));
-			} else {
-				LightmapHelper.setLightmapCoord(lightmap);
-			}
-		}
-
-		tessellator.startDrawingQuads();
-
-		GL11.glDisable(GL11.GL_LIGHTING);
-
-		selectTile(TextureIndex.CHEVRON);
-
-		// Face 1
-		vertex(tessellator, x2, y2, z1, 0, 2);
-		vertex(tessellator, x1, y1, z1, 0, 16);
-		vertex(tessellator, x1 + w1, y1 - w1, z1, 4, 12);
-		vertex(tessellator, x2, y2 - w2, z1, 4, 2);
-
-		// Side 1
-		vertex(tessellator, x2, y2, z1, 0, 0);
-		vertex(tessellator, x2, y2, z2, 0, 4);
-		vertex(tessellator, x1, y1, z2, 16, 4);
-		vertex(tessellator, x1, y1, z1, 16, 0);
-
-		// End 1
-		vertex(tessellator, x2, y2, z1, 16, 0);
-		vertex(tessellator, x2, y2 - w2, z1, 12, 0);
-		vertex(tessellator, x2, y2 - w2, z2, 12, 4);
-		vertex(tessellator, x2, y2, z2, 16, 4);
-
-		// Face 2
-		vertex(tessellator, x1 + w1, y1 - w1, z1, 4, 12);
-		vertex(tessellator, x1, y1, z1, 0, 16);
-		vertex(tessellator, x1, -y1, z1, 16, 16);
-		vertex(tessellator, x1 + w1, -y1 + w1, z1, 12, 12);
-
-		// Side 2
-		vertex(tessellator, x1, y1, z1, 0, 0);
-		vertex(tessellator, x1, y1, z2, 0, 4);
-		vertex(tessellator, x1, -y1, z2, 16, 4);
-		vertex(tessellator, x1, -y1, z1, 16, 0);
-
-		// Face 3
-		vertex(tessellator, x2, -y2 + w2, z1, 12, 0);
-		vertex(tessellator, x1 + w1, -y1 + w1, z1, 12, 12);
-		vertex(tessellator, x1, -y1, z1, 16, 16);
-		vertex(tessellator, x2, -y2, z1, 16, 0);
-
-		// Side 3
-		vertex(tessellator, x1, -y1, z1, 0, 0);
-		vertex(tessellator, x1, -y1, z2, 0, 4);
-		vertex(tessellator, x2, -y2, z2, 16, 4);
-		vertex(tessellator, x2, -y2, z1, 16, 0);
-
-		// End 3
-		vertex(tessellator, x2, -y2, z1, 0, 0);
-		vertex(tessellator, x2, -y2, z2, 0, 4);
-		vertex(tessellator, x2, -y2 + w2, z2, 4, 4);
-		vertex(tessellator, x2, -y2 + w2, z1, 4, 0);
-
-		// Back
-		vertex(tessellator, x2, -y2, z2, 0, 0);
-		vertex(tessellator, x1, -y1, z2, 0, 16);
-		vertex(tessellator, x1, y1, z2, 16, 16);
-		vertex(tessellator, x2, y2, z2, 16, 0);
-
-		tessellator.draw();
-
-		GL11.glPushMatrix();
-
-		selectTile(TextureIndex.CHEVRON_LIT);
-		if (!chevronActive) {
-			GL11.glColor3d(0.4, 0.4, 0.4);
-		}
-
-		if (chevronActive && LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
-		}
-
-		tessellator.startDrawingQuads();
-
-		// Face 4
-		vertex(tessellator, x2, y2 - w2, z1, 0, 4);
-		vertex(tessellator, x1 + w1, y1 - w1, z1, 4, 16);
-		vertex(tessellator, x1 + w1, 0, z1, 8, 16);
-		vertex(tessellator, x2, 0, z1, 8, 4);
-
-		vertex(tessellator, x2, 0, z1, 8, 4);
-		vertex(tessellator, x1 + w1, 0, z1, 8, 16);
-		vertex(tessellator, x1 + w1, -y1 + w1, z1, 12, 16);
-		vertex(tessellator, x2, -y2 + w2, z1, 16, 4);
-
-		// End 4
-		vertex(tessellator, x2, y2 - w2, z2, 0, 0);
-		vertex(tessellator, x2, y2 - w2, z1, 0, 4);
-		vertex(tessellator, x2, -y2 + w2, z1, 16, 4);
-		vertex(tessellator, x2, -y2 + w2, z2, 16, 0);
-
-		if (chevronActive) {
-			GL11.glColor3f(1, 1, 1);
-		}
-		tessellator.draw();
-		GL11.glPopMatrix();
-
-		if (chevronActive) {
-			GL11.glColor3f(1, 1, 1);
-		} else {
-			GL11.glColor3f(0.9f, 0.9f, 0.9f);
-		}
-
-		GL11.glEnable(GL11.GL_LIGHTING);
+	protected void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
 	}
 
-	void renderEventHorizon(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
+	private void renderEventHorizon(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
 		if (!tileEntity.interpolatedShowEventHorizon()) {
 			return;
 		}
@@ -457,7 +287,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 
-	void renderEventHorizonVortex(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
+	private void renderEventHorizonVortex(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
 		final int split = 100;
 
 		final double rawDistance = tileEntity.interpolatedUnstableVortexDistance(partialTicks);
@@ -557,7 +387,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 
-	void eventHorizonVortexVertex(Tessellator tessellator, double i, int j, double h, double notShieldedRadius, int frame) {
+	private void eventHorizonVortexVertex(Tessellator tessellator, double i, int j, double h, double notShieldedRadius, int frame) {
 		double r = i * eventHorizonVortexBaseWidth;
 		double x = r * ringCosValues[j];
 		double y = r * ringSinValues[j];
@@ -567,7 +397,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 	}
 
 
-	void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame, double showProgress) {
+	private void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame, double showProgress) {
 		double r = i * eventHorizonBandWidth;
 		double R = eventHorizonGridRadialSize * eventHorizonBandWidth;
 		double min = R * (1.0 - showProgress);
@@ -584,22 +414,12 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		tessellator.addVertex(x, y, z);
 	}
 
-	double eventHorizonClip(double z, double r, double radius) {
+	private double eventHorizonClip(double z, double r, double radius) {
 		if (r >= radius)
 			z = Math.min(z, 0);
 		return z;
 	}
 
-	void renderIris(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
-	}
-
-	void selectTile(TextureIndex index) {
-		u0 = (index.index % textureTilesWide) * (textureScaleU * 16);
-		v0 = ((double) index.index / textureTilesWide) * (textureScaleV * 16);
-	}
-
-	void vertex(Tessellator tessellator, double x, double y, double z, double u, double v) {
-		tessellator.setTextureUV(u0 + u * textureScaleU, v0 + v * textureScaleV);
-		tessellator.addVertex(x, y, z);
+	private void renderIris(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
 	}
 }

@@ -609,11 +609,11 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
 
 		if (currentAnimationTick > 26.67) {
-			return (1 - Math.min((currentAnimationTick - 26.67) / 6.66, 1)) * -0.125;
+			return (1 - Math.min((currentAnimationTick - 26.67) / 6.66, 1)) * -0.025;
 		}
 
 		if (currentAnimationTick > 12.67) {
-			return Math.min(((currentAnimationTick - 12.67) / 6.66), 1) * -0.125;
+			return Math.min(((currentAnimationTick - 12.67) / 6.66), 1) * -0.025;
 		}
 
 		return 0;
