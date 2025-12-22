@@ -16,6 +16,8 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
     static private final WavefrontLoader ChevronLowerLightFront = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayChevronLowerLightFront.obj");
     static private final WavefrontLoader ChevronLowerLightBack = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayChevronLowerLightBack.obj");
 
+    static private final boolean RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES = false;
+
     @Override
     protected void renderFrame(Tessellator tessellator) {
         MilkywayRing.render(tessellator);
@@ -53,16 +55,21 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
             GL11.glTranslated(0, chevronDistance, 0);
         }
         ChevronLower.render(tessellator);
-        ChevronLowerLightBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronStatic");
-        ChevronLowerLightBack.render(tessellator);
-        if (chevronDistance != 0) {
-            GL11.glPopMatrix();
-            GL11.glPushMatrix();
-            GL11.glTranslated(0, -chevronDistance, 0);
+
+        if (!RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
+            ChevronLowerLightBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronStatic");
+            ChevronLowerLightBack.render(tessellator);
+
+            if (chevronDistance != 0) {
+                GL11.glPopMatrix();
+                GL11.glPushMatrix();
+                GL11.glTranslated(0, -chevronDistance, 0);
+            }
+
+            ChevronUpperBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronStatic");
+            ChevronUpperBack.render(tessellator);
         }
 
-        ChevronUpperBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronStatic");
-        ChevronUpperBack.render(tessellator);
         if (chevronDistance != 0) {
             GL11.glPopMatrix();
         }
@@ -79,9 +86,17 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
         if (chevronActive) {
             ChevronLowerLightFront.mapMaterial("MilkywayChevronOn", "MilkywayChevronOn");
             ChevronUpperFront.mapMaterial("MilkywayChevronOn", "MilkywayChevronOn");
+            if (RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
+                ChevronLowerLightBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronOff");
+                ChevronUpperBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronOn");
+            }
         } else {
             ChevronLowerLightFront.mapMaterial("MilkywayChevronOn", "MilkywayChevronOff");
             ChevronUpperFront.mapMaterial("MilkywayChevronOn", "MilkywayChevronOff");
+            if (RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
+                ChevronLowerLightBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronOff");
+                ChevronUpperBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronOff");
+            }
         }
 
         if (chevronDistance != 0) {
@@ -89,6 +104,9 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
             GL11.glTranslated(0, chevronDistance, 0);
         }
         ChevronLowerLightFront.render(tessellator);
+        if (RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
+            ChevronLowerLightBack.render(tessellator);
+        }
         if (chevronDistance != 0) {
             GL11.glPopMatrix();
             GL11.glPushMatrix();
@@ -96,12 +114,14 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
         }
 
         ChevronUpperFront.render(tessellator);
+        if (RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
+            ChevronUpperBack.render(tessellator);
+        }
         if (chevronDistance != 0) {
             GL11.glPopMatrix();
         }
 
         GL11.glPushMatrix();
-
 
         GL11.glPopMatrix();
 
