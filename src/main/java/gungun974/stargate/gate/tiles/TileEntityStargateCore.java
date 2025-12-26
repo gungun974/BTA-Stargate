@@ -39,14 +39,17 @@ import java.util.*;
 
 public abstract class TileEntityStargateCore extends TileEntity {
 	public final static double symbolAngle = 360.0 / StargateMilkyWayAddress.NUMBER_OF_SYMBOL;
-	private final Queue<Runnable> commandQueue = new ArrayDeque<>();
+	protected final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
-	private double currentAngle = 0;
-	private double lastAngle = 0;
-	private double targetAngle = 0;
-	private boolean ringDirection = false;
-	private boolean lastRingMove = false;
-	private boolean ringMove = false;
+	protected StargateState state = StargateState.IDLE;
+	protected double targetAngle = 0;
+	protected double currentAngle = 0;
+	protected short currentDialingAddressSize = 0;
+	protected int[] currentDialingAddress = new int[9];
+	protected boolean ringDirection = false;
+	protected boolean lastRingMove = false;
+	protected boolean ringMove = false;
+	protected double lastAngle = 0;
 	private boolean lastEventHorizonNoise = false;
 	private boolean assembled = false;
 	private Direction direction = Direction.NORTH;
@@ -57,9 +60,6 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	private int lastAnimationTick = 0;
 	private int eventHorizonTick = 0;
 	private int lastEventHorizonTick = 0;
-	private StargateState state = StargateState.IDLE;
-	private short currentDialingAddressSize = 0;
-	private int[] currentDialingAddress = new int[9];
 
 	@Nullable
 	public static TileEntityStargateCore findStargateCore(WorldSource worldSource, int x, int y, int z) {
@@ -323,6 +323,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	@Override
 	public void invalidate() {
 		stopSoundAtCenter("stargate:stargate.milkyway.roll");
+		stopSoundAtCenter("stargate:stargate.pegasus.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
 		super.invalidate();
 	}
@@ -487,6 +488,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			StargateMod.LOGGER.info("Disassemble Stargate");
 
 			stopSoundAtCenter("stargate:stargate.milkyway.roll");
+			stopSoundAtCenter("stargate:stargate.pegasus.roll");
 			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
@@ -580,7 +582,11 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 			return currentAnimationTick > 30.67;
 		} else if (animation == StargateAnimation.FAST_ENCODE_CHEVRON && ((!isLastChevronActive && chevron == currentEncodedChevron && chevron != 6) || (isLastChevronActive && chevron == 6))) {
-			final double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+			double currentAnimationTick = lastAnimationTick + (animationTick - lastAnimationTick) * partialTicks;
+
+			if (getFamily() == StargateFamily.Pegasus) {
+				currentAnimationTick += 4.0;
+			}
 
 			return currentAnimationTick > (double) StargateAnimation.FAST_ENCODE_CHEVRON.duration / 2;
 		}
@@ -595,6 +601,22 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 		return chevron <= currentEncodedChevron;
 
+	}
+
+	public int getChevronActiveSymbol(int chevron) {
+		final int[] ORDER = {0, 1, 2, 3, 4, 5, 8, 6, 7};
+
+		if (currentDialingAddressSize == 0) {
+			return -1;
+		}
+
+		int currentEncodedChevron = ORDER[chevron];
+
+		if (currentEncodedChevron >= currentDialingAddressSize) {
+			return currentDialingAddress[currentDialingAddressSize - 1];
+		}
+
+		return currentDialingAddress[currentEncodedChevron];
 	}
 
 	public double interpolatedChevronDistance(int chevron, double partialTicks) {
@@ -726,7 +748,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		return true;
 	}
 
-	private int getCurrentSymbol() {
+	public int getCurrentSymbol() {
 		return (int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle);
 	}
 
@@ -931,7 +953,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		updateAnimation();
 	}
 
-	private void playSoundAtCenter(String name, SoundCategory soundCategory, float volume, float pitch, boolean loop) {
+	protected void playSoundAtCenter(String name, SoundCategory soundCategory, float volume, float pitch, boolean loop) {
 		Direction direction = getDirection();
 		Direction orientation = getOrientation();
 
@@ -964,7 +986,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		}
 	}
 
-	private void stopSoundAtCenter(String name) {
+	protected void stopSoundAtCenter(String name) {
 		Direction direction = getDirection();
 		Direction orientation = getOrientation();
 
@@ -1393,7 +1415,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		}
 	}
 
-	private void updateRotation() {
+	protected void updateRotation() {
 		if (!lastRingMove && ringMove) {
 			playSoundAtCenter("stargate:stargate.milkyway.roll", SoundCategory.WORLD_SOUNDS, 1.0f, 1.0f, false);
 		}
@@ -1432,13 +1454,21 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 		if (lastAnimation != animation) {
 			if (animation == StargateAnimation.KAWOOSH) {
-				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				if (getFamily() == StargateFamily.Pegasus) {
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				} else {
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				}
 			}
 			if (animation == StargateAnimation.CLOSING) {
 				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 			if (animation == StargateAnimation.CANCEL) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				if (getFamily() == StargateFamily.Pegasus) {
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				} else {
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				}
 			}
 		}
 
@@ -1461,7 +1491,11 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		}
 
 		if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
-			if (animationTick == 4) {
+			if (getFamily() == StargateFamily.Pegasus) {
+				if (animationTick == 0) {
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				}
+			} else if (animationTick == 4) {
 				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 		}
@@ -1707,42 +1741,65 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	}
 
 	public void autoDial() {
-//		moveToSymbol(26);
+		moveToSymbol(22);
+		encode();
+		moveToSymbol(27);
+		encode();
+		moveToSymbol(33);
+		encode();
+		moveToSymbol(17);
+		encode();
+		moveToSymbol(1);
+		encode();
+		moveToSymbol(19);
+		encode();
+		moveToSymbol(2);
+		encode();
+//		moveToSymbol(9);
 //		encode();
+		moveToSymbol(0);
+		encode();
+
+//		fastEncode(26);
+//		//moveToSymbol(26);
+//		//encode();
 //		moveToSymbol(6);
 //		encode();
-//		moveToSymbol(14);
-//		encode();
+//		fastEncode(14);
+////		moveToSymbol(14);
+////		encode();
 //		moveToSymbol(31);
 //		encode();
-//		moveToSymbol(11);
-//		encode();
+//		fastEncode(11);
+////		moveToSymbol(11);
+////		encode();
 //		moveToSymbol(29);
 //		encode();
-//		moveToSymbol(0);
-//		encode();
+//		fastEncode(0);
+//		//moveToSymbol(0);
+//		//encode();
 
-		if (x == 9989 && y == 7 && z == 9) {
-			fastEncode(27);
-			fastEncode(31);
-			fastEncode(36);
-			fastEncode(13);
-			fastEncode(34);
-			fastEncode(9);
-			fastEncode(1);
-			fastEncode(38);
-			fastEncode(0);
-		} else {
-			fastEncode(17);
-			fastEncode(8);
-			fastEncode(31);
-			fastEncode(27);
-			fastEncode(26);
-			fastEncode(21);
-			//fastEncode(1);
-			//fastEncode(9);
-			fastEncode(0);
-		}
+//		if (x == 9989 && y == 7 && z == 9) {
+//			fastEncode(27);
+//			fastEncode(31);
+//			fastEncode(36);
+//			fastEncode(13);
+//			fastEncode(34);
+//			fastEncode(9);
+//			fastEncode(1);
+//			fastEncode(38);
+//			fastEncode(0);
+//		} else {
+//			fastEncode(17);
+//			fastEncode(8);
+//			fastEncode(31);
+//			fastEncode(27);
+//			fastEncode(26);
+//			fastEncode(21);
+//			//fastEncode(1);
+//			//fastEncode(9);
+//			fastEncode(0);
+//		}
 
 		dial();
 
