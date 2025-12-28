@@ -72,6 +72,39 @@
       "pegasus/event_horizon_open.ogg"
     ]
   },
+  "stargate.universe.roll": {
+    "sounds": [
+      {
+        "name": "universe/roll_long.ogg",
+        "stream": true
+      }
+    ]
+  },
+  "stargate.universe.encode.fast": {
+    "sounds": [
+      "universe/encode1.ogg",
+      "universe/encode2.ogg",
+      "universe/encode3.ogg",
+      "universe/encode4.ogg"
+    ]
+  },
+  "stargate.universe.dial.start": {
+    "sounds": [
+      "universe/dial_start.ogg"
+    ]
+  },
+  "stargate.universe.dial.fail": {
+    "sounds": [
+      "universe/dial_fail1.ogg",
+      "universe/dial_fail2.ogg",
+      "universe/dial_fail3.ogg"
+    ]
+  },
+  "stargate.universe.evenHorizon.open": {
+    "sounds": [
+      "universe/event_horizon_open.ogg"
+    ]
+  },
   "stargate.evenHorizon.close": {
     "sounds": [
       "event_horizon_close.ogg"

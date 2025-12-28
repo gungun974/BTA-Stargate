@@ -152,15 +152,40 @@ public class TileEntityStargatePegasus extends TileEntityStargateCore {
 				}
 			}
 
-			final int[] ORDER = {1, 2, 3, 6, 7, 8, 0, 4, 5};
+			int sourceChevron = 0;
 
-			if (currentDialingAddressSize >= ORDER.length) {
-				return;
+			switch (currentDialingAddressSize) {
+				case 0:
+					sourceChevron = 1;
+					break;
+				case 1:
+					sourceChevron = 2;
+					break;
+				case 2:
+					sourceChevron = 3;
+					break;
+				case 3:
+					sourceChevron = 6;
+					break;
+				case 4:
+					sourceChevron = 7;
+					break;
+				case 5:
+					sourceChevron = 8;
+					break;
+				case 6:
+					sourceChevron = 4;
+					break;
+				case 7:
+					sourceChevron = 5;
+					break;
 			}
 
-			int targetChevron = ORDER[currentDialingAddressSize];
+			if (symbol == 0) {
+				sourceChevron = 0;
+			}
 
-			currentAngle = targetChevron * 4 * symbolAngle;
+			currentAngle = sourceChevron * 4 * symbolAngle;
 			lastAngle = currentAngle;
 			targetAngle = currentAngle;
 

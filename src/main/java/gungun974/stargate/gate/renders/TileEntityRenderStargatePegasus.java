@@ -19,7 +19,7 @@ public class TileEntityRenderStargatePegasus extends TileEntityRenderStargateCor
 	static private final boolean RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES = true;
 
 	@Override
-	protected void renderFrame(Tessellator tessellator) {
+	protected void renderFrame(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 		PegasusRing.render(tessellator);
 	}
 
@@ -210,5 +210,10 @@ public class TileEntityRenderStargatePegasus extends TileEntityRenderStargateCor
 
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glPopMatrix();
+	}
+
+	@Override
+	void loadEventHorizonTexture() {
+		this.loadTexture("/assets/stargate/textures/eventhorizon_pegasus.png");
 	}
 }

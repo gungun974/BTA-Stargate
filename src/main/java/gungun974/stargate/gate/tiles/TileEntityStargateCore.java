@@ -42,6 +42,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	protected final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
 	protected StargateState state = StargateState.IDLE;
+	protected StargateState lastState = StargateState.IDLE;
 	protected double targetAngle = 0;
 	protected double currentAngle = 0;
 	protected short currentDialingAddressSize = 0;
@@ -316,6 +317,10 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 	}
 
+	public boolean isRingMove() {
+		return ringMove;
+	}
+
 	public StargateState getState() {
 		return state;
 	}
@@ -324,6 +329,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	public void invalidate() {
 		stopSoundAtCenter("stargate:stargate.milkyway.roll");
 		stopSoundAtCenter("stargate:stargate.pegasus.roll");
+		stopSoundAtCenter("stargate:stargate.universe.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
 		super.invalidate();
 	}
@@ -489,6 +495,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 			stopSoundAtCenter("stargate:stargate.milkyway.roll");
 			stopSoundAtCenter("stargate:stargate.pegasus.roll");
+			stopSoundAtCenter("stargate:stargate.universe.roll");
 			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
@@ -500,6 +507,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		orientation = Direction.values()[compoundTag.getIntegerOrDefault("Orientation", Direction.NORTH.ordinal())];
 
 		state = StargateState.values()[compoundTag.getIntegerOrDefault("State", StargateAnimation.NONE.ordinal())];
+		lastState = state;
 		currentDialingAddressSize = compoundTag.getShortOrDefault("DialingAddressSize", (short) 0);
 		currentDialingAddress[0] = compoundTag.getIntegerOrDefault("DialingAddress0", 0);
 		currentDialingAddress[1] = compoundTag.getIntegerOrDefault("DialingAddress1", 0);
@@ -604,19 +612,34 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	}
 
 	public int getChevronActiveSymbol(int chevron) {
-		final int[] ORDER = {0, 1, 2, 3, 4, 5, 8, 6, 7};
-
-		if (currentDialingAddressSize == 0) {
-			return -1;
+		switch (chevron) {
+			case 0:
+				return currentDialingAddress[0];
+			case 1:
+				return currentDialingAddress[1];
+			case 2:
+				return currentDialingAddress[2];
+			case 3:
+				return currentDialingAddress[3];
+			case 4:
+				return currentDialingAddress[4];
+			case 5:
+				return currentDialingAddress[5];
+			case 6:
+				if (currentDialingAddressSize == 7) {
+					return currentDialingAddress[6];
+				}
+				if (currentDialingAddressSize == 8) {
+					return currentDialingAddress[7];
+				}
+				return currentDialingAddress[8];
+			case 7:
+				return currentDialingAddress[6];
+			case 8:
+				return currentDialingAddress[7];
 		}
 
-		int currentEncodedChevron = ORDER[chevron];
-
-		if (currentEncodedChevron >= currentDialingAddressSize) {
-			return currentDialingAddress[currentDialingAddressSize - 1];
-		}
-
-		return currentDialingAddress[currentEncodedChevron];
+		return -1;
 	}
 
 	public double interpolatedChevronDistance(int chevron, double partialTicks) {
@@ -784,6 +807,10 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
+	protected void resetGateDirection() {
+		ringDirection = false;
+	}
+
 	@Override
 	public void tick() {
 		if (state == StargateState.CONNECTED && worldObj != null) {
@@ -878,6 +905,12 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		}
 
 		if (!EnvironmentHelper.isClientWorld()) {
+			if (getFamily() == StargateFamily.Universe) {
+				if (state != StargateState.IDLE && lastState == StargateState.IDLE) {
+					playAnimation(StargateAnimation.UNIVERSE_START);
+				}
+			}
+
 			StargateDematerializedManager.getInstance().materializeEntities(this);
 			StargateDematerializedManager.getInstance().materializeBlocks(this);
 
@@ -896,6 +929,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				} else {
 					state = StargateState.IDLE;
 					currentDialingAddressSize = 0;
+
+					this.resetGateDirection();
 
 					if (worldObj != null) {
 						worldObj.markBlockNeedsUpdate(x, y, z);
@@ -943,11 +978,20 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 		lastEventHorizonNoise = eventHorizonNoise;
 
+		if (animation == StargateAnimation.UNIVERSE_START) {
+			updateAnimation();
+			lastState = state;
+			return;
+		}
+
 		updateRotation();
 
 		if (ringMove) {
+			lastState = state;
 			return;
 		}
+
+		lastState = state;
 
 		updateCommands();
 		updateAnimation();
@@ -1456,6 +1500,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			if (animation == StargateAnimation.KAWOOSH) {
 				if (getFamily() == StargateFamily.Pegasus) {
 					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				} else if (getFamily() == StargateFamily.Universe) {
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 				} else {
 					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 				}
@@ -1466,6 +1512,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			if (animation == StargateAnimation.CANCEL) {
 				if (getFamily() == StargateFamily.Pegasus) {
 					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				} else if (getFamily() == StargateFamily.Universe) {
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 				} else {
 					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 				}
@@ -1497,6 +1545,18 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				}
 			} else if (animationTick == 4) {
 				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+		}
+
+		if (animation == StargateAnimation.UNIVERSE_START) {
+			if (animationTick == 0) {
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.start", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+			}
+		}
+
+		if (animation == StargateAnimation.UNIVERSE_ENCODE_CHEVRON || animation == StargateAnimation.UNIVERSE_FAST_ENCODE_CHEVRON) {
+			if (animationTick == 0) {
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
 			}
 		}
 
@@ -1619,10 +1679,10 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				int[] originAddress = this.getAddress().encodeAddress();
 
 				currentDialingAddress[6] = originAddress[6];
-				currentDialingAddress[7] = -1;
+				currentDialingAddress[7] = 0;
 				currentDialingAddress[8] = 0;
 			} else if (currentDialingAddressSize == 8) {
-				currentDialingAddress[7] = -1;
+				currentDialingAddress[7] = 0;
 				currentDialingAddress[8] = 0;
 			}
 
@@ -1706,7 +1766,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		});
 	}
 
-	private void cancelDial(int x, int y, int z) {
+	protected void cancelDial(int x, int y, int z) {
 		state = StargateState.IDLE;
 		currentDialingAddressSize = 0;
 
@@ -1715,6 +1775,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		}
 
 		playAnimation(StargateAnimation.CANCEL);
+
+		resetGateDirection();
 	}
 
 	private void openGate() {
@@ -1755,10 +1817,21 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		encode();
 		moveToSymbol(2);
 		encode();
-//		moveToSymbol(9);
-//		encode();
+		moveToSymbol(9);
+		encode();
 		moveToSymbol(0);
 		encode();
+
+
+//		fastEncode(22);
+//		fastEncode(27);
+//		fastEncode(33);
+//		fastEncode(17);
+//		fastEncode(1);
+//		fastEncode(19);
+//		fastEncode(2);
+//		fastEncode(0);
+
 
 //		fastEncode(26);
 //		//moveToSymbol(26);

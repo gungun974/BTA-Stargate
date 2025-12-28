@@ -118,7 +118,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 			LightmapHelper.setLightmapCoord(tileEntity.getLightmap());
 		}
 
-		renderFrame(tessellator);
+		renderFrame(tessellator, tileEntity, partialTicks);
 		renderSymbolRing(tessellator, tileEntity, partialTicks);
 		renderChevrons(tessellator, tileEntity, partialTicks);
 
@@ -197,7 +197,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 		Lighting.enableLight();
 	}
 
-	protected void renderFrame(Tessellator tessellator) {
+	protected void renderFrame(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
 	}
 
 	protected void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
@@ -233,6 +233,8 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 	protected void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
 	}
 
+	abstract void loadEventHorizonTexture();
+
 	private void renderEventHorizon(Tessellator tessellator, TileEntityStargateCore tileEntity, float partialTicks) {
 		if (!tileEntity.interpolatedShowEventHorizon()) {
 			return;
@@ -242,7 +244,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 
 		final int frame = (int) (time % 14);
 
-		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
+		loadEventHorizonTexture();
 
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glDisable(GL11.GL_CULL_FACE);
@@ -308,7 +310,7 @@ public abstract class TileEntityRenderStargateCore extends TileEntityRenderer<Ti
 
 		final int vortexSide = 30;
 
-		this.loadTexture("/assets/stargate/textures/tileentity/milkyway/eventhorizon.png");
+		loadEventHorizonTexture();
 
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_CULL_FACE);
