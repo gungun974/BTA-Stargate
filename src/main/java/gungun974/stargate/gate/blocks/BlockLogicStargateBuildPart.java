@@ -8,6 +8,7 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.enums.EnumDropCause;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.helper.Side;
@@ -70,6 +71,20 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			return this.block.getKey().replace(".build.part", ".core");
 		}
 		return this.block.getKey();
+	}
+
+	@Override
+	public ItemStack[] getBreakResult(World world, EnumDropCause dropCause, int meta, TileEntity entity) {
+		switch (dropCause) {
+			case PICK_BLOCK:
+			case EXPLOSION:
+			case PROPER_TOOL:
+			case SILK_TOUCH:
+			case PISTON_CRUSH:
+				return new ItemStack[]{new ItemStack(block.id(), 1, meta)};
+			default:
+				return null;
+		}
 	}
 
 	@Override

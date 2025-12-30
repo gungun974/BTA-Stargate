@@ -8,6 +8,8 @@ import net.minecraft.core.block.BlockLogicRotatable;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.enums.EnumDropCause;
+import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
 import turniplabs.halplibe.helper.EnvironmentHelper;
@@ -30,17 +32,7 @@ public class BlockLogicStargate extends BlockLogicRotatable {
 		return StargateBlocks.STARGATE_BUILD_PART_MILKYWAY.id();
 	}
 
-	public void restoreOriginalBlock(World world, int x, int y, int z) {
-		if (world.isAirBlock(x, y, z)) {
-			return;
-		}
-
-		if (world.getBlockId(x, y, z) != id()) {
-			return;
-		}
-
-		int rawMetadata = world.getBlockMetadata(x, y, z);
-
+	private int originalBlockMetadata(World world, int x, int y, int z, int rawMetadata) {
 		int ringMetadata = rawMetadata & 0b1111;
 
 		int ringMetadataOffset = rawMetadata & 0b11000000;
@@ -81,7 +73,33 @@ public class BlockLogicStargate extends BlockLogicRotatable {
 				metadata = BlockLogicStargateBuildPart.CHEVRON_META;
 		}
 
-		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), metadata);
+		return metadata;
+	}
+
+	@Override
+	public ItemStack[] getBreakResult(World world, EnumDropCause dropCause, int meta, TileEntity entity) {
+		switch (dropCause) {
+			case PICK_BLOCK:
+			case EXPLOSION:
+			case PROPER_TOOL:
+			case SILK_TOUCH:
+			case PISTON_CRUSH:
+				return new ItemStack[]{new ItemStack(getIdForStargateBuildPartBlock(), 1, originalBlockMetadata(world, entity.x, entity.y, entity.z, meta))};
+			default:
+				return null;
+		}
+	}
+
+	public void restoreOriginalBlock(World world, int x, int y, int z) {
+		if (world.isAirBlock(x, y, z)) {
+			return;
+		}
+
+		if (world.getBlockId(x, y, z) != id()) {
+			return;
+		}
+
+		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), originalBlockMetadata(world, x, y, z, world.getBlockMetadata(x, y, z)));
 	}
 
 	@Override
