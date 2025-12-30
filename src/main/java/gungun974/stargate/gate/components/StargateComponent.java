@@ -158,6 +158,15 @@ public abstract class StargateComponent {
 		horizontalCheckIfStillValid();
 	}
 
+	public void destroyGate() {
+		if (orientation == Direction.NORTH) {
+			destroyVertical();
+			return;
+		}
+		destroyHorizontal();
+		invalidate();
+	}
+
 	private int getIdForStargateBlock() {
 		switch (getFamily()) {
 			case MilkyWay:
@@ -267,6 +276,87 @@ public abstract class StargateComponent {
 		}
 	}
 
+	private void destroyVertical() {
+		if (stargateTile.worldObj == null) {
+			return;
+		}
+
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		boolean invertOrder = (direction == Direction.WEST || direction == Direction.NORTH);
+
+		int stargateBlockId = getIdForStargateBlock();
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (invertOrder && idx > 0) {
+				meta = ringOrder.length - idx;
+			} else {
+				meta = idx;
+			}
+
+			int px = stargateTile.x + direction.getOffsetZ() * i;
+			int py = stargateTile.y + j;
+			int pz = stargateTile.z + direction.getOffsetX() * i;
+
+			if (stargateTile.worldObj.getBlockId(px, py, pz) != stargateBlockId) {
+				continue;
+			}
+
+			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, py, pz);
+
+			int ringMetadata = rawMetadata & 0b1111;
+			int directionMetadata = rawMetadata & 0b110000;
+
+			if (ringMetadata != meta) {
+				continue;
+			}
+
+			if (direction == Direction.EAST || direction == Direction.WEST) {
+				if (directionMetadata != 0b010000) {
+					continue;
+				}
+			} else {
+				if (directionMetadata != 0b000000) {
+					continue;
+				}
+			}
+
+			stargateTile.worldObj.setBlockRaw(px, py, pz, 0);
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = stargateTile.x + direction.getOffsetZ() * i;
+			int py = stargateTile.y + j;
+			int pz = stargateTile.z + direction.getOffsetX() * i;
+
+			stargateTile.worldObj.notifyBlockChange(px, py, pz, 0);
+		}
+	}
+
 	private void horizontalCheckIfStillValid() {
 		if (stargateTile.worldObj == null) {
 			return;
@@ -356,6 +446,85 @@ public abstract class StargateComponent {
 			}
 
 			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, px, stargateTile.y, pz);
+		}
+	}
+
+	private void destroyHorizontal() {
+		if (stargateTile.worldObj == null) {
+			return;
+		}
+
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		int stargateBlockId = getIdForStargateBlock();
+
+		Direction dira = direction.getOpposite();
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (dira == Direction.WEST) {
+				meta = ringOrder.length - idx - 12;
+			} else if (dira == Direction.NORTH) {
+				meta = idx - 8;
+			} else if (dira == Direction.EAST) {
+				meta = ringOrder.length - idx - 4;
+			} else {
+				meta = idx;
+			}
+
+			meta = Math.floorMod(meta, 16);
+
+			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
+			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+
+			if (stargateTile.worldObj.getBlockId(px, stargateTile.y, pz) != stargateBlockId) {
+				continue;
+			}
+
+			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, stargateTile.y, pz);
+
+			int ringMetadata = rawMetadata & 0b1111;
+			int directionMetadata = rawMetadata & 0b110000;
+
+			if (ringMetadata != meta) {
+				continue;
+			}
+
+			if (directionMetadata != 0b100000) {
+				continue;
+			}
+
+			stargateTile.worldObj.setBlockRaw(px, stargateTile.y, pz, 0);
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
+			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+
+			stargateTile.worldObj.notifyBlockChange(px, stargateTile.y, pz, 0);
 		}
 	}
 

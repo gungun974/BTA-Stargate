@@ -154,7 +154,7 @@ public class BlockLogicStargate extends BlockLogic {
 		return stargate;
 	}
 
-	private TileEntityStargate findMainTileEntityStargate(World world, int x, int y, int z) {
+	public TileEntityStargate findMainTileEntityStargate(World world, int x, int y, int z) {
 		int rawMetadata = world.getBlockMetadata(x, y, z);
 
 		int ringMetadata = rawMetadata & 0b1111;

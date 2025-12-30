@@ -1,6 +1,7 @@
 package gungun974.stargate.gate.blocks;
 
 import gungun974.stargate.StargateBlocks;
+import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLogic;
@@ -58,6 +59,262 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			default:
 				return meta;
 		}
+	}
+
+	static public boolean canBuildVerticalStargate(World world, int x, int y, int z, Direction direction) {
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = x + direction.getOffsetZ() * i;
+			int py = y + j;
+			int pz = z + direction.getOffsetX() * i;
+
+			if (!world.canPlaceInsideBlock(px, py, pz)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static public void buildVerticalStargate(World world, int x, int y, int z, Direction direction, StargateFamily family) {
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		boolean invertOrder = (direction == Direction.WEST || direction == Direction.NORTH);
+
+		int stargateBlockId = 0;
+
+		switch (family) {
+			case MilkyWay:
+				stargateBlockId = StargateBlocks.STARGATE_MILKYWAY.id();
+				break;
+			case Pegasus:
+				stargateBlockId = StargateBlocks.STARGATE_PEGASUS.id();
+				break;
+			case Universe:
+				stargateBlockId = StargateBlocks.STARGATE_UNIVERSE.id();
+				break;
+		}
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (invertOrder && idx > 0) {
+				meta = ringOrder.length - idx;
+			} else {
+				meta = idx;
+			}
+
+			int blockMeta = meta;
+
+			if (direction == Direction.EAST || direction == Direction.WEST) {
+				blockMeta += 0b010000;
+			}
+
+			int px = x + direction.getOffsetZ() * i;
+			int py = y + j;
+			int pz = z + direction.getOffsetX() * i;
+
+			world.setBlockAndMetadataRaw(px, py, pz, stargateBlockId, blockMeta);
+			TileEntity tileEntity = world.getTileEntity(px, py, pz);
+			if (tileEntity == null) {
+				continue;
+			}
+
+			if (!(tileEntity instanceof TileEntityStargate)) {
+				continue;
+			}
+
+			if (idx == 0) {
+				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
+				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
+				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(Direction.NORTH);
+			} else {
+				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
+			}
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = x + direction.getOffsetZ() * i;
+			int py = y + j;
+			int pz = z + direction.getOffsetX() * i;
+
+			world.notifyBlockChange(px, py, pz, stargateBlockId);
+		}
+	}
+
+	static public void buildHorizontalStargate(World world, int x, int y, int z, Direction direction, Direction orientation, StargateFamily family) {
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		int stargateBlockId = 0;
+
+		switch (family) {
+			case MilkyWay:
+				stargateBlockId = StargateBlocks.STARGATE_MILKYWAY.id();
+				break;
+			case Pegasus:
+				stargateBlockId = StargateBlocks.STARGATE_PEGASUS.id();
+				break;
+			case Universe:
+				stargateBlockId = StargateBlocks.STARGATE_UNIVERSE.id();
+				break;
+		}
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (direction == Direction.WEST) {
+				meta = ringOrder.length - idx - 12;
+			} else if (direction == Direction.NORTH) {
+				meta = idx - 8;
+			} else if (direction == Direction.EAST) {
+				meta = ringOrder.length - idx - 4;
+			} else {
+				meta = idx;
+			}
+
+			meta = Math.floorMod(meta, 16);
+
+			int blockMeta = meta;
+
+			blockMeta += 0b100000;
+
+			if (direction == Direction.WEST) {
+				blockMeta += 0b11000000;
+			} else if (direction == Direction.NORTH) {
+				blockMeta += 0b01000000;
+			} else if (direction == Direction.EAST) {
+				blockMeta += 0b10000000;
+			}
+
+			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
+			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+
+			world.setBlockAndMetadataRaw(px, y, pz, stargateBlockId, blockMeta);
+
+			TileEntity tileEntity = world.getTileEntity(px, y, pz);
+			if (tileEntity == null) {
+				continue;
+			}
+
+			if (!(tileEntity instanceof TileEntityStargate)) {
+				continue;
+			}
+
+			if (idx == 0) {
+				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
+				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
+				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(orientation);
+			} else {
+				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
+			}
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
+			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+
+			world.notifyBlockChange(px, y, pz, stargateBlockId);
+		}
+	}
+
+	static public boolean canBuildHorizontalStargate(World world, int x, int y, int z, Direction direction) {
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
+			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+
+			if (!world.canPlaceInsideBlock(px, y, pz)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public String getLanguageKey(int meta) {
@@ -193,11 +450,11 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 		}
 
 		if (isValidStructureVertical(world, x, y, z, direction)) {
-			buildVerticalStargate(world, x, y, z, direction);
+			buildVerticalStargate(world, x, y, z, direction, getFamilyForStargateBlock());
 			return;
 		}
 		if (isValidStructureHorizontal(world, x, y, z, direction)) {
-			buildHorizontalStargate(world, x, y, z, direction);
+			buildHorizontalStargate(world, x, y, z, direction, Direction.UP, getFamilyForStargateBlock());
 		}
 	}
 
@@ -286,177 +543,16 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 		return true;
 	}
 
-	private int getIdForStargateBlock() {
+	private StargateFamily getFamilyForStargateBlock() {
 		int id = id();
 
 		if (id == StargateBlocks.STARGATE_BUILD_PART_PEGASUS.id()) {
-			return StargateBlocks.STARGATE_PEGASUS.id();
+			return StargateFamily.Pegasus;
 		}
 		if (id == StargateBlocks.STARGATE_BUILD_PART_UNIVERSE.id()) {
-			return StargateBlocks.STARGATE_UNIVERSE.id();
+			return StargateFamily.Universe;
 		}
 
-		return StargateBlocks.STARGATE_MILKYWAY.id();
-	}
-
-	private void buildVerticalStargate(World world, int x, int y, int z, Direction direction) {
-		int[][] ringOrder = {
-			{0, 0},
-			{-1, 0},
-			{-2, 1},
-			{-3, 2},
-			{-3, 3},
-			{-3, 4},
-			{-2, 5},
-			{-1, 6},
-			{0, 6},
-			{1, 6},
-			{2, 5},
-			{3, 4},
-			{3, 3},
-			{3, 2},
-			{2, 1},
-			{1, 0},
-		};
-
-		boolean invertOrder = (direction == Direction.WEST || direction == Direction.NORTH);
-
-		int stargateBlockId = getIdForStargateBlock();
-
-		for (int idx = 0; idx < ringOrder.length; idx++) {
-			int i = ringOrder[idx][0];
-			int j = ringOrder[idx][1];
-
-			int meta;
-			if (invertOrder && idx > 0) {
-				meta = ringOrder.length - idx;
-			} else {
-				meta = idx;
-			}
-
-			int blockMeta = meta;
-
-			if (direction == Direction.EAST || direction == Direction.WEST) {
-				blockMeta += 0b010000;
-			}
-
-			int px = x + direction.getOffsetZ() * i;
-			int py = y + j;
-			int pz = z + direction.getOffsetX() * i;
-
-			world.setBlockAndMetadataRaw(px, py, pz, stargateBlockId, blockMeta);
-			TileEntity tileEntity = world.getTileEntity(px, py, pz);
-			if (tileEntity == null) {
-				continue;
-			}
-
-			if (!(tileEntity instanceof TileEntityStargate)) {
-				continue;
-			}
-
-			if (idx == 0) {
-				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
-				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
-				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(Direction.NORTH);
-			} else {
-				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
-			}
-		}
-
-		for (int[] ints : ringOrder) {
-			int i = ints[0];
-			int j = ints[1];
-
-			int px = x + direction.getOffsetZ() * i;
-			int py = y + j;
-			int pz = z + direction.getOffsetX() * i;
-
-			world.notifyBlockChange(px, py, pz, stargateBlockId);
-		}
-	}
-
-	private void buildHorizontalStargate(World world, int x, int y, int z, Direction direction) {
-		int[][] ringOrder = {
-			{0, 0},
-			{-1, 0},
-			{-2, 1},
-			{-3, 2},
-			{-3, 3},
-			{-3, 4},
-			{-2, 5},
-			{-1, 6},
-			{0, 6},
-			{1, 6},
-			{2, 5},
-			{3, 4},
-			{3, 3},
-			{3, 2},
-			{2, 1},
-			{1, 0},
-		};
-
-		int stargateBlockId = getIdForStargateBlock();
-
-		for (int idx = 0; idx < ringOrder.length; idx++) {
-			int i = ringOrder[idx][0];
-			int j = ringOrder[idx][1];
-
-			int meta;
-			if (direction == Direction.WEST) {
-				meta = ringOrder.length - idx - 12;
-			} else if (direction == Direction.NORTH) {
-				meta = idx - 8;
-			} else if (direction == Direction.EAST) {
-				meta = ringOrder.length - idx - 4;
-			} else {
-				meta = idx;
-			}
-
-			meta = Math.floorMod(meta, 16);
-
-			int blockMeta = meta;
-
-			blockMeta += 0b100000;
-
-			if (direction == Direction.WEST) {
-				blockMeta += 0b11000000;
-			} else if (direction == Direction.NORTH) {
-				blockMeta += 0b01000000;
-			} else if (direction == Direction.EAST) {
-				blockMeta += 0b10000000;
-			}
-
-			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
-
-			world.setBlockAndMetadataRaw(px, y, pz, stargateBlockId, blockMeta);
-
-			TileEntity tileEntity = world.getTileEntity(px, y, pz);
-			if (tileEntity == null) {
-				continue;
-			}
-
-			if (!(tileEntity instanceof TileEntityStargate)) {
-				continue;
-			}
-
-			if (idx == 0) {
-				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
-				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
-				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(Direction.UP);
-			} else {
-				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
-			}
-		}
-
-		for (int[] ints : ringOrder) {
-			int i = ints[0];
-			int j = ints[1];
-
-			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
-
-			world.notifyBlockChange(px, y, pz, stargateBlockId);
-		}
+		return StargateFamily.MilkyWay;
 	}
 }

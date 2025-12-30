@@ -23,6 +23,7 @@ public class StargateMod implements ModInitializer, RecipeEntrypoint, GameStartE
 	public void onInitialize() {
 		LOGGER.info("Stargate initialized.");
 		StargateBlocks.RegisterBlocks();
+		StargateItems.RegisterItems();
 
 		NetworkHandler.registerNetworkMessage(PlayerEnterStargateMessage::new);
 	}
