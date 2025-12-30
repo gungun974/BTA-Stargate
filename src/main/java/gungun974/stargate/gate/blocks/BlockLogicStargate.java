@@ -4,7 +4,7 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.block.Block;
-import net.minecraft.core.block.BlockLogicRotatable;
+import net.minecraft.core.block.BlockLogic;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.Player;
@@ -14,7 +14,7 @@ import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
-public class BlockLogicStargate extends BlockLogicRotatable {
+public class BlockLogicStargate extends BlockLogic {
 	public BlockLogicStargate(Block<?> block, Material material) {
 		super(block, material);
 	}
