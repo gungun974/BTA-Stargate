@@ -101,13 +101,20 @@ public class BlockLogicStargate extends BlockLogicRotatable {
 		}
 
 		checkIfStillValid(world, x, y, z);
-//
-//        TileEntityStargateCore stargateCore = TileEntityStargateCore.findStargateCore(world, x, y, z);
-//        if (stargateCore != null && stargateCore.isAssembled()) {
-//            stargateCore.autoDial();
-//            return true;
-//        }
-		return false;
+
+		TileEntityStargate stargate = findMainTileEntityStargate(world, x, y, z);
+		if (stargate == null) {
+			return false;
+		}
+
+		StargateComponent component = stargate.getStargateComponent();
+		if (component == null) {
+			return false;
+		}
+
+		component.autoDial();
+
+		return true;
 	}
 
 	private TileEntityStargate extractMainTileEntityStargate(World world, int x, int y, int z) {

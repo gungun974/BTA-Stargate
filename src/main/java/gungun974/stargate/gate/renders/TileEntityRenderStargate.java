@@ -70,21 +70,21 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		} else if (gate.getOrientation() == Direction.UP) {
 			switch (gate.getDirection()) {
 				case NORTH:
-					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotated(-90, 1, 0, 0);
 					GL11.glTranslated(0.5, 2.5, 0.5);
 					break;
 				case EAST:
-					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotated(-90, 1, 0, 0);
 					GL11.glRotatef(-90, 0, 0, 1);
 					GL11.glTranslated(0.5, 3.5, 0.5);
 					break;
 				case SOUTH:
-					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotated(-90, 1, 0, 0);
 					GL11.glRotatef(180, 0, 0, 1);
 					GL11.glTranslated(-0.5, 3.5, 0.5);
 					break;
 				case WEST:
-					GL11.glRotated(-90, 0, 0, 0);
+					GL11.glRotated(-90, 1, 0, 0);
 					GL11.glRotatef(90, 0, 0, 1);
 					GL11.glTranslated(-0.5, 2.5, 0.5);
 					break;
@@ -92,21 +92,21 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		} else {
 			switch (gate.getDirection()) {
 				case NORTH:
-					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotated(90, 1, 0, 0);
 					GL11.glRotatef(180, 0, 0, 1);
 					GL11.glTranslated(-0.5, 2.5, -0.5);
 					break;
 				case EAST:
-					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotated(90, 1, 0, 0);
 					GL11.glRotatef(-90, 0, 0, 1);
 					GL11.glTranslated(-0.5, 3.5, -0.5);
 					break;
 				case SOUTH:
-					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotated(90, 1, 0, 0);
 					GL11.glTranslated(0.5, 3.5, -0.5);
 					break;
 				case WEST:
-					GL11.glRotated(90, 0, 0, 0);
+					GL11.glRotated(90, 1, 0, 0);
 					GL11.glRotatef(90, 0, 0, 1);
 					GL11.glTranslated(0.5, 2.5, -0.5);
 					break;

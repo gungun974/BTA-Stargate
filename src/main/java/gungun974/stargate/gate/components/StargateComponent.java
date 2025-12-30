@@ -372,6 +372,7 @@ public abstract class StargateComponent {
 		stopSoundAtCenter("stargate:stargate.pegasus.roll");
 		stopSoundAtCenter("stargate:stargate.universe.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
+		StargateSessionManager.getInstance().removeSession(this);
 	}
 
 	public Direction getDirection() {
@@ -408,158 +409,6 @@ public abstract class StargateComponent {
 		animationTick = compoundTag.getIntegerOrDefault("AnimationTick", 0);
 	}
 
-//	private boolean isValidStructure() {
-//		World world = stargateTile.worldObj;
-//
-//		if (world == null) {
-//			direction = Direction.NORTH;
-//		} else {
-//			direction = BlockLogicStargate.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
-//		}
-//
-//		if (isValidStructureVertical()) {
-//			orientation = Direction.NORTH;
-//			return true;
-//		}
-//		if (isValidStructureHorizontal()) {
-//			orientation = Direction.UP;
-//			return true;
-//		}
-//		return false;
-//	}
-//
-//	private boolean isValidStructureVertical() {
-//		World world = stargateTile.worldObj;
-//		if (world == null) {
-//			return false;
-//		}
-//
-//		Direction direction = BlockLogicStargate.getDirectionFromMeta(
-//			world.getBlockMetadata(stargateTile.x, stargateTile.y, stargateTile.z)
-//		);
-//
-//		for (int j = 0; j < 7; j++) {
-//			for (int i = -4; i < 5; i++) {
-//				switch (j) {
-//					case 0:
-//						if (Math.abs(i) != 1) continue;
-//						break;
-//					case 1:
-//					case 5:
-//						if (Math.abs(i) != 2) continue;
-//						break;
-//					case 2:
-//					case 3:
-//					case 4:
-//						if (Math.abs(i) != 3) continue;
-//						break;
-//					case 6:
-//						if (Math.abs(i) > 1) continue;
-//						break;
-//					default:
-//						continue;
-//				}
-//
-//				int px = stargateTile.x + direction.getOffsetZ() * i;
-//				int py = stargateTile.y + j;
-//				int pz = stargateTile.z + direction.getOffsetX() * i;
-//
-//				int id = world.getBlockId(px, py, pz);
-//
-//				if (id != this.getRingBlock().id()) {
-//					return false;
-//				}
-//
-//				int meta = world.getBlockMetadata(px, py, pz);
-//
-//				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
-//					if (meta != 1) {
-//						return false;
-//					}
-//				} else if (meta != 0) {
-//					return false;
-//				}
-//			}
-//		}
-//		return true;
-//	}
-//
-//	private boolean isValidStructureHorizontal() {
-//		World world = stargateTile.worldObj;
-//		if (world == null) {
-//			return false;
-//		}
-//
-//		Direction direction = BlockLogicStargate.getDirectionFromMeta(
-//			world.getBlockMetadata(stargateTile.x, stargateTile.y, stargateTile.z)
-//		);
-//
-//		for (int j = 0; j < 7; j++) {
-//			for (int i = -4; i < 5; i++) {
-//				switch (j) {
-//					case 0:
-//						if (Math.abs(i) != 1) continue;
-//						break;
-//					case 1:
-//					case 5:
-//						if (Math.abs(i) != 2) continue;
-//						break;
-//					case 2:
-//					case 3:
-//					case 4:
-//						if (Math.abs(i) != 3) continue;
-//						break;
-//					case 6:
-//						if (Math.abs(i) > 1) continue;
-//						break;
-//					default:
-//						continue;
-//				}
-//
-//				int px = stargateTile.x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-//				int py = stargateTile.y;
-//				int pz = stargateTile.z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
-//
-//				int id = world.getBlockId(px, py, pz);
-//
-//				if (id != this.getRingBlock().id()) {
-//					return false;
-//				}
-//
-//				int meta = world.getBlockMetadata(px, py, pz);
-//
-//				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
-//					if (meta != 1) {
-//						return false;
-//					}
-//				} else if (meta != 0) {
-//					return false;
-//				}
-//			}
-//		}
-//		return true;
-//	}
-//
-//	public void checkAndAssemble() {
-//		boolean shouldAssembled = isValidStructure();
-//
-//		if (shouldAssembled && !assembled) {
-//			// ASSEMBLE
-//			this.assembled = true;
-//			StargateMod.LOGGER.info("Assemble Stargate");
-//		}
-//
-//		if (!shouldAssembled && assembled) {
-//			// DISASSEMBLE
-//			this.assembled = false;
-//			StargateMod.LOGGER.info("Disassemble Stargate");
-//
-//			stopSoundAtCenter("stargate:stargate.milkyway.roll");
-//			stopSoundAtCenter("stargate:stargate.pegasus.roll");
-//			stopSoundAtCenter("stargate:stargate.universe.roll");
-//			StargateSessionManager.getInstance().removeSession(this);
-//		}
-//	}
 
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putInt("Direction", direction.ordinal());
@@ -1392,6 +1241,18 @@ public abstract class StargateComponent {
 
 				int meta = stargateTile.worldObj.getBlockMetadata(x, y, z);
 
+				if (id == StargateBlocks.STARGATE_MILKYWAY.id()) {
+					continue;
+				}
+
+				if (id == StargateBlocks.STARGATE_PEGASUS.id()) {
+					continue;
+				}
+
+				if (id == StargateBlocks.STARGATE_UNIVERSE.id()) {
+					continue;
+				}
+
 				if (id == Blocks.PISTON_MOVING.id()) {
 					continue;
 				}
@@ -1834,34 +1695,34 @@ public abstract class StargateComponent {
 	}
 
 	public void autoDial() {
-		moveToSymbol(22);
-		encode();
-		moveToSymbol(27);
-		encode();
-		moveToSymbol(33);
-		encode();
-		moveToSymbol(17);
-		encode();
-		moveToSymbol(1);
-		encode();
-		moveToSymbol(19);
-		encode();
-		moveToSymbol(2);
-		encode();
-		moveToSymbol(9);
-		encode();
-		moveToSymbol(0);
-		encode();
+//		moveToSymbol(22);
+//		encode();
+//		moveToSymbol(27);
+//		encode();
+//		moveToSymbol(33);
+//		encode();
+//		moveToSymbol(17);
+//		encode();
+//		moveToSymbol(1);
+//		encode();
+//		moveToSymbol(19);
+//		encode();
+//		moveToSymbol(2);
+//		encode();
+//		moveToSymbol(9);
+//		encode();
+//		moveToSymbol(0);
+//		encode();
 
 
-//		fastEncode(22);
-//		fastEncode(27);
-//		fastEncode(33);
-//		fastEncode(17);
-//		fastEncode(1);
-//		fastEncode(19);
-//		fastEncode(2);
-//		fastEncode(0);
+		fastEncode(22);
+		fastEncode(27);
+		fastEncode(33);
+		fastEncode(17);
+		fastEncode(1);
+		fastEncode(19);
+		fastEncode(2);
+		fastEncode(0);
 
 
 //		fastEncode(26);
