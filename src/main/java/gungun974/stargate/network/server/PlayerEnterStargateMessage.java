@@ -2,7 +2,8 @@ package gungun974.stargate.network.server;
 
 import gungun974.stargate.core.StargateSession;
 import gungun974.stargate.core.StargateSessionManager;
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.components.StargateComponent;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.block.entity.TileEntity;
@@ -85,11 +86,15 @@ public class PlayerEnterStargateMessage implements NetworkMessage {
 
 		TileEntity tileEntity = world.getTileEntity(gateX, gateY, gateZ);
 
-		if (!(tileEntity instanceof TileEntityStargateCore)) {
+		if (!(tileEntity instanceof TileEntityStargate)) {
 			return;
 		}
 
-		TileEntityStargateCore gate = (TileEntityStargateCore) tileEntity;
+		StargateComponent gate = ((TileEntityStargate) tileEntity).getStargateComponent();
+
+		if (gate == null) {
+			return;
+		}
 
 		StargateSession session = StargateSessionManager.getInstance().getSession(gate);
 

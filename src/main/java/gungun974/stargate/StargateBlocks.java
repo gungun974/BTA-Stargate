@@ -1,7 +1,7 @@
 package gungun974.stargate;
 
-import gungun974.stargate.gate.blocks.BlockLogicStargateCore;
-import gungun974.stargate.gate.blocks.BlockLogicStargateRing;
+import gungun974.stargate.gate.blocks.BlockLogicStargate;
+import gungun974.stargate.gate.blocks.BlockLogicStargateBuildPart;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.tiles.TileEntityStargatePegasus;
 import gungun974.stargate.gate.tiles.TileEntityStargateUniverse;
@@ -16,14 +16,14 @@ import turniplabs.halplibe.helper.EntityHelper;
 import static gungun974.stargate.StargateMod.MOD_ID;
 
 public class StargateBlocks {
-	public static Block<BlockLogicStargateCore> STARGATE_CORE_MILKYWAY;
-	public static Block<BlockLogicStargateRing> STARGATE_RING_MILKYWAY;
+	public static Block<BlockLogicStargate> STARGATE_MILKYWAY;
+	public static Block<BlockLogicStargateBuildPart> STARGATE_BUILD_PART_MILKYWAY;
 
-	public static Block<BlockLogicStargateCore> STARGATE_CORE_PEGASUS;
-	public static Block<BlockLogicStargateRing> STARGATE_RING_PEGASUS;
+	public static Block<BlockLogicStargate> STARGATE_PEGASUS;
+	public static Block<BlockLogicStargateBuildPart> STARGATE_BUILD_PART_PEGASUS;
 
-	public static Block<BlockLogicStargateCore> STARGATE_CORE_UNIVERSE;
-	public static Block<BlockLogicStargateRing> STARGATE_RING_UNIVERSE;
+	public static Block<BlockLogicStargate> STARGATE_UNIVERSE;
+	public static Block<BlockLogicStargateBuildPart> STARGATE_BUILD_PART_UNIVERSE;
 
 	private static int currentGeneratedId;
 
@@ -38,35 +38,35 @@ public class StargateBlocks {
 		EntityHelper.createTileEntity(TileEntityStargatePegasus.class, NamespaceID.getPermanent(MOD_ID, "stargate_pegasus"));
 		EntityHelper.createTileEntity(TileEntityStargateUniverse.class, NamespaceID.getPermanent(MOD_ID, "stargate_universe"));
 
-		BlockBuilder stargateCoreBuilder = new BlockBuilder(MOD_ID)
+		BlockBuilder stargateBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)
 			.setResistance(5.0f)
 			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
 			.setBlockSound(BlockSounds.WOOD);
 
-		BlockBuilder stargateRingBuilder = new BlockBuilder(MOD_ID)
+		BlockBuilder stargateBuildPartBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)
 			.setResistance(5.0f)
 			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
 			.setBlockSound(BlockSounds.WOOD);
 
-		STARGATE_CORE_MILKYWAY = stargateCoreBuilder
+		STARGATE_MILKYWAY = stargateBuilder
 			.setTileEntity(TileEntityStargateMilkyWay::new)
-			.build("stargate_core_milkyway", generateNexId(), b -> new BlockLogicStargateCore(b, Material.wood));
-		STARGATE_RING_MILKYWAY = stargateRingBuilder
-			.build("stargate_ring_milkyway", generateNexId(), b -> new BlockLogicStargateRing(b, Material.wood));
+			.build("stargate_milkyway", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+		STARGATE_BUILD_PART_MILKYWAY = stargateBuildPartBuilder
+			.build("stargate_build_part_milkyway", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
 
-		STARGATE_CORE_PEGASUS = stargateCoreBuilder
+		STARGATE_PEGASUS = stargateBuilder
 			.setTileEntity(TileEntityStargatePegasus::new)
-			.build("stargate_core_pegasus", generateNexId(), b -> new BlockLogicStargateCore(b, Material.wood));
-		STARGATE_RING_PEGASUS = stargateRingBuilder
-			.build("stargate_ring_pegasus", generateNexId(), b -> new BlockLogicStargateRing(b, Material.wood));
+			.build("stargate_pegasus", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+		STARGATE_BUILD_PART_PEGASUS = stargateBuildPartBuilder
+			.build("stargate_build_part_pegasus", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
 
-		STARGATE_CORE_UNIVERSE = stargateCoreBuilder
+		STARGATE_UNIVERSE = stargateBuilder
 			.setTileEntity(TileEntityStargateUniverse::new)
-			.build("stargate_core_universe", generateNexId(), b -> new BlockLogicStargateCore(b, Material.wood));
-		STARGATE_RING_UNIVERSE = stargateRingBuilder
-			.build("stargate_ring_universe", generateNexId(), b -> new BlockLogicStargateRing(b, Material.wood));
+			.build("stargate_universe", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+		STARGATE_BUILD_PART_UNIVERSE = stargateBuildPartBuilder
+			.build("stargate_build_part_universe", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
 	}
 
 }

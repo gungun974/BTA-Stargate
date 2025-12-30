@@ -1,11 +1,12 @@
-package gungun974.stargate.gate.tiles;
+package gungun974.stargate.gate.components;
 
 import com.mojang.nbt.tags.CompoundTag;
+import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
-import gungun974.stargate.gate.blocks.BlockLogicStargateCore;
-import gungun974.stargate.gate.blocks.BlockLogicStargateRing;
+import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.renders.StargateEventHorizon;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -17,14 +18,14 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.net.packet.*;
+import net.minecraft.core.net.packet.PacketGameRule;
+import net.minecraft.core.net.packet.PacketPlayerGamemode;
+import net.minecraft.core.net.packet.PacketRespawn;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.Dimension;
-import net.minecraft.core.world.World;
-import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
 import net.minecraft.core.world.chunk.ChunkPosition;
@@ -37,8 +38,9 @@ import turniplabs.halplibe.helper.network.NetworkHandler;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public abstract class TileEntityStargateCore extends TileEntity {
+public abstract class StargateComponent {
 	public final static double symbolAngle = 360.0 / StargateMilkyWayAddress.NUMBER_OF_SYMBOL;
+	public final TileEntity stargateTile;
 	protected final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
 	protected StargateState state = StargateState.IDLE;
@@ -52,7 +54,6 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	protected boolean ringMove = false;
 	protected double lastAngle = 0;
 	private boolean lastEventHorizonNoise = false;
-	private boolean assembled = false;
 	private Direction direction = Direction.NORTH;
 	private Direction orientation = Direction.NORTH;
 	private StargateAnimation lastAnimation = StargateAnimation.NONE;
@@ -62,176 +63,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	private int eventHorizonTick = 0;
 	private int lastEventHorizonTick = 0;
 
-	@Nullable
-	public static TileEntityStargateCore findStargateCore(WorldSource worldSource, int x, int y, int z) {
-		TileEntity tileEntity = worldSource.getTileEntity(x, y, z);
-		if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-		for (Direction direction : Direction.directions) {
-			if (direction == Direction.DOWN) {
-				continue;
-			}
-
-			for (int j = 0; j < 7; j++) {
-				int i;
-				switch (j) {
-					case 0:
-						i = 1;
-						break;
-					case 1:
-					case 5:
-						i = 2;
-						break;
-					case 2:
-					case 3:
-					case 4:
-						i = 3;
-						break;
-					case 6:
-						i = 1;
-						tileEntity = worldSource.getTileEntity(x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
-						if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-						break;
-					default:
-						continue;
-				}
-
-				if (direction == Direction.UP) {
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j + i
-					);
-					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j - i
-					);
-					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j + i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j
-					);
-					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j - i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j
-					);
-				} else {
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j + direction.getOffsetZ() * i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j + direction.getOffsetX() * i
-					);
-					if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j - direction.getOffsetZ() * i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j - direction.getOffsetX() * i
-					);
-
-				}
-				if (tileEntity instanceof TileEntityStargateCore) return (TileEntityStargateCore) tileEntity;
-			}
-		}
-
-		return null;
-	}
-
-	public static boolean isPartOfAssembled(WorldSource worldSource, int x, int y, int z) {
-		TileEntity tileEntity = worldSource.getTileEntity(x, y, z);
-		if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-			return true;
-
-		for (Direction direction : Direction.directions) {
-			if (direction == Direction.DOWN) {
-				continue;
-			}
-
-			for (int j = 0; j < 7; j++) {
-				int i;
-				switch (j) {
-					case 0:
-						i = 1;
-						break;
-					case 1:
-					case 5:
-						i = 2;
-						break;
-					case 2:
-					case 3:
-					case 4:
-						i = 3;
-						break;
-					case 6:
-						i = 1;
-						tileEntity = worldSource.getTileEntity(x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
-						if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-							return true;
-						break;
-					default:
-						continue;
-				}
-
-				if (direction == Direction.UP) {
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j + i
-					);
-					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-						return true;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j - i
-					);
-					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-						return true;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j + i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j
-					);
-					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-						return true;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j - i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j
-					);
-				} else {
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j + direction.getOffsetZ() * i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j + direction.getOffsetX() * i
-					);
-					if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-						return true;
-
-					tileEntity = worldSource.getTileEntity(
-						x - direction.getOffsetX() * j - direction.getOffsetZ() * i,
-						y - direction.getOffsetY() * j,
-						z - direction.getOffsetZ() * j - direction.getOffsetX() * i
-					);
-
-				}
-				if (tileEntity instanceof TileEntityStargateCore && ((TileEntityStargateCore) tileEntity).assembled)
-					return true;
-			}
-		}
-
-		return false;
+	protected StargateComponent(TileEntity stargateTile) {
+		this.stargateTile = stargateTile;
 	}
 
 	public static double angularDistance(double angle1, double angle2) {
@@ -317,6 +150,215 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 	}
 
+	public void checkIfStillValid() {
+		if (orientation == Direction.NORTH) {
+			verticalCheckIfStillValid();
+			return;
+		}
+		horizontalCheckIfStillValid();
+	}
+
+	private int getIdForStargateBlock() {
+		switch (getFamily()) {
+			case MilkyWay:
+				return StargateBlocks.STARGATE_MILKYWAY.id();
+			case Pegasus:
+				return StargateBlocks.STARGATE_PEGASUS.id();
+			case Universe:
+				return StargateBlocks.STARGATE_UNIVERSE.id();
+		}
+
+		return StargateBlocks.STARGATE_MILKYWAY.id();
+	}
+
+
+	private void verticalCheckIfStillValid() {
+		if (stargateTile.worldObj == null) {
+			return;
+		}
+
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		boolean invertOrder = (direction == Direction.WEST || direction == Direction.NORTH);
+
+		int stargateBlockId = getIdForStargateBlock();
+
+		boolean isValidStructure = true;
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (invertOrder && idx > 0) {
+				meta = ringOrder.length - idx;
+			} else {
+				meta = idx;
+			}
+
+			int px = stargateTile.x + direction.getOffsetZ() * i;
+			int py = stargateTile.y + j;
+			int pz = stargateTile.z + direction.getOffsetX() * i;
+
+			if (stargateTile.worldObj.getBlockId(px, py, pz) != stargateBlockId) {
+				isValidStructure = false;
+				break;
+			}
+
+			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, py, pz);
+
+			int ringMetadata = rawMetadata & 0b1111;
+			int directionMetadata = rawMetadata & 0b110000;
+
+			if (ringMetadata != meta) {
+				isValidStructure = false;
+				break;
+			}
+
+			if (direction == Direction.EAST || direction == Direction.WEST) {
+				if (directionMetadata != 0b010000) {
+					isValidStructure = false;
+					break;
+				}
+			} else {
+				if (directionMetadata != 0b000000) {
+					isValidStructure = false;
+					break;
+				}
+			}
+		}
+
+		if (isValidStructure) {
+			return;
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = stargateTile.x + direction.getOffsetZ() * i;
+			int py = stargateTile.y + j;
+			int pz = stargateTile.z + direction.getOffsetX() * i;
+
+			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(px, py, pz, BlockLogicStargate.class);
+
+			if (blockLogicStargate == null) {
+				continue;
+			}
+
+			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, px, py, pz);
+		}
+	}
+
+	private void horizontalCheckIfStillValid() {
+		if (stargateTile.worldObj == null) {
+			return;
+		}
+
+		int[][] ringOrder = {
+			{0, 0},
+			{-1, 0},
+			{-2, 1},
+			{-3, 2},
+			{-3, 3},
+			{-3, 4},
+			{-2, 5},
+			{-1, 6},
+			{0, 6},
+			{1, 6},
+			{2, 5},
+			{3, 4},
+			{3, 3},
+			{3, 2},
+			{2, 1},
+			{1, 0},
+		};
+
+		int stargateBlockId = getIdForStargateBlock();
+
+		boolean isValidStructure = true;
+
+		Direction dira = direction.getOpposite();
+
+		for (int idx = 0; idx < ringOrder.length; idx++) {
+			int i = ringOrder[idx][0];
+			int j = ringOrder[idx][1];
+
+			int meta;
+			if (dira == Direction.WEST) {
+				meta = ringOrder.length - idx - 12;
+			} else if (dira == Direction.NORTH) {
+				meta = idx - 8;
+			} else if (dira == Direction.EAST) {
+				meta = ringOrder.length - idx - 4;
+			} else {
+				meta = idx;
+			}
+
+			meta = Math.floorMod(meta, 16);
+
+			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
+			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+
+			if (stargateTile.worldObj.getBlockId(px, stargateTile.y, pz) != stargateBlockId) {
+				isValidStructure = false;
+				break;
+			}
+
+			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, stargateTile.y, pz);
+
+			int ringMetadata = rawMetadata & 0b1111;
+			int directionMetadata = rawMetadata & 0b110000;
+
+			if (ringMetadata != meta) {
+				isValidStructure = false;
+				break;
+			}
+
+			if (directionMetadata != 0b100000) {
+				isValidStructure = false;
+				break;
+			}
+		}
+
+		if (isValidStructure) {
+			return;
+		}
+
+		for (int[] ints : ringOrder) {
+			int i = ints[0];
+			int j = ints[1];
+
+			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
+			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+
+			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(px, stargateTile.y, pz, BlockLogicStargate.class);
+
+			if (blockLogicStargate == null) {
+				continue;
+			}
+
+			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, px, stargateTile.y, pz);
+		}
+	}
+
 	public boolean isRingMove() {
 		return ringMove;
 	}
@@ -325,184 +367,22 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		return state;
 	}
 
-	@Override
 	public void invalidate() {
 		stopSoundAtCenter("stargate:stargate.milkyway.roll");
 		stopSoundAtCenter("stargate:stargate.pegasus.roll");
 		stopSoundAtCenter("stargate:stargate.universe.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
-		super.invalidate();
-	}
-
-	@Override
-	public Packet getDescriptionPacket() {
-		return new PacketTileEntityData(this);
-	}
-
-	public boolean isAssembled() {
-		return assembled;
 	}
 
 	public Direction getDirection() {
 		return direction;
 	}
 
-	private boolean isValidStructure() {
-		World world = worldObj;
-
-		if (world == null) {
-			direction = Direction.NORTH;
-		} else {
-			direction = BlockLogicStargateCore.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
-		}
-
-		if (isValidStructureVertical()) {
-			orientation = Direction.NORTH;
-			return true;
-		}
-		if (isValidStructureHorizontal()) {
-			orientation = Direction.UP;
-			return true;
-		}
-		return false;
+	public void setDirection(Direction direction) {
+		this.direction = direction;
 	}
 
-	private boolean isValidStructureVertical() {
-		World world = worldObj;
-		if (world == null) {
-			return false;
-		}
-
-		Direction direction = BlockLogicStargateCore.getDirectionFromMeta(
-			world.getBlockMetadata(x, y, z)
-		);
-
-		for (int j = 0; j < 7; j++) {
-			for (int i = -4; i < 5; i++) {
-				switch (j) {
-					case 0:
-						if (Math.abs(i) != 1) continue;
-						break;
-					case 1:
-					case 5:
-						if (Math.abs(i) != 2) continue;
-						break;
-					case 2:
-					case 3:
-					case 4:
-						if (Math.abs(i) != 3) continue;
-						break;
-					case 6:
-						if (Math.abs(i) > 1) continue;
-						break;
-					default:
-						continue;
-				}
-
-				int px = x + direction.getOffsetZ() * i;
-				int py = y + j;
-				int pz = z + direction.getOffsetX() * i;
-
-				int id = world.getBlockId(px, py, pz);
-
-				if (id != this.getRingBlock().id()) {
-					return false;
-				}
-
-				int meta = world.getBlockMetadata(px, py, pz);
-
-				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
-					if (meta != 1) {
-						return false;
-					}
-				} else if (meta != 0) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private boolean isValidStructureHorizontal() {
-		World world = worldObj;
-		if (world == null) {
-			return false;
-		}
-
-		Direction direction = BlockLogicStargateCore.getDirectionFromMeta(
-			world.getBlockMetadata(x, y, z)
-		);
-
-		for (int j = 0; j < 7; j++) {
-			for (int i = -4; i < 5; i++) {
-				switch (j) {
-					case 0:
-						if (Math.abs(i) != 1) continue;
-						break;
-					case 1:
-					case 5:
-						if (Math.abs(i) != 2) continue;
-						break;
-					case 2:
-					case 3:
-					case 4:
-						if (Math.abs(i) != 3) continue;
-						break;
-					case 6:
-						if (Math.abs(i) > 1) continue;
-						break;
-					default:
-						continue;
-				}
-
-				int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-				int py = y;
-				int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
-
-				int id = world.getBlockId(px, py, pz);
-
-				if (id != this.getRingBlock().id()) {
-					return false;
-				}
-
-				int meta = world.getBlockMetadata(px, py, pz);
-
-				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
-					if (meta != 1) {
-						return false;
-					}
-				} else if (meta != 0) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	public void checkAndAssemble() {
-		boolean shouldAssembled = isValidStructure();
-
-		if (shouldAssembled && !assembled) {
-			// ASSEMBLE
-			this.assembled = true;
-			StargateMod.LOGGER.info("Assemble Stargate");
-		}
-
-		if (!shouldAssembled && assembled) {
-			// DISASSEMBLE
-			this.assembled = false;
-			StargateMod.LOGGER.info("Disassemble Stargate");
-
-			stopSoundAtCenter("stargate:stargate.milkyway.roll");
-			stopSoundAtCenter("stargate:stargate.pegasus.roll");
-			stopSoundAtCenter("stargate:stargate.universe.roll");
-			StargateSessionManager.getInstance().removeSession(this);
-		}
-	}
-
-	@Override
 	public void readFromNBT(CompoundTag compoundTag) {
-		assembled = compoundTag.getBooleanOrDefault("Assembled", false);
 		direction = Direction.values()[compoundTag.getIntegerOrDefault("Direction", Direction.NORTH.ordinal())];
 		orientation = Direction.values()[compoundTag.getIntegerOrDefault("Orientation", Direction.NORTH.ordinal())];
 
@@ -526,13 +406,162 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 		animation = StargateAnimation.values()[compoundTag.getIntegerOrDefault("Animation", StargateAnimation.NONE.ordinal())];
 		animationTick = compoundTag.getIntegerOrDefault("AnimationTick", 0);
-
-		super.readFromNBT(compoundTag);
 	}
 
-	@Override
+//	private boolean isValidStructure() {
+//		World world = stargateTile.worldObj;
+//
+//		if (world == null) {
+//			direction = Direction.NORTH;
+//		} else {
+//			direction = BlockLogicStargate.getDirectionFromMeta(world.getBlockMetadata(x, y, z)).getOpposite();
+//		}
+//
+//		if (isValidStructureVertical()) {
+//			orientation = Direction.NORTH;
+//			return true;
+//		}
+//		if (isValidStructureHorizontal()) {
+//			orientation = Direction.UP;
+//			return true;
+//		}
+//		return false;
+//	}
+//
+//	private boolean isValidStructureVertical() {
+//		World world = stargateTile.worldObj;
+//		if (world == null) {
+//			return false;
+//		}
+//
+//		Direction direction = BlockLogicStargate.getDirectionFromMeta(
+//			world.getBlockMetadata(stargateTile.x, stargateTile.y, stargateTile.z)
+//		);
+//
+//		for (int j = 0; j < 7; j++) {
+//			for (int i = -4; i < 5; i++) {
+//				switch (j) {
+//					case 0:
+//						if (Math.abs(i) != 1) continue;
+//						break;
+//					case 1:
+//					case 5:
+//						if (Math.abs(i) != 2) continue;
+//						break;
+//					case 2:
+//					case 3:
+//					case 4:
+//						if (Math.abs(i) != 3) continue;
+//						break;
+//					case 6:
+//						if (Math.abs(i) > 1) continue;
+//						break;
+//					default:
+//						continue;
+//				}
+//
+//				int px = stargateTile.x + direction.getOffsetZ() * i;
+//				int py = stargateTile.y + j;
+//				int pz = stargateTile.z + direction.getOffsetX() * i;
+//
+//				int id = world.getBlockId(px, py, pz);
+//
+//				if (id != this.getRingBlock().id()) {
+//					return false;
+//				}
+//
+//				int meta = world.getBlockMetadata(px, py, pz);
+//
+//				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
+//					if (meta != 1) {
+//						return false;
+//					}
+//				} else if (meta != 0) {
+//					return false;
+//				}
+//			}
+//		}
+//		return true;
+//	}
+//
+//	private boolean isValidStructureHorizontal() {
+//		World world = stargateTile.worldObj;
+//		if (world == null) {
+//			return false;
+//		}
+//
+//		Direction direction = BlockLogicStargate.getDirectionFromMeta(
+//			world.getBlockMetadata(stargateTile.x, stargateTile.y, stargateTile.z)
+//		);
+//
+//		for (int j = 0; j < 7; j++) {
+//			for (int i = -4; i < 5; i++) {
+//				switch (j) {
+//					case 0:
+//						if (Math.abs(i) != 1) continue;
+//						break;
+//					case 1:
+//					case 5:
+//						if (Math.abs(i) != 2) continue;
+//						break;
+//					case 2:
+//					case 3:
+//					case 4:
+//						if (Math.abs(i) != 3) continue;
+//						break;
+//					case 6:
+//						if (Math.abs(i) > 1) continue;
+//						break;
+//					default:
+//						continue;
+//				}
+//
+//				int px = stargateTile.x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
+//				int py = stargateTile.y;
+//				int pz = stargateTile.z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+//
+//				int id = world.getBlockId(px, py, pz);
+//
+//				if (id != this.getRingBlock().id()) {
+//					return false;
+//				}
+//
+//				int meta = world.getBlockMetadata(px, py, pz);
+//
+//				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
+//					if (meta != 1) {
+//						return false;
+//					}
+//				} else if (meta != 0) {
+//					return false;
+//				}
+//			}
+//		}
+//		return true;
+//	}
+//
+//	public void checkAndAssemble() {
+//		boolean shouldAssembled = isValidStructure();
+//
+//		if (shouldAssembled && !assembled) {
+//			// ASSEMBLE
+//			this.assembled = true;
+//			StargateMod.LOGGER.info("Assemble Stargate");
+//		}
+//
+//		if (!shouldAssembled && assembled) {
+//			// DISASSEMBLE
+//			this.assembled = false;
+//			StargateMod.LOGGER.info("Disassemble Stargate");
+//
+//			stopSoundAtCenter("stargate:stargate.milkyway.roll");
+//			stopSoundAtCenter("stargate:stargate.pegasus.roll");
+//			stopSoundAtCenter("stargate:stargate.universe.roll");
+//			StargateSessionManager.getInstance().removeSession(this);
+//		}
+//	}
+
 	public void writeToNBT(CompoundTag compoundTag) {
-		compoundTag.putBoolean("Assembled", assembled);
 		compoundTag.putInt("Direction", direction.ordinal());
 		compoundTag.putInt("Orientation", orientation.ordinal());
 
@@ -555,8 +584,6 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 		compoundTag.putInt("Animation", animation.ordinal());
 		compoundTag.putInt("AnimationTick", animationTick);
-
-		super.writeToNBT(compoundTag);
 	}
 
 	public double interpolatedRingAngle(double partialTicks) {
@@ -781,21 +808,21 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		double offset = 3.0;
 
 		Direction direction = getDirection();
-		double x1 = x + direction.getOffsetZ() * -3 + direction.getOffsetX() * offset;
-		double y1 = y;
-		double z1 = z + direction.getOffsetX() * -3 + direction.getOffsetZ() * offset;
-		double x2 = x + direction.getOffsetZ() * 3 - direction.getOffsetX() * offset;
-		double y2 = y + 5;
-		double z2 = z + direction.getOffsetX() * 3 - direction.getOffsetZ() * offset;
+		double x1 = stargateTile.x + direction.getOffsetZ() * -3 + direction.getOffsetX() * offset;
+		double y1 = stargateTile.y;
+		double z1 = stargateTile.z + direction.getOffsetX() * -3 + direction.getOffsetZ() * offset;
+		double x2 = stargateTile.x + direction.getOffsetZ() * 3 - direction.getOffsetX() * offset;
+		double y2 = stargateTile.y + 5;
+		double z2 = stargateTile.z + direction.getOffsetX() * 3 - direction.getOffsetZ() * offset;
 
 		if (orientation != Direction.NORTH) {
-			x1 = x - direction.getOffsetZ() * 3;
-			y1 = y - offset;
-			z1 = z - direction.getOffsetX() * 3;
+			x1 = stargateTile.x - direction.getOffsetZ() * 3;
+			y1 = stargateTile.y - offset;
+			z1 = stargateTile.z - direction.getOffsetX() * 3;
 
-			x2 = x + direction.getOffsetX() * 6 + direction.getOffsetZ() * 3;
-			y2 = y + offset;
-			z2 = z + direction.getOffsetX() * 3 + direction.getOffsetZ() * 6;
+			x2 = stargateTile.x + direction.getOffsetX() * 6 + direction.getOffsetZ() * 3;
+			y2 = stargateTile.y + offset;
+			z2 = stargateTile.z + direction.getOffsetX() * 3 + direction.getOffsetZ() * 6;
 		}
 
 		double minX = Math.min(x1, x2);
@@ -811,24 +838,23 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		ringDirection = false;
 	}
 
-	@Override
 	public void tick() {
-		if (state == StargateState.CONNECTED && worldObj != null) {
+		if (state == StargateState.CONNECTED && stargateTile.worldObj != null) {
 			this.teleportBlocks();
 			Direction orientation = getOrientation();
 
 			Direction direction = getDirection();
 
 			AABB detectionBox = this.getDetectionBox();
-			List<Entity> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
+			List<Entity> list = this.stargateTile.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
 			for (Entity entity : list) {
 				double dx = direction.getOffsetX();
 				double dz = direction.getOffsetZ();
 
-				double cx = x + 0.5;
-				double cy = y + 3.5;
-				double cz = z + 0.5;
+				double cx = stargateTile.x + 0.5;
+				double cy = stargateTile.y + 3.5;
+				double cz = stargateTile.z + 0.5;
 
 				double x0 = entity.xo;
 				double y0 = entity.yo;
@@ -843,9 +869,9 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				double nz = dz;
 
 				if (orientation != Direction.NORTH) {
-					cx = x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
-					cy = y + orientation.getOffsetY() * 0.5;
-					cz = z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+					cx = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
+					cy = stargateTile.y + orientation.getOffsetY() * 0.5;
+					cz = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
 
 					if (direction.getOffsetX() < 0) {
 						cx += 1;
@@ -878,13 +904,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					if (distanceSq < 7.5) {
 						if (entity instanceof Player && EnvironmentHelper.isClientWorld()) {
-							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(x, y, z, worldObj.dimension.id, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
+							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(stargateTile.x, stargateTile.y, stargateTile.z, stargateTile.worldObj.dimension.id, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
 						} else {
 							StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 							if (session != null) {
 								if (
-									(session.destinationX == x && session.destinationY == y && session.destinationZ == z) ||
+									(session.destinationX == stargateTile.x && session.destinationY == stargateTile.y && session.destinationZ == stargateTile.z) ||
 										d0 > 0 && d1 < 0
 								) {
 									SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
@@ -932,8 +958,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					this.resetGateDirection();
 
-					if (worldObj != null) {
-						worldObj.markBlockNeedsUpdate(x, y, z);
+					if (stargateTile.worldObj != null) {
+						stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 					}
 				}
 			}
@@ -941,8 +967,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			if (state != StargateState.CONNECTED && session != null && animation != StargateAnimation.KAWOOSH) {
 				state = StargateState.CONNECTED;
 
-				if (worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
+				if (stargateTile.worldObj != null) {
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 				}
 			}
 
@@ -950,8 +976,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				boolean needUpdate = currentDialingAddressSize != session.dialingAddressSize;
 				currentDialingAddressSize = session.dialingAddressSize;
 
-				if (needUpdate && worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
+				if (needUpdate && stargateTile.worldObj != null) {
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 				}
 			}
 
@@ -960,8 +986,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				animationTick = 0;
 				lastAnimationTick = 0;
 
-				if (worldObj != null) {
-					worldObj.markBlockNeedsUpdate(x, y, z);
+				if (stargateTile.worldObj != null) {
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 				}
 			}
 		}
@@ -1004,13 +1030,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		float centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = x + 0.5f;
-			centerY = y + 3.5f;
-			centerZ = z + 0.5f;
+			centerX = stargateTile.x + 0.5f;
+			centerY = stargateTile.y + 3.5f;
+			centerZ = stargateTile.z + 0.5f;
 		} else {
-			centerX = x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
-			centerY = y + orientation.getOffsetY() * 0.5f;
-			centerZ = z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+			centerX = stargateTile.x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
+			centerY = stargateTile.y + orientation.getOffsetY() * 0.5f;
+			centerZ = stargateTile.z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
 
 			if (direction.getOffsetX() < 0) {
 				centerX += 1;
@@ -1037,13 +1063,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		float centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = x + 0.5f;
-			centerY = y + 3.5f;
-			centerZ = z + 0.5f;
+			centerX = stargateTile.x + 0.5f;
+			centerY = stargateTile.y + 3.5f;
+			centerZ = stargateTile.z + 0.5f;
 		} else {
-			centerX = x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
-			centerY = y + orientation.getOffsetY() * 0.5f;
-			centerZ = z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+			centerX = stargateTile.x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
+			centerY = stargateTile.y + orientation.getOffsetY() * 0.5f;
+			centerZ = stargateTile.z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
 
 			if (direction.getOffsetX() < 0) {
 				centerX += 1;
@@ -1070,13 +1096,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		double destinationX, destinationY, destinationZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = x + 0.5;
-			originY = y + 3.5;
-			originZ = z + 0.5;
+			originX = stargateTile.x + 0.5;
+			originY = stargateTile.y + 3.5;
+			originZ = stargateTile.z + 0.5;
 		} else {
-			originX = x + originDirection.getOffsetZ() * 0.5 + originDirection.getOffsetX() * 3.5;
-			originY = y + originOrientation.getOffsetY() * 0.5;
-			originZ = z + originDirection.getOffsetX() * 0.5 + originDirection.getOffsetZ() * 3.5;
+			originX = stargateTile.x + originDirection.getOffsetZ() * 0.5 + originDirection.getOffsetX() * 3.5;
+			originY = stargateTile.y + originOrientation.getOffsetY() * 0.5;
+			originZ = stargateTile.z + originDirection.getOffsetX() * 0.5 + originDirection.getOffsetZ() * 3.5;
 
 			if (originDirection.getOffsetX() < 0) {
 				originX += 1;
@@ -1227,7 +1253,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			return;
 		}
 
-		if (worldObj == null) {
+		if (stargateTile.worldObj == null) {
 			return;
 		}
 
@@ -1237,7 +1263,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			return;
 		}
 
-		if (session.destinationX == x && session.destinationY == y && session.destinationZ == z) {
+		if (session.destinationX == stargateTile.x && session.destinationY == stargateTile.y && session.destinationZ == stargateTile.z) {
 			return;
 		}
 
@@ -1252,13 +1278,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		int destinationX, destinationY, destinationZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = x;
-			originY = y + 3;
-			originZ = z;
+			originX = stargateTile.x;
+			originY = stargateTile.y + 3;
+			originZ = stargateTile.z;
 		} else {
-			originX = x + originDirection.getOffsetX() * 3;
-			originY = y;
-			originZ = z + originDirection.getOffsetZ() * 3;
+			originX = stargateTile.x + originDirection.getOffsetX() * 3;
+			originY = stargateTile.y;
+			originZ = stargateTile.z + originDirection.getOffsetZ() * 3;
 
 			if (originDirection.getOffsetX() < 0) {
 				originX += 1;
@@ -1358,13 +1384,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 					z = originZ + i * originDirection.getOffsetX() + j * originDirection.getOffsetZ();
 				}
 
-				if (worldObj.isAirBlock(x, y, z)) {
+				if (stargateTile.worldObj.isAirBlock(x, y, z)) {
 					continue;
 				}
 
-				int id = worldObj.getBlockId(x, y, z);
+				int id = stargateTile.worldObj.getBlockId(x, y, z);
 
-				int meta = worldObj.getBlockMetadata(x, y, z);
+				int meta = stargateTile.worldObj.getBlockMetadata(x, y, z);
 
 				if (id == Blocks.PISTON_MOVING.id()) {
 					continue;
@@ -1381,7 +1407,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				int newY = destinationY + alpha * dry + beta * duy;
 				int newZ = destinationZ + alpha * drz + beta * duz;
 
-				@Nullable Block<?> block = worldObj.getBlock(x, y, z);
+				@Nullable Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
 
 				if (block != null && block.getLogic() instanceof BlockLogicRotatable) {
 					Direction blockDirection = BlockLogicRotatable.getDirectionFromMeta(meta);
@@ -1396,7 +1422,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					int newMeta = BlockLogicRotatable.setDirection(meta, blockDirection);
 
-					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
 				if (block != null && block.getLogic() instanceof BlockLogicVeryRotatable) {
@@ -1412,7 +1438,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					int newMeta = BlockLogicVeryRotatable.setDirection(meta, blockDirection);
 
-					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
 				if (block != null && block.getLogic() instanceof BlockLogicFullyRotatable) {
@@ -1428,7 +1454,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					int newMeta = meta & -8 | BlockLogicFullyRotatable.directionToMeta(blockDirection);
 
-					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
 				if (block != null && block.getLogic() instanceof BlockLogicAxisAligned) {
@@ -1450,10 +1476,10 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 					int newMeta = BlockLogicAxisAligned.axisToMeta(blockAxis);
 
-					worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
-				StargateDematerializedManager.getInstance().dematerializeBlock(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, worldObj, x, y, z, newX, newY, newZ);
+				StargateDematerializedManager.getInstance().dematerializeBlock(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, stargateTile.worldObj, x, y, z, newX, newY, newZ);
 				StargateSessionManager.getInstance().endSession(this);
 			}
 		}
@@ -1499,23 +1525,23 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		if (lastAnimation != animation) {
 			if (animation == StargateAnimation.KAWOOSH) {
 				if (getFamily() == StargateFamily.Pegasus) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				} else if (getFamily() == StargateFamily.Universe) {
-					SoundHelper.playShortSoundAt("stargate:stargate.universe.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				} else {
-					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				}
 			}
 			if (animation == StargateAnimation.CLOSING) {
-				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 			if (animation == StargateAnimation.CANCEL) {
 				if (getFamily() == StargateFamily.Pegasus) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				} else if (getFamily() == StargateFamily.Universe) {
-					SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				} else {
-					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				}
 			}
 		}
@@ -1531,32 +1557,32 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
 
 			if (animationTick == 4) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 			if (animationTick == 26 && !isLastChevronActive) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
 			if (getFamily() == StargateFamily.Pegasus) {
 				if (animationTick == 0) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 				}
 			} else if (animationTick == 4) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.UNIVERSE_START) {
 			if (animationTick == 0) {
-				SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.start", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.start", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.UNIVERSE_ENCODE_CHEVRON || animation == StargateAnimation.UNIVERSE_FAST_ENCODE_CHEVRON) {
 			if (animationTick == 0) {
-				SoundHelper.playShortSoundAt("stargate:stargate.universe.encode.fast", SoundCategory.WORLD_SOUNDS, x, y, z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
 			}
 		}
 
@@ -1578,8 +1604,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		animationTick = 0;
 		lastAnimationTick = 0;
 
-		if (worldObj != null) {
-			worldObj.markBlockNeedsUpdate(x, y, z);
+		if (stargateTile.worldObj != null) {
+			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 		}
 	}
 
@@ -1631,8 +1657,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			}
 			targetAngle = symbol * symbolAngle;
 
-			if (worldObj != null) {
-				worldObj.markBlockNeedsUpdate(x, y, z);
+			if (stargateTile.worldObj != null) {
+				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 			}
 		});
 	}
@@ -1671,7 +1697,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			}
 
 			if (currentDialingAddressSize < 7) {
-				cancelDial(x, y, z);
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
@@ -1689,7 +1715,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			StargateAddress destinationAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress, getFamily());
 
 			if (destinationAddress == null) {
-				cancelDial(x, y, z);
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
@@ -1697,7 +1723,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
 				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
-					Chunk chunk = StargateChunkLoader.loadChunk(worldObj, destinationAddress.getDim(), cx, cz);
+					Chunk chunk = StargateChunkLoader.loadChunk(stargateTile.worldObj, destinationAddress.getDim(), cx, cz);
 
 					if (chunk == null) {
 						continue;
@@ -1706,10 +1732,10 @@ public abstract class TileEntityStargateCore extends TileEntity {
 					for (Map.Entry<ChunkPosition, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
 						TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
 
-						if (tileEntity instanceof TileEntityStargateCore) {
-							TileEntityStargateCore destinationGate = (TileEntityStargateCore) tileEntity;
+						if (tileEntity instanceof TileEntityStargate) {
+							StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
 
-							if (this != destinationGate && destinationGate.isAssembled()) {
+							if (destinationGate != null && this != destinationGate) {
 								locations.add(new StargateLocation(
 									tileEntity.x,
 									tileEntity.y,
@@ -1724,7 +1750,7 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			}
 
 			if (locations.isEmpty()) {
-				cancelDial(x, y, z);
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
@@ -1743,19 +1769,24 @@ public abstract class TileEntityStargateCore extends TileEntity {
 				}
 			}
 
-			Chunk chunk = StargateChunkLoader.loadChunk(worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
+			Chunk chunk = StargateChunkLoader.loadChunk(stargateTile.worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
 
 			if (chunk == null) {
-				cancelDial(x, y, z);
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
-			TileEntityStargateCore destinationGate = (TileEntityStargateCore) chunk.getTileEntity(target.x & 15, target.y, target.z & 15);
+			StargateComponent destinationGate = ((TileEntityStargate) chunk.getTileEntity(target.x & 15, target.y, target.z & 15)).getStargateComponent();
+
+			if (destinationGate == null) {
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				return;
+			}
 
 			StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
 			if (currentPresentSession != null) {
-				cancelDial(x, y, z);
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
@@ -1770,8 +1801,8 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		state = StargateState.IDLE;
 		currentDialingAddressSize = 0;
 
-		if (worldObj != null) {
-			worldObj.markBlockNeedsUpdate(x, y, z);
+		if (stargateTile.worldObj != null) {
+			stargateTile.worldObj.markBlockNeedsUpdate(x, y, z);
 		}
 
 		playAnimation(StargateAnimation.CANCEL);
@@ -1885,10 +1916,12 @@ public abstract class TileEntityStargateCore extends TileEntity {
 
 	public abstract StargateFamily getFamily();
 
-	public abstract Block<BlockLogicStargateRing> getRingBlock();
-
 	public Direction getOrientation() {
 		return orientation;
+	}
+
+	public void setOrientation(Direction orientation) {
+		this.orientation = orientation;
 	}
 
 	public StargateAddress getAddress() {
@@ -1896,11 +1929,11 @@ public abstract class TileEntityStargateCore extends TileEntity {
 	}
 
 	public StargateAddress getAddressWithFamily(StargateFamily family) {
-		return StargateAddress.createAddressFromBlock(x, y, worldObj.dimension.id, family);
+		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.y, stargateTile.worldObj.dimension.id, family);
 	}
 
 	public int getLightmap() {
-		if (worldObj == null) {
+		if (stargateTile.worldObj == null) {
 			return LightmapHelper.getLightmapCoord(15, 15);
 		}
 
@@ -1910,13 +1943,13 @@ public abstract class TileEntityStargateCore extends TileEntity {
 		int originX, originY, originZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = x;
-			originY = y + 3;
-			originZ = z;
+			originX = stargateTile.x;
+			originY = stargateTile.y + 3;
+			originZ = stargateTile.z;
 		} else {
-			originX = x + originDirection.getOffsetX() * 3;
-			originY = y;
-			originZ = z + originDirection.getOffsetZ() * 3;
+			originX = stargateTile.x + originDirection.getOffsetX() * 3;
+			originY = stargateTile.y;
+			originZ = stargateTile.z + originDirection.getOffsetZ() * 3;
 
 			if (originDirection.getOffsetX() < 0) {
 				originX += 1;
@@ -1929,6 +1962,6 @@ public abstract class TileEntityStargateCore extends TileEntity {
 			}
 		}
 
-		return worldObj.getLightmapCoord(originX, originY, originZ, worldObj.getBlockLightValue(originX, originY, originZ));
+		return stargateTile.worldObj.getLightmapCoord(originX, originY, originZ, stargateTile.worldObj.getBlockLightValue(originX, originY, originZ));
 	}
 }

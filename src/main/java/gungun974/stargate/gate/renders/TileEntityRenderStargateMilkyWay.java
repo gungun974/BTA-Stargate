@@ -1,12 +1,12 @@
 package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.WavefrontLoader;
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import org.lwjgl.opengl.GL11;
 
-public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCore {
+public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 	static private final WavefrontLoader MilkywayRing = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayRing.obj");
 	static private final WavefrontLoader MilkywayGlyphs = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayGlyphs.obj");
 	static private final WavefrontLoader ChevronStatic = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayChevronStatic.obj");
@@ -19,12 +19,12 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
 	static private final boolean RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES = false;
 
 	@Override
-	protected void renderFrame(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		MilkywayRing.render(tessellator);
 	}
 
 	@Override
-	protected void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		GL11.glPushMatrix();
 
 		GL11.glRotatef((float) (stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
@@ -34,7 +34,7 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargateCo
 		GL11.glPopMatrix();
 	}
 
-	protected void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
+	protected void chevron(Tessellator tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
 		double chevronDistance = stargateCore.interpolatedChevronDistance(chevron, partialTicks);
 
 		boolean chevronActive = stargateCore.interpolatedChevronActive(chevron, partialTicks);

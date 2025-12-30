@@ -2,16 +2,16 @@ package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.StargateState;
 import gungun974.stargate.core.WavefrontLoader;
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import org.lwjgl.opengl.GL11;
 
-public class TileEntityRenderStargateUniverse extends TileEntityRenderStargateCore {
+public class TileEntityRenderStargateUniverse extends TileEntityRenderStargate {
 	static private final WavefrontLoader UniverseGate = new WavefrontLoader("/assets/stargate/models/Universe/UniverseGate.obj");
 
 	@Override
-	protected void renderFrame(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		if (stargateCore.getState() == StargateState.IDLE && !stargateCore.isRingMove()) {
 			UniverseGate.mapMaterial("UniverseOff", "UniverseOff");
 		} else {
@@ -28,7 +28,7 @@ public class TileEntityRenderStargateUniverse extends TileEntityRenderStargateCo
 	}
 
 	@Override
-	protected void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 

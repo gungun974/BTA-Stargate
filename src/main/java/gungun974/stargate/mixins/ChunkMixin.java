@@ -1,6 +1,6 @@
 package gungun974.stargate.mixins;
 
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkPosition;
@@ -20,7 +20,7 @@ public class ChunkMixin {
 	@Inject(method = "needsSaving", at = @At("TAIL"), cancellable = true)
 	void forceStargateToSaveState(boolean saveImmediately, CallbackInfoReturnable<Boolean> cir) {
 		for (Map.Entry<ChunkPosition, TileEntity> entry : this.tileEntityMap.entrySet()) {
-			if (entry.getValue() instanceof TileEntityStargateCore) {
+			if (entry.getValue() instanceof TileEntityStargate) {
 				cir.setReturnValue(true);
 				return;
 			}

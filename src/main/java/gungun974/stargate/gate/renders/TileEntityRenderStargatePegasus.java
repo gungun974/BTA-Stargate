@@ -2,12 +2,12 @@ package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.StargateState;
 import gungun974.stargate.core.WavefrontLoader;
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import org.lwjgl.opengl.GL11;
 
-public class TileEntityRenderStargatePegasus extends TileEntityRenderStargateCore {
+public class TileEntityRenderStargatePegasus extends TileEntityRenderStargate {
 	static private final WavefrontLoader PegasusRing = new WavefrontLoader("/assets/stargate/models/Pegasus/PegasusRing.obj");
 	static private final WavefrontLoader ChevronStatic = new WavefrontLoader("/assets/stargate/models/Pegasus/PegasusChevronStatic.obj");
 	static private final WavefrontLoader ChevronUpperFront = new WavefrontLoader("/assets/stargate/models/Pegasus/PegasusChevronUpperFront.obj");
@@ -19,12 +19,12 @@ public class TileEntityRenderStargatePegasus extends TileEntityRenderStargateCor
 	static private final boolean RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES = true;
 
 	@Override
-	protected void renderFrame(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		PegasusRing.render(tessellator);
 	}
 
 	@Override
-	protected void renderSymbolRing(Tessellator tessellator, TileEntityStargateCore stargateCore, float partialTicks) {
+	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 
@@ -145,7 +145,7 @@ public class TileEntityRenderStargatePegasus extends TileEntityRenderStargateCor
 		GL11.glPopMatrix();
 	}
 
-	protected void chevron(Tessellator tessellator, TileEntityStargateCore stargateCore, int chevron, float partialTicks) {
+	protected void chevron(Tessellator tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
 		boolean chevronActive = stargateCore.interpolatedChevronActive(chevron, partialTicks);
 
 		if (LightmapHelper.isLightmapEnabled()) {

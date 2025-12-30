@@ -2,7 +2,7 @@ package gungun974.stargate.core;
 
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
-import gungun974.stargate.gate.tiles.TileEntityStargateCore;
+import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.entity.TileEntityDispatcher;
 import net.minecraft.core.entity.Entity;
@@ -179,32 +179,34 @@ public class StargateDematerializedManager {
 		));
 	}
 
-	public void materializeEntities(TileEntityStargateCore gate) {
-		if (gate == null) {
+	public void materializeEntities(StargateComponent gate) {
+		TileEntity tile = gate.stargateTile;
+
+		if (tile == null) {
 			return;
 		}
 
-		if (gate.worldObj == null) {
+		if (tile.worldObj == null) {
 			return;
 		}
 
-		int dim = gate.worldObj.dimension.id;
+		int dim = tile.worldObj.dimension.id;
 
 		Iterator<StargateDematerializedEntity> iterator = dematerializedEntities.iterator();
 
 		while (iterator.hasNext()) {
 			StargateDematerializedEntity dematerializedEntity = iterator.next();
 
-			if (gate.x != dematerializedEntity.destinationX || gate.y != dematerializedEntity.destinationY || gate.z != dematerializedEntity.destinationZ || dim != dematerializedEntity.destinationDim) {
+			if (tile.x != dematerializedEntity.destinationX || tile.y != dematerializedEntity.destinationY || tile.z != dematerializedEntity.destinationZ || dim != dematerializedEntity.destinationDim) {
 				continue;
 			}
 
-			Entity materializedEntity = EntityDispatcher.createEntityFromNBT(dematerializedEntity.dematerializedData, gate.worldObj);
+			Entity materializedEntity = EntityDispatcher.createEntityFromNBT(dematerializedEntity.dematerializedData, tile.worldObj);
 			if (materializedEntity == null) {
 				iterator.remove();
 				continue;
 			}
-			gate.worldObj.entityJoinedWorld(materializedEntity);
+			tile.worldObj.entityJoinedWorld(materializedEntity);
 
 			iterator.remove();
 		}
@@ -249,33 +251,35 @@ public class StargateDematerializedManager {
 		));
 	}
 
-	public void materializeBlocks(TileEntityStargateCore gate) {
-		if (gate == null) {
+	public void materializeBlocks(StargateComponent gate) {
+		TileEntity tile = gate.stargateTile;
+
+		if (tile == null) {
 			return;
 		}
 
-		if (gate.worldObj == null) {
+		if (tile.worldObj == null) {
 			return;
 		}
 
-		int dim = gate.worldObj.dimension.id;
+		int dim = tile.worldObj.dimension.id;
 
 		Iterator<StargateDematerializedBlock> iterator = dematerializedBlocks.iterator();
 
 		while (iterator.hasNext()) {
 			StargateDematerializedBlock dematerializedBlock = iterator.next();
 
-			if (gate.x != dematerializedBlock.destinationX || gate.y != dematerializedBlock.destinationY || gate.z != dematerializedBlock.destinationZ || dim != dematerializedBlock.destinationDim) {
+			if (tile.x != dematerializedBlock.destinationX || tile.y != dematerializedBlock.destinationY || tile.z != dematerializedBlock.destinationZ || dim != dematerializedBlock.destinationDim) {
 				continue;
 			}
 
-			int id = gate.worldObj.getBlockId(
+			int id = tile.worldObj.getBlockId(
 				dematerializedBlock.dematerializedX,
 				dematerializedBlock.dematerializedY,
 				dematerializedBlock.dematerializedZ
 			);
 
-			int meta = gate.worldObj.getBlockMetadata(
+			int meta = tile.worldObj.getBlockMetadata(
 				dematerializedBlock.dematerializedX,
 				dematerializedBlock.dematerializedY,
 				dematerializedBlock.dematerializedZ
@@ -286,7 +290,7 @@ public class StargateDematerializedManager {
 				continue;
 			}
 
-			gate.worldObj.setBlockAndMetadataRaw(
+			tile.worldObj.setBlockAndMetadataRaw(
 				dematerializedBlock.dematerializedX,
 				dematerializedBlock.dematerializedY,
 				dematerializedBlock.dematerializedZ,
@@ -295,7 +299,7 @@ public class StargateDematerializedManager {
 			);
 
 			if (dematerializedBlock.dematerializedTile != null) {
-				gate.worldObj.replaceBlockTileEntity(
+				tile.worldObj.replaceBlockTileEntity(
 					dematerializedBlock.dematerializedX,
 					dematerializedBlock.dematerializedY,
 					dematerializedBlock.dematerializedZ,
@@ -303,7 +307,7 @@ public class StargateDematerializedManager {
 				);
 			}
 
-			gate.worldObj.notifyBlockChange(
+			tile.worldObj.notifyBlockChange(
 				dematerializedBlock.dematerializedX,
 				dematerializedBlock.dematerializedY,
 				dematerializedBlock.dematerializedZ,

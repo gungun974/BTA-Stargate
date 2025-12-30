@@ -9,7 +9,6 @@ import net.minecraft.client.render.TileEntityRenderDispatcher;
 import net.minecraft.client.render.block.color.BlockColorDispatcher;
 import net.minecraft.client.render.block.model.BlockModelDispatcher;
 import net.minecraft.client.render.item.model.ItemModelDispatcher;
-import net.minecraft.core.util.helper.Side;
 import turniplabs.halplibe.helper.ModelHelper;
 import turniplabs.halplibe.util.ModelEntrypoint;
 
@@ -17,30 +16,21 @@ public class StargateModels implements ModelEntrypoint {
 
 	@Override
 	public void initBlockModels(BlockModelDispatcher dispatcher) {
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_CORE_MILKYWAY, () -> new BlockModelStargateCore<>(StargateBlocks.STARGATE_CORE_MILKYWAY)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
-			.setTex(0, "minecraft:block/noteblock", Side.NORTH)
-		);
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_RING_MILKYWAY, () -> new BlockModelStargateRing<>(StargateBlocks.STARGATE_RING_MILKYWAY)
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY)
 			.setAllTextures(0, "minecraft:block/chest/planks/top")
 		);
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_CORE_PEGASUS, () -> new BlockModelStargateCore<>(StargateBlocks.STARGATE_CORE_PEGASUS)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
-			.setTex(0, "minecraft:block/noteblock", Side.NORTH)
-		);
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_PEGASUS, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_PEGASUS));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_RING_PEGASUS, () -> new BlockModelStargateRing<>(StargateBlocks.STARGATE_RING_PEGASUS)
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_PEGASUS)
 			.setAllTextures(0, "minecraft:block/chest/planks/top")
 		);
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_CORE_UNIVERSE, () -> new BlockModelStargateCore<>(StargateBlocks.STARGATE_CORE_UNIVERSE)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
-			.setTex(0, "minecraft:block/noteblock", Side.NORTH)
-		);
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_UNIVERSE, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_UNIVERSE));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_RING_UNIVERSE, () -> new BlockModelStargateRing<>(StargateBlocks.STARGATE_RING_UNIVERSE)
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE)
 			.setAllTextures(0, "minecraft:block/chest/planks/top")
 		);
 

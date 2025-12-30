@@ -35,8 +35,8 @@ public class StargateEventHorizon {
 
 	public double[][][] getEventHorizonGrid() {
 		if (eventHorizonGrid == null) {
-			int m = TileEntityRenderStargateCore.eventHorizonGridRadialSize;
-			int n = TileEntityRenderStargateCore.eventHorizonGridPolarSize;
+			int m = TileEntityRenderStargate.eventHorizonGridRadialSize;
+			int n = TileEntityRenderStargate.eventHorizonGridPolarSize;
 			eventHorizonGrid = new double[2][n + 2][m + 1];
 			for (int i = 0; i < 2; i++) {
 				eventHorizonGrid[i][0] = eventHorizonGrid[i][n];
@@ -48,8 +48,8 @@ public class StargateEventHorizon {
 
 	public void applyRandomImpulse() {
 		double[][] v = getEventHorizonGrid()[1];
-		int m = TileEntityRenderStargateCore.eventHorizonGridRadialSize;
-		int n = TileEntityRenderStargateCore.eventHorizonGridPolarSize;
+		int m = TileEntityRenderStargate.eventHorizonGridRadialSize;
+		int n = TileEntityRenderStargate.eventHorizonGridPolarSize;
 		int i = random.nextInt(m - 1) + 1;
 		int j = random.nextInt(n) + 1;
 		v[j][i] += 0.02 * random.nextGaussian();
@@ -59,8 +59,8 @@ public class StargateEventHorizon {
 		double[][][] grid = getEventHorizonGrid();
 		double[][] u = grid[0];
 		double[][] v = grid[1];
-		int m = TileEntityRenderStargateCore.eventHorizonGridRadialSize;
-		int n = TileEntityRenderStargateCore.eventHorizonGridPolarSize;
+		int m = TileEntityRenderStargate.eventHorizonGridRadialSize;
+		int n = TileEntityRenderStargate.eventHorizonGridPolarSize;
 		double dt = 1.0;
 		double asq = 0.03;
 		double d = 0.95;

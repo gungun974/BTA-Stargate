@@ -1,4 +1,4 @@
-package gungun974.stargate.gate.tiles;
+package gungun974.stargate.gate.components;
 
 public enum StargateAnimation {
 	NONE(0),
