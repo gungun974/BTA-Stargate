@@ -25,8 +25,6 @@ public class PlayerControllerMixin {
 			return original.call(world, x, y, z, id);
 		}
 
-		//camouflageComponent.clearCamouflage();
-
 		world.notifyBlockChange(x, y, z, entity.getBlockId());
 
 		return true;

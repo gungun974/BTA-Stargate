@@ -1,7 +1,6 @@
 package gungun974.stargate.gate.blocks;
 
 import gungun974.stargate.StargateBlocks;
-import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.VirtualWorld;
 import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
@@ -133,6 +132,25 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	@Override
+	public void onBlockDestroyedByPlayer(World world, int x, int y, int z, Side side, int meta, Player player, Item item) {
+		if (player.getGamemode().dropBlockOnBreak()) {
+			return;
+		}
+
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				camouflageComponent.clearCamouflage();
+			}
+		}
+
+		super.onBlockDestroyedByPlayer(world, x, y, z, side, meta, player, item);
+	}
+
+	@Override
 	public float blockStrength(World world, int x, int y, int z, Side side, Player player) {
 		TileEntity entity = world.getTileEntity(x, y, z);
 
@@ -222,8 +240,6 @@ public class BlockLogicStargate extends BlockLogic {
 
 								int newId = virtualWorld.getBlockId(x, y, z);
 								int newMeta = virtualWorld.getBlockMetadata(x, y, z);
-
-								StargateMod.LOGGER.info("{} {}", newId, newMeta);
 
 								stargate.getCamouflageComponent().setCamouflage(newId, newMeta);
 
