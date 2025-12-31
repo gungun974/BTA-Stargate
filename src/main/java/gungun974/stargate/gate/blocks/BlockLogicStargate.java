@@ -1,15 +1,21 @@
 package gungun974.stargate.gate.blocks;
 
 import gungun974.stargate.StargateBlocks;
+import gungun974.stargate.StargateMod;
+import gungun974.stargate.core.VirtualWorld;
+import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLogic;
+import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.enums.EnumDropCause;
+import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
 import turniplabs.halplibe.helper.EnvironmentHelper;
@@ -84,10 +90,62 @@ public class BlockLogicStargate extends BlockLogic {
 			case PROPER_TOOL:
 			case SILK_TOUCH:
 			case PISTON_CRUSH:
+				if (entity instanceof TileEntityStargate) {
+					CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+					if (camouflageComponent.hasCamouflage()) {
+						Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+						if (camoufledBlock != null) {
+							return camoufledBlock.getBreakResult(world, dropCause, camouflageComponent.getBlockMeta(), null);
+						}
+					}
+				}
+
+
 				return new ItemStack[]{new ItemStack(getIdForStargateBuildPartBlock(), 1, originalBlockMetadata(world, entity.x, entity.y, entity.z, meta))};
 			default:
 				return null;
 		}
+	}
+
+	@Override
+	public void harvestBlock(World world, Player player, int x, int y, int z, int meta, TileEntity entity) {
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					camoufledBlock.harvestBlock(world, player, x, y, z, meta, null);
+				}
+
+				camouflageComponent.clearCamouflage();
+				return;
+			}
+		}
+		super.harvestBlock(world, player, x, y, z, meta, entity);
+	}
+
+	@Override
+	public float blockStrength(World world, int x, int y, int z, Side side, Player player) {
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					return camoufledBlock.blockStrength(world, x, y, z, side, player);
+				}
+
+			}
+		}
+
+		return super.blockStrength(world, x, y, z, side, player);
 	}
 
 	public void restoreOriginalBlock(World world, int x, int y, int z) {
@@ -97,6 +155,21 @@ public class BlockLogicStargate extends BlockLogic {
 
 		if (world.getBlockId(x, y, z) != id()) {
 			return;
+		}
+
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					camoufledBlock.dropBlockWithCause(world, EnumDropCause.SILK_TOUCH, x, y, z, world.getBlockMetadata(x, y, z), null, null);
+				}
+
+			}
 		}
 
 		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), originalBlockMetadata(world, x, y, z, world.getBlockMetadata(x, y, z)));
@@ -119,6 +192,52 @@ public class BlockLogicStargate extends BlockLogic {
 		}
 
 		checkIfStillValid(world, x, y, z);
+
+		{
+			TileEntity tileEntity = world.getTileEntity(x, y, z);
+
+			if (tileEntity instanceof TileEntityStargate) {
+				TileEntityStargate stargate = (TileEntityStargate) tileEntity;
+
+				if (!stargate.getCamouflageComponent().hasCamouflage()) {
+					ItemStack heldItem = player.getHeldItem();
+					if (heldItem != null) {
+
+						Item item = heldItem.getItem();
+
+						if (item instanceof ItemBlock) {
+							ItemBlock<?> itemBlock = (ItemBlock<?>) item;
+
+							if (!itemBlock.getBlock().isEntityTile) {
+
+								VirtualWorld virtualWorld = new VirtualWorld(world);
+
+								virtualWorld.setBlockWithNotify(x, y, z, 0);
+
+								itemBlock.onUseItemOnBlock(heldItem, player, virtualWorld, x, y, z, side, xHit, yHit);
+
+								int newId = virtualWorld.getBlockId(x, y, z);
+								int newMeta = virtualWorld.getBlockMetadata(x, y, z);
+
+								StargateMod.LOGGER.info("{} {}", newId, newMeta);
+
+								stargate.getCamouflageComponent().setCamouflage(newId, newMeta);
+
+								world.notifyBlockChange(x, y, z, id());
+
+								return true;
+							}
+						}
+					}
+				}
+
+			}
+		}
+
+		ItemStack heldItem = player.getHeldItem();
+		if (heldItem != null) {
+			return false;
+		}
 
 		TileEntityStargate stargate = findMainTileEntityStargate(world, x, y, z);
 		if (stargate == null) {

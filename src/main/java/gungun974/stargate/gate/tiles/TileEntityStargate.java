@@ -1,12 +1,16 @@
 package gungun974.stargate.gate.tiles;
 
 import com.mojang.nbt.tags.CompoundTag;
+import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
 
+import javax.annotation.Nullable;
+
 public abstract class TileEntityStargate extends TileEntity {
+	private final CamouflageComponent camouflageComponent = new CamouflageComponent();
 	private Role role = Role.RING;
 	private StargateComponent stargateComponent;
 
@@ -46,6 +50,7 @@ public abstract class TileEntityStargate extends TileEntity {
 		if (stargateComponent != null) {
 			stargateComponent.readFromNBT(compoundTag);
 		}
+		camouflageComponent.readFromNBT(compoundTag);
 		super.readFromNBT(compoundTag);
 	}
 
@@ -56,6 +61,7 @@ public abstract class TileEntityStargate extends TileEntity {
 		if (stargateComponent != null) {
 			stargateComponent.writeToNBT(compoundTag);
 		}
+		camouflageComponent.writeToNBT(compoundTag);
 		super.writeToNBT(compoundTag);
 	}
 
@@ -66,8 +72,13 @@ public abstract class TileEntityStargate extends TileEntity {
 		}
 	}
 
+	@Nullable
 	public StargateComponent getStargateComponent() {
 		return stargateComponent;
+	}
+
+	public CamouflageComponent getCamouflageComponent() {
+		return camouflageComponent;
 	}
 
 	protected abstract StargateComponent provideStargateComponent();
