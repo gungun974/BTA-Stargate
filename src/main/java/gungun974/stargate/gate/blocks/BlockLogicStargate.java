@@ -16,8 +16,12 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.util.helper.Side;
+import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 import turniplabs.halplibe.helper.EnvironmentHelper;
+
+import java.util.ArrayList;
 
 public class BlockLogicStargate extends BlockLogic {
 	public BlockLogicStargate(Block<?> block, Material material) {
@@ -467,5 +471,128 @@ public class BlockLogicStargate extends BlockLogic {
 	@Override
 	public boolean isSolidRender() {
 		return false;
+	}
+
+	@Override
+	public AABB getBlockBoundsFromState(WorldSource world, int x, int y, int z) {
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		AABB mainAABB;
+
+		int rawMetadata = world.getBlockMetadata(x, y, z);
+
+		int directionMetadata = rawMetadata & 0b110000;
+
+		if (directionMetadata == 0b000000) {
+			mainAABB = AABB.getPermanentBB(0, 0, 0.25, 1, 1, 0.75);
+		} else if (directionMetadata == 0b010000) {
+			mainAABB = AABB.getPermanentBB(0.25, 0, 0, 0.75, 1, 1);
+		} else {
+			mainAABB = AABB.getPermanentBB(0, 0.25, 0, 1, 0.75, 1);
+		}
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					AABB otherAABB = camoufledBlock.getBlockBoundsFromState(world, x, y, z);
+					return AABB.getPermanentBB(
+						Math.min(mainAABB.minX, otherAABB.minX),
+						Math.min(mainAABB.minY, otherAABB.minY),
+						Math.min(mainAABB.minZ, otherAABB.minZ),
+						Math.max(mainAABB.maxX, otherAABB.maxX),
+						Math.max(mainAABB.maxY, otherAABB.maxY),
+						Math.max(mainAABB.maxZ, otherAABB.maxZ)
+					);
+				}
+			}
+		}
+
+		return mainAABB;
+	}
+
+	@Override
+	public boolean isCubeShaped() {
+		return false;
+	}
+
+	@Override
+	public void getCollidingBoundingBoxes(World world, int x, int y, int z, AABB aabb, ArrayList<AABB> aabbList) {
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					VirtualWorld virtualWorld = new VirtualWorld(world);
+
+					virtualWorld.setBlockAndMetadataRaw(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta());
+
+					camoufledBlock.getCollidingBoundingBoxes(virtualWorld, x, y, z, aabb, aabbList);
+				}
+			}
+		}
+
+		int rawMetadata = world.getBlockMetadata(x, y, z);
+
+		int ringMetadata = rawMetadata & 0b1111;
+
+		int directionMetadata = rawMetadata & 0b110000;
+
+		if (directionMetadata == 0b000000) {
+			if (ringMetadata == 2) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 0.5, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 0.5, 1, 0.75).move(x, y, z), aabbList);
+			} else if (ringMetadata == 6) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.5, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 0.5, 1, 0.75).move(x, y, z), aabbList);
+			} else if (ringMetadata == 10) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.5, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+			} else if (ringMetadata == 14) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 0.5, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+			} else {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+			}
+		} else if (directionMetadata == 0b010000) {
+			if (ringMetadata == 2) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 0.5, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 0.5).move(x, y, z), aabbList);
+			} else if (ringMetadata == 6) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0.5, 0, 0.75, 1, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 0.5).move(x, y, z), aabbList);
+			} else if (ringMetadata == 10) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0.5, 0, 0.75, 1, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0.5, 0.75, 1, 1).move(x, y, z), aabbList);
+			} else if (ringMetadata == 14) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 0.5, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0.5, 0.75, 1, 1).move(x, y, z), aabbList);
+			} else {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 1).move(x, y, z), aabbList);
+			}
+		} else {
+			if (ringMetadata == 2) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 0.5, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0.5, 1, 0.75, 1).move(x, y, z), aabbList);
+			} else if (ringMetadata == 6) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 0.5, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 0.5).move(x, y, z), aabbList);
+			} else if (ringMetadata == 10) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 0.5).move(x, y, z), aabbList);
+			} else if (ringMetadata == 14) {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0.5, 1, 0.75, 1).move(x, y, z), aabbList);
+			} else {
+				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
+			}
+		}
 	}
 }
