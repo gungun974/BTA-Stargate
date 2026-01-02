@@ -15,13 +15,7 @@ tile.stargate.stargate.universe.name = Universe Stargate
 
 item.stargate.stargate_wand.name = Stargate Wand
 item.stargate.stargate_wand.desc = Stargate magical wand to spawn a stargate quickly for testing purposes
-item.stargate.stargate_wand.milkyway.vertical.name = Stargate Wand [Milkyway Vertical]
-item.stargate.stargate_wand.pegasus.vertical.name = Stargate Wand [Pegasus Vertical]
-item.stargate.stargate_wand.universe.vertical.name = Stargate Wand [Universe Vertical]
-item.stargate.stargate_wand.milkyway.up.name = Stargate Wand [Milkyway Up]
-item.stargate.stargate_wand.pegasus.up.name = Stargate Wand [Pegasus Up]
-item.stargate.stargate_wand.universe.up.name = Stargate Wand [Universe Up]
-item.stargate.stargate_wand.milkyway.down.name = Stargate Wand [Milkyway Down]
-item.stargate.stargate_wand.pegasus.down.name = Stargate Wand [Pegasus Down]
-item.stargate.stargate_wand.universe.down.name = Stargate Wand [Universe Down]
+item.stargate.stargate_wand.milkyway.name = Stargate Wand [Milkyway]
+item.stargate.stargate_wand.pegasus.name = Stargate Wand [Pegasus]
+item.stargate.stargate_wand.universe.name = Stargate Wand [Universe]
 item.stargate.stargate_wand.error = Can't place stargate here

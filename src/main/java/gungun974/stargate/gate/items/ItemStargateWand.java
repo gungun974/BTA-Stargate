@@ -23,7 +23,7 @@ public class ItemStargateWand extends Item {
 	public ItemStack onUseItem(ItemStack itemstack, World world, Player player) {
 		if (player.isSneaking()) {
 			ItemStack newItemStack = itemstack.copy();
-			newItemStack.setMetadata((itemstack.getMetadata() + 1) % 9);
+			newItemStack.setMetadata((itemstack.getMetadata() + 1) % 3);
 
 			player.sendStatusMessage(getTranslatedName(newItemStack));
 
@@ -37,23 +37,11 @@ public class ItemStargateWand extends Item {
 	public String getTranslatedName(ItemStack itemstack) {
 		switch (itemstack.getMetadata()) {
 			case 0:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".milkyway.vertical.name");
+				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".milkyway.name");
 			case 1:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".milkyway.up.name");
+				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".pegasus.name");
 			case 2:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".milkyway.down.name");
-			case 3:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".pegasus.vertical.name");
-			case 4:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".pegasus.up.name");
-			case 5:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".pegasus.down.name");
-			case 6:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".universe.vertical.name");
-			case 7:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".universe.up.name");
-			case 8:
-				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".universe.down.name");
+				return I18n.getInstance().translateKey(itemstack.getItemKey() + ".universe.name");
 		}
 		return super.getTranslatedName(itemstack);
 	}
@@ -68,56 +56,56 @@ public class ItemStargateWand extends Item {
 		int cy = blockY + side.getOffsetY();
 		int cz = blockZ + side.getOffsetZ();
 
-		switch (itemstack.getMetadata()) {
-			case 0:
-			case 3:
-			case 6:
-				if (!BlockLogicStargateBuildPart.canBuildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite())) {
-					player.sendStatusMessage(I18n.getInstance().translateKey("item.stargate.stargate_wand.error"));
-					return false;
-				}
-				break;
-			case 1:
-			case 4:
-			case 7:
-			case 2:
-			case 5:
-			case 8:
-				if (!BlockLogicStargateBuildPart.canBuildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite())) {
-					player.sendStatusMessage(I18n.getInstance().translateKey("item.stargate.stargate_wand.error"));
-					return false;
-				}
-				break;
+		Direction orientation = player.getPlacementDirection(side).getOpposite();
+
+		if (orientation.isHorizontal()) {
+			if (!BlockLogicStargateBuildPart.canBuildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite())) {
+				player.sendStatusMessage(I18n.getInstance().translateKey("item.stargate.stargate_wand.error"));
+				return false;
+			}
+		} else {
+			if (!BlockLogicStargateBuildPart.canBuildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite())) {
+				player.sendStatusMessage(I18n.getInstance().translateKey("item.stargate.stargate_wand.error"));
+				return false;
+			}
 		}
 
-		switch (itemstack.getMetadata()) {
-			case 0:
-				BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.MilkyWay);
-				break;
-			case 1:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.MilkyWay);
-				break;
-			case 2:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.MilkyWay);
-				break;
-			case 3:
-				BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.Pegasus);
-				break;
-			case 4:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.Pegasus);
-				break;
-			case 5:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.Pegasus);
-				break;
-			case 6:
-				BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.Universe);
-				break;
-			case 7:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.Universe);
-				break;
-			case 8:
-				BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.Universe);
-				break;
+		if (orientation.isHorizontal()) {
+			switch (itemstack.getMetadata()) {
+				case 0:
+					BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.MilkyWay);
+					break;
+				case 1:
+					BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.Pegasus);
+					break;
+				case 2:
+					BlockLogicStargateBuildPart.buildVerticalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), StargateFamily.Universe);
+					break;
+			}
+		} else if (orientation == Direction.DOWN) {
+			switch (itemstack.getMetadata()) {
+				case 0:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.MilkyWay);
+					break;
+				case 1:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.Pegasus);
+					break;
+				case 2:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.DOWN, StargateFamily.Universe);
+					break;
+			}
+		} else {
+			switch (itemstack.getMetadata()) {
+				case 0:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.MilkyWay);
+					break;
+				case 1:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.Pegasus);
+					break;
+				case 2:
+					BlockLogicStargateBuildPart.buildHorizontalStargate(world, cx, cy, cz, player.getHorizontalPlacementDirection(side).getOpposite(), Direction.UP, StargateFamily.Universe);
+					break;
+			}
 		}
 
 		return true;
