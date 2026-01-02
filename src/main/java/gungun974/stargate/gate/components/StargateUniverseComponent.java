@@ -2,6 +2,7 @@ package gungun974.stargate.gate.components;
 
 import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.StargateState;
+import gungun974.stargate.core.StargateUniverseAddress;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.sound.SoundCategory;
 
@@ -31,7 +32,28 @@ public class StargateUniverseComponent extends StargateComponent {
 		lastRingMove = ringMove;
 		lastAngle = currentAngle;
 
+		if (ringMoveForEver) {
+			if (currentAngle == 0) {
+				if (ringDirection) {
+					targetAngle = computeTargetAngle(0);
+				} else {
+					targetAngle = computeTargetAngle(-1);
+				}
+			} else {
+				if (ringDirection) {
+					targetAngle = computeTargetAngle(getCurrentSymbol() + 1);
+				} else {
+					targetAngle = computeTargetAngle(getCurrentSymbol() - 1);
+				}
+
+			}
+		}
+
 		double angleDistance = angularDistance(targetAngle, currentAngle);
+
+		if (ringMoveForEver) {
+			angleDistance += 100;
+		}
 
 		if (angleDistance < 0.01) {
 			ringMove = false;
@@ -66,7 +88,19 @@ public class StargateUniverseComponent extends StargateComponent {
 			}
 		}
 
-		return symbol;
+		return symbol % StargateUniverseAddress.NUMBER_OF_SYMBOL;
+	}
+
+	protected double computeTargetAngle(int symbol) {
+		int symbolMod = Math.floorMod(symbol, StargateUniverseAddress.NUMBER_OF_SYMBOL);
+
+		int targetPos = symbolMod;
+
+		for (int i = 4; i <= symbolMod; i += 4) {
+			targetPos += 2;
+		}
+
+		return targetPos * symbolAngle + 10;
 	}
 
 	public void moveToSymbol(int symbol) {
@@ -75,13 +109,7 @@ public class StargateUniverseComponent extends StargateComponent {
 				return;
 			}
 
-			int targetPos = symbol;
-
-			for (int i = 4; i <= symbol; i += 4) {
-				targetPos += 2;
-			}
-
-			targetAngle = targetPos * symbolAngle + 10;
+			targetAngle = computeTargetAngle(symbol);
 
 			state = StargateState.DIALLING;
 

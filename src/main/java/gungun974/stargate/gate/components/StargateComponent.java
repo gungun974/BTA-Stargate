@@ -52,6 +52,7 @@ public abstract class StargateComponent {
 	protected boolean ringDirection = false;
 	protected boolean lastRingMove = false;
 	protected boolean ringMove = false;
+	protected boolean ringMoveForEver = false;
 	protected double lastAngle = 0;
 	private boolean lastEventHorizonNoise = false;
 	private Direction direction = Direction.NORTH;
@@ -150,6 +151,22 @@ public abstract class StargateComponent {
 
 	}
 
+	protected double computeTargetAngle(int symbol) {
+		return Math.floorMod(symbol, StargateMilkyWayAddress.NUMBER_OF_SYMBOL) * symbolAngle;
+	}
+
+	public double getCurrentAngle() {
+		return (((currentAngle % 360) + 360) % 360);
+	}
+
+	public int[] getCurrentDialingAddress() {
+		return Arrays.copyOfRange(
+			currentDialingAddress,
+			0,
+			currentDialingAddressSize
+		);
+	}
+
 	public void checkIfStillValid() {
 		if (orientation == Direction.NORTH) {
 			verticalCheckIfStillValid();
@@ -179,7 +196,6 @@ public abstract class StargateComponent {
 
 		return StargateBlocks.STARGATE_MILKYWAY.id();
 	}
-
 
 	private void verticalCheckIfStillValid() {
 		if (stargateTile.worldObj == null) {
@@ -578,7 +594,6 @@ public abstract class StargateComponent {
 		animationTick = compoundTag.getIntegerOrDefault("AnimationTick", 0);
 	}
 
-
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putInt("Direction", direction.ordinal());
 		compoundTag.putInt("Orientation", orientation.ordinal());
@@ -817,7 +832,7 @@ public abstract class StargateComponent {
 	}
 
 	public int getCurrentSymbol() {
-		return (int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle);
+		return Math.floorMod((int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle), StargateMilkyWayAddress.NUMBER_OF_SYMBOL);
 	}
 
 	public AABB getDetectionBox() {
@@ -1527,7 +1542,19 @@ public abstract class StargateComponent {
 		lastRingMove = ringMove;
 		lastAngle = currentAngle;
 
+		if (ringMoveForEver) {
+			if (ringDirection) {
+				targetAngle = computeTargetAngle(getCurrentSymbol() - 1);
+			} else {
+				targetAngle = computeTargetAngle(getCurrentSymbol() + 1);
+			}
+		}
+
 		double angleDistance = angularDistance(targetAngle, currentAngle);
+
+		if (ringMoveForEver) {
+			angleDistance += 100;
+		}
 
 		if (angleDistance < 0.01) {
 			ringMove = false;
@@ -1685,12 +1712,50 @@ public abstract class StargateComponent {
 			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
 				return;
 			}
-			targetAngle = symbol * symbolAngle;
+			targetAngle = computeTargetAngle(symbol);
 
 			if (stargateTile.worldObj != null) {
 				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 			}
 		});
+	}
+
+	public void rotateClockwise(Runnable action) {
+		if (getFamily() == StargateFamily.Pegasus) {
+			return;
+		}
+		if (ringMoveForEver) {
+			action.run();
+			return;
+		}
+		commandQueue.add(() -> {
+			ringMoveForEver = true;
+			ringDirection = true;
+			action.run();
+		});
+	}
+
+	public void rotateCounterClockwise(Runnable action) {
+		if (getFamily() == StargateFamily.Pegasus) {
+			return;
+		}
+		if (ringMoveForEver) {
+			action.run();
+			return;
+		}
+		commandQueue.add(() -> {
+			ringMoveForEver = true;
+			ringDirection = false;
+			action.run();
+		});
+
+	}
+
+	public void stopRotation() {
+		if (getFamily() == StargateFamily.Pegasus) {
+			return;
+		}
+		ringMoveForEver = false;
 	}
 
 	public void fastEncode(int symbol) {
@@ -1847,6 +1912,10 @@ public abstract class StargateComponent {
 	}
 
 	public void closeGate() {
+		if (isReceiverGate()) {
+			return;
+		}
+
 		if (state != StargateState.CONNECTED) {
 			return;
 		}
@@ -1863,77 +1932,49 @@ public abstract class StargateComponent {
 		StargateSessionManager.getInstance().removeSession(this);
 	}
 
+	public boolean isReceiverGate() {
+		if (state != StargateState.CONNECTED) {
+			return false;
+		}
+
+		StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+		if (session == null) {
+			return false;
+		}
+
+		if (stargateTile.worldObj == null) {
+			return false;
+		}
+
+		return session.destinationX == stargateTile.x &&
+			session.destinationY == stargateTile.y &&
+			session.destinationZ == stargateTile.z &&
+			session.destinationDim == stargateTile.worldObj.dimension.id;
+	}
+
 	public void autoDial() {
-//		moveToSymbol(22);
-//		encode();
-//		moveToSymbol(27);
-//		encode();
-//		moveToSymbol(33);
-//		encode();
-//		moveToSymbol(17);
-//		encode();
-//		moveToSymbol(1);
-//		encode();
-//		moveToSymbol(19);
-//		encode();
-//		moveToSymbol(2);
-//		encode();
-//		moveToSymbol(9);
-//		encode();
-//		moveToSymbol(0);
-//		encode();
-
-
-		fastEncode(22);
-		fastEncode(27);
-		fastEncode(33);
-		fastEncode(17);
-		fastEncode(1);
-		fastEncode(19);
-		fastEncode(2);
-		fastEncode(0);
-
-
-//		fastEncode(26);
-//		//moveToSymbol(26);
-//		//encode();
-//		moveToSymbol(6);
-//		encode();
-//		fastEncode(14);
-////		moveToSymbol(14);
-////		encode();
-//		moveToSymbol(31);
-//		encode();
-//		fastEncode(11);
-////		moveToSymbol(11);
-////		encode();
-//		moveToSymbol(29);
-//		encode();
-//		fastEncode(0);
-//		//moveToSymbol(0);
-//		//encode();
-
-//		if (x == 9989 && y == 7 && z == 9) {
-//			fastEncode(27);
-//			fastEncode(31);
-//			fastEncode(36);
-//			fastEncode(13);
-//			fastEncode(34);
-//			fastEncode(9);
-//			fastEncode(1);
-//			fastEncode(38);
-//			fastEncode(0);
-//		} else {
-//			fastEncode(17);
-//			fastEncode(8);
-//			fastEncode(31);
-//			fastEncode(27);
-//			fastEncode(26);
-//			fastEncode(21);
-//			//fastEncode(1);
-//			//fastEncode(9);
-//			fastEncode(0);
-//		}
+		if (stargateTile.x == -28 && stargateTile.y == 78 && stargateTile.z == 98) {
+			fastEncode(10);
+			fastEncode(20);
+			fastEncode(11);
+			fastEncode(26);
+			fastEncode(25);
+			fastEncode(6);
+			fastEncode(1);
+			fastEncode(18);
+			fastEncode(0);
+		} else {
+			fastEncode(17);
+			fastEncode(21);
+			fastEncode(16);
+			fastEncode(27);
+			fastEncode(24);
+			fastEncode(3);
+			fastEncode(1);
+			fastEncode(9);
+			fastEncode(0);
+		}
 
 		dial();
 
@@ -1993,5 +2034,23 @@ public abstract class StargateComponent {
 		}
 
 		return stargateTile.worldObj.getLightmapCoord(originX, originY, originZ, stargateTile.worldObj.getBlockLightValue(originX, originY, originZ));
+	}
+
+	public void waitCommandQueue(Runnable action) {
+		commandQueue.add(action);
+	}
+
+	public int getOpenTimeDuration() {
+		if (state != StargateState.CONNECTED) {
+			return 0;
+		}
+
+		StargateSession session = StargateSessionManager.getInstance().getSession(this);
+
+		if (session == null) {
+			return 0;
+		}
+
+		return session.openTick;
 	}
 }

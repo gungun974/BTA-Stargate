@@ -81,6 +81,7 @@ public class StargateSessionManager {
 			sessionTag.putShort("DialingAddressSize", session.dialingAddressSize);
 
 			sessionTag.putInt("RemainingTick", session.remainingTick);
+			sessionTag.putInt("OpenTick", session.openTick);
 
 			sessionsTag.put(String.valueOf(i), sessionTag);
 		}
@@ -139,7 +140,8 @@ public class StargateSessionManager {
 						StargateFamily.values()[sessionTag.getInteger("DestinationAddressFamily")]
 					),
 					sessionTag.getShort("DialingAddressSize"),
-					sessionTag.getInteger("RemainingTick")
+					sessionTag.getInteger("RemainingTick"),
+					sessionTag.getInteger("OpenTick")
 				));
 			} catch (Exception ignored) {
 			}
@@ -188,7 +190,8 @@ public class StargateSessionManager {
 			destination.getOrientation(),
 			destination.getAddress(),
 			dialingAddressSize,
-			MAX_OPENING_TIME
+			MAX_OPENING_TIME,
+			0
 		));
 	}
 
@@ -287,6 +290,7 @@ public class StargateSessionManager {
 			StargateSession session = iterator.next();
 
 			session.remainingTick -= 1;
+			session.openTick += 1;
 
 			if (session.remainingTick <= 0) {
 				iterator.remove();

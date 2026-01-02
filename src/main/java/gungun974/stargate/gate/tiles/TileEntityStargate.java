@@ -1,15 +1,22 @@
 package gungun974.stargate.gate.tiles;
 
 import com.mojang.nbt.tags.CompoundTag;
+import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.api.peripheral.IPeripheralTile;
+import gungun974.stargate.gate.blocks.BlockLogicStargate;
+import gungun974.stargate.gate.cc.StargatePeripheral;
 import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
+import net.minecraft.core.util.helper.Direction;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public abstract class TileEntityStargate extends TileEntity {
+public abstract class TileEntityStargate extends TileEntity implements IPeripheralTile {
 	private final CamouflageComponent camouflageComponent = new CamouflageComponent();
 	private Role role = Role.RING;
 	private StargateComponent stargateComponent;
@@ -76,6 +83,32 @@ public abstract class TileEntityStargate extends TileEntity {
 	public StargateComponent getStargateComponent() {
 		return stargateComponent;
 	}
+
+	@Nullable
+	public StargateComponent findMainStargateComponent() {
+		if (worldObj == null) {
+			return getStargateComponent();
+		}
+
+		BlockLogicStargate blockLogicStargate = worldObj.getBlockLogic(x, y, z, BlockLogicStargate.class);
+		if (blockLogicStargate == null) {
+			return getStargateComponent();
+		}
+
+		TileEntityStargate stargate = blockLogicStargate.findMainTileEntityStargate(worldObj, x, y, z);
+		if (stargate == null) {
+			return getStargateComponent();
+		}
+
+		return stargate.getStargateComponent();
+	}
+
+	@Nonnull
+	@Override
+	public IPeripheral getPeripheral(@NotNull Direction side) {
+		return new StargatePeripheral(this);
+	}
+
 
 	public CamouflageComponent getCamouflageComponent() {
 		return camouflageComponent;
