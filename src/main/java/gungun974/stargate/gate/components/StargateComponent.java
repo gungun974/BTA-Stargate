@@ -54,6 +54,7 @@ public abstract class StargateComponent {
 	protected boolean ringMove = false;
 	protected boolean ringMoveForEver = false;
 	protected double lastAngle = 0;
+	int longTick = 0;
 	private boolean lastEventHorizonNoise = false;
 	private Direction direction = Direction.NORTH;
 	private Direction orientation = Direction.NORTH;
@@ -867,13 +868,234 @@ public abstract class StargateComponent {
 		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
+	public void kawooshDestroyInnerBlocks() {
+		if (stargateTile.worldObj == null) {
+			return;
+		}
+
+		Direction direction = getDirection();
+		Direction orientation = getOrientation();
+
+		double radius = 3;
+
+		double centerX, centerY, centerZ;
+
+		if (orientation == Direction.NORTH) {
+			centerX = stargateTile.x + 0.5;
+			centerY = stargateTile.y + 3.5;
+			centerZ = stargateTile.z + 0.5;
+		} else {
+			centerX = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
+			centerY = stargateTile.y + orientation.getOffsetY() * 0.5;
+			centerZ = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+
+			if (direction.getOffsetX() < 0) {
+				centerX += 1;
+				centerZ += 1;
+			}
+
+			if (direction.getOffsetZ() < 0) {
+				centerZ += 1;
+				centerX += 1;
+			}
+		}
+
+		double x1, y1, z1, x2, y2, z2;
+
+		if (orientation == Direction.NORTH) {
+			double x = radius * Math.abs(direction.getOffsetZ());
+			double z = radius * Math.abs(direction.getOffsetX());
+
+			x1 = centerX - x;
+			y1 = centerY - radius;
+			z1 = centerZ - z;
+
+			x2 = centerX + x;
+			y2 = centerY + radius;
+			z2 = centerZ + z;
+		} else {
+			x1 = centerX - radius;
+			y1 = centerY;
+			z1 = centerZ - radius;
+
+			x2 = centerX + radius;
+			y2 = centerY;
+			z2 = centerZ + radius;
+		}
+
+		double minX = Math.min(x1, x2);
+		double minY = Math.min(y1, y2);
+		double minZ = Math.min(z1, z2);
+		double maxX = Math.max(x1, x2);
+		double maxY = Math.max(y1, y2);
+		double maxZ = Math.max(z1, z2);
+
+		int startX = (int) Math.floor(minX);
+		int startY = (int) Math.floor(minY);
+		int startZ = (int) Math.floor(minZ);
+		int endX = (int) Math.ceil(maxX) - 1;
+		int endY = (int) Math.ceil(maxY) - 1;
+		int endZ = (int) Math.ceil(maxZ) - 1;
+
+		for (int x = startX; x <= endX; x++) {
+			for (int y = startY; y <= endY; y++) {
+				for (int z = startZ; z <= endZ; z++) {
+					double distance = Math.sqrt((x + 0.5 - centerX) * (x + 0.5 - centerX) + (y + 0.5 - centerY) * (y + 0.5 - centerY) + (z + 0.5 - centerZ) * (z + 0.5 - centerZ));
+
+					if (distance >= 2.5) {
+						continue;
+					}
+
+					if (distance <= 3 * (1 - interpolatedEventHorizonFormationProgress(1))) {
+						continue;
+					}
+
+					if (stargateTile.worldObj.getBlockLogic(x, y, z, BlockLogicStargate.class) != null) {
+						continue;
+					}
+
+					if (stargateTile.worldObj.isAirBlock(x, y, z)) {
+						continue;
+					}
+
+					stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
+				}
+			}
+		}
+	}
+
+	public AABB getKawooshDetectionBox() {
+		Direction direction = getDirection();
+		Direction orientation = getOrientation();
+
+		double radius = interpolatedUnstableVortexDiameter(1) * 1.5;
+		double depth = interpolatedUnstableVortexDistance(1) * 4;
+
+		double centerX, centerY, centerZ;
+
+		if (orientation == Direction.NORTH) {
+			centerX = stargateTile.x + 0.5;
+			centerY = stargateTile.y + 3.5;
+			centerZ = stargateTile.z + 0.5;
+		} else {
+			centerX = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
+			centerY = stargateTile.y + orientation.getOffsetY() * 0.5;
+			centerZ = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+
+			if (direction.getOffsetX() < 0) {
+				centerX += 1;
+				centerZ += 1;
+			}
+
+			if (direction.getOffsetZ() < 0) {
+				centerZ += 1;
+				centerX += 1;
+			}
+		}
+
+		double x1, y1, z1, x2, y2, z2;
+
+		if (orientation == Direction.NORTH) {
+			double x = radius * Math.abs(direction.getOffsetZ());
+			double z = radius * Math.abs(direction.getOffsetX());
+
+			x1 = centerX - x;
+			y1 = centerY - radius;
+			z1 = centerZ - z;
+
+			x2 = centerX + x - direction.getOffsetX() * depth;
+			y2 = centerY + radius;
+			z2 = centerZ + z - direction.getOffsetZ() * depth;
+		} else {
+			x1 = centerX - radius;
+			y1 = centerY;
+			z1 = centerZ - radius;
+
+			x2 = centerX + radius;
+			y2 = centerY + orientation.getOffsetY() * depth;
+			z2 = centerZ + radius;
+		}
+
+		double minX = Math.min(x1, x2);
+		double minY = Math.min(y1, y2);
+		double minZ = Math.min(z1, z2);
+		double maxX = Math.max(x1, x2);
+		double maxY = Math.max(y1, y2);
+		double maxZ = Math.max(z1, z2);
+
+		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
+	}
+
 	protected void resetGateDirection() {
 		ringDirection = false;
 	}
 
 	public void tick() {
-		if (state == StargateState.CONNECTED && stargateTile.worldObj != null) {
-			this.teleportBlocks();
+		if (animation == StargateAnimation.KAWOOSH && stargateTile.worldObj != null) {
+			kawooshDestroyInnerBlocks();
+			AABB detectionBox = this.getKawooshDetectionBox();
+			List<Entity> list = this.stargateTile.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
+
+			for (Entity entity : list) {
+				if (entity instanceof Player) {
+					((Player) entity).killPlayer();
+				} else {
+					entity.hurt(null, 100000, null);
+				}
+			}
+
+			Direction direction = getDirection();
+			Direction orientation = getOrientation();
+
+			int startX = (int) Math.floor(detectionBox.minX);
+			int startY = (int) Math.floor(detectionBox.minY);
+			int startZ = (int) Math.floor(detectionBox.minZ);
+			int endX = (int) Math.ceil(detectionBox.maxX) - 1;
+			int endY = (int) Math.ceil(detectionBox.maxY) - 1;
+			int endZ = (int) Math.ceil(detectionBox.maxZ) - 1;
+
+			for (int x = startX; x <= endX; x++) {
+				for (int y = startY; y <= endY; y++) {
+					for (int z = startZ; z <= endZ; z++) {
+						boolean isMinX = (x == startX);
+						boolean isMaxX = (x == endX);
+						boolean isMinY = (y == startY);
+						boolean isMaxY = (y == endY);
+						boolean isMinZ = (z == startZ);
+						boolean isMaxZ = (z == endZ);
+
+						boolean isCorner = false;
+
+						if (direction == Direction.UP || direction == Direction.DOWN) {
+							if (orientation == Direction.EAST || orientation == Direction.WEST) {
+								isCorner = (isMinY || isMaxY) && (isMinZ || isMaxZ) && (isMinX || isMaxX);
+							} else {
+								isCorner = (isMinX || isMaxX) && (isMinY || isMaxY) && (isMinZ || isMaxZ);
+							}
+						} else if (direction == Direction.NORTH || direction == Direction.SOUTH) {
+							isCorner = (isMinX || isMaxX) && (isMinY || isMaxY) && (isMinZ || isMaxZ);
+						} else if (direction == Direction.EAST || direction == Direction.WEST) {
+							isCorner = (isMinY || isMaxY) && (isMinZ || isMaxZ) && (isMinX || isMaxX);
+						}
+
+						if (isCorner) {
+							continue;
+						}
+
+						if (stargateTile.worldObj.isAirBlock(x, y, z)) {
+							continue;
+						}
+
+						stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
+					}
+				}
+			}
+		}
+
+		if ((state == StargateState.OPENING || state == StargateState.CONNECTED) && stargateTile.worldObj != null) {
+			if (state == StargateState.CONNECTED) {
+				this.teleportBlocks();
+			}
 			Direction orientation = getOrientation();
 
 			Direction direction = getDirection();
@@ -947,14 +1169,26 @@ public abstract class StargateComponent {
 										d0 > 0 && d1 < 0
 								) {
 									SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
-									if (entity instanceof Player) {
-										((Player) entity).killPlayer();
-									} else {
-										entity.remove();
+									if (state == StargateState.CONNECTED || animationTick >= 18) {
+										if (entity instanceof Player) {
+											((Player) entity).killPlayer();
+										} else {
+											entity.hurt(null, 100000, null);
+										}
 									}
 								} else if (d0 < 0 && d1 > 0) {
-									this.teleportEntity(entity, session);
-									StargateSessionManager.getInstance().endSession(this);
+									if (state == StargateState.CONNECTED) {
+										this.teleportEntity(entity, session);
+										StargateSessionManager.getInstance().endSession(this);
+									} else {
+										if (animationTick >= 18) {
+											if (entity instanceof Player) {
+												((Player) entity).killPlayer();
+											} else {
+												entity.hurt(null, 100000, null);
+											}
+										}
+									}
 								}
 							}
 						}
