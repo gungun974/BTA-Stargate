@@ -1955,14 +1955,14 @@ public abstract class StargateComponent {
 
 	public void autoDial() {
 		if (stargateTile.x == -28 && stargateTile.y == 78 && stargateTile.z == 98) {
-			fastEncode(10);
-			fastEncode(20);
-			fastEncode(11);
-			fastEncode(26);
-			fastEncode(25);
 			fastEncode(6);
+			fastEncode(17);
+			fastEncode(14);
+			fastEncode(7);
+			fastEncode(28);
+			fastEncode(27);
 			fastEncode(1);
-			fastEncode(18);
+			fastEncode(19);
 			fastEncode(0);
 		} else {
 			fastEncode(17);

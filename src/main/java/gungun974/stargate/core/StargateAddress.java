@@ -38,7 +38,7 @@ public abstract class StargateAddress {
 		return (r < 0) ? r + m : r;
 	}
 
-	private static long mod(long a, long m) {
+	protected static long mod(long a, long m) {
 		long r = a % m;
 		return (r < 0) ? r + m : r;
 	}
@@ -52,35 +52,6 @@ public abstract class StargateAddress {
 			res *= f;
 		}
 		return res;
-	}
-
-	private static long feistelF(long r, int round, long S) {
-		long t = (r * r) + (A[round] * r) + B[round];
-		return mod(t, S);
-	}
-
-	private static long[] feistelMix(long ix, long iz, long S) {
-		long L = mod(ix, S);
-		long R = mod(iz, S);
-		for (int i = 0; i < FEISTEL_ROUNDS; i++) {
-			long F = feistelF(R, i, S);
-			long newR = mod(L + F, S);
-			L = R;
-			R = newR;
-		}
-		return new long[]{L, R};
-	}
-
-	private static long[] feistelUnmix(long Lp, long Rp, long S) {
-		long L = mod(Lp, S);
-		long R = mod(Rp, S);
-		for (int i = FEISTEL_ROUNDS - 1; i >= 0; i--) {
-			long prevR = L;
-			long F = feistelF(prevR, i, S);
-			L = mod(R - F, S);
-			R = prevR;
-		}
-		return new long[]{L, R};
 	}
 
 	public static StargateAddress createAddressFromBlock(int x, int y, int dim, StargateFamily family) {
@@ -107,6 +78,35 @@ public abstract class StargateAddress {
 			default:
 				throw new IllegalStateException("Unhandled family: " + family);
 		}
+	}
+
+	private long[] feistelMix(long ix, long iz, long S) {
+		long L = mod(ix, S);
+		long R = mod(iz, S);
+		for (int i = 0; i < FEISTEL_ROUNDS; i++) {
+			long F = feistelF(R, i, S);
+			long newR = mod(L + F, S);
+			L = R;
+			R = newR;
+		}
+		return new long[]{L, R};
+	}
+
+	private long[] feistelUnmix(long Lp, long Rp, long S) {
+		long L = mod(Lp, S);
+		long R = mod(Rp, S);
+		for (int i = FEISTEL_ROUNDS - 1; i >= 0; i--) {
+			long prevR = L;
+			long F = feistelF(prevR, i, S);
+			L = mod(R - F, S);
+			R = prevR;
+		}
+		return new long[]{L, R};
+	}
+
+	protected long feistelF(long r, int round, long S) {
+		long t = (r * r) + (A[round] * r) + B[round];
+		return mod(t, S);
 	}
 
 	protected void setAddressFromEncoded(int[] address) {
