@@ -3,6 +3,7 @@ package gungun974.stargate.gate.cc;
 import dan200.computercraft.api.lua.*;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import gungun974.stargate.core.StargateAddress;
 import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
@@ -223,6 +224,78 @@ public class StargatePeripheral implements IPeripheral {
 	@LuaFunction(mainThread = true)
 	public final List<Integer> getLocalAddress() throws LuaException {
 		return Arrays.stream(getStargateComponent().getAddress().encodeAddress()).boxed().collect(Collectors.toList());
+	}
+
+	/**
+	 * Use the inboard stargate stellar address computer to convert a local address into world coordinate
+	 */
+	@LuaFunction(mainThread = true)
+	public final Object[] addressToLocation(Object table) throws LuaException {
+
+		if (!(table instanceof Map)) {
+			throw new LuaException("Expected table");
+		}
+
+		@SuppressWarnings("unchecked")
+		Map<Object, Object> map = (Map<Object, Object>) table;
+
+		int size = map.size();
+		int[] addr = new int[Math.max(size, 9)];
+
+		for (Map.Entry<Object, Object> entry : map.entrySet()) {
+			Object key = entry.getKey();
+			Object value = entry.getValue();
+
+			if (!(key instanceof Number)) {
+				throw new LuaException("Table key is not numeric: " + key);
+			}
+			if (!(value instanceof Number)) {
+				throw new LuaException("Table value is not numeric: " + value);
+			}
+
+			int index = ((Number) key).intValue();
+			if (index < 1 || index > size) {
+				throw new LuaException("Invalid index: " + index);
+			}
+
+			addr[index - 1] = ((Number) value).intValue();
+		}
+
+		if (size == 7) {
+			int[] originAddress = getStargateComponent().getAddress().encodeAddress();
+
+			addr[6] = originAddress[6];
+			addr[7] = 0;
+			addr[8] = 0;
+		} else if (size == 8) {
+			addr[7] = 0;
+			addr[8] = 0;
+		}
+
+		StargateAddress stargateAddress =
+			StargateAddress.createAddressFromEncoded(
+				addr,
+				getStargateComponent().getFamily()
+			);
+
+		if (stargateAddress == null) {
+			throw new LuaException("Can't compute stargate address");
+		}
+
+		return new Object[]{
+			stargateAddress.getBlockX(),
+			stargateAddress.getBlockZ(),
+			stargateAddress.getDim()
+		};
+	}
+
+
+	/**
+	 * Use the inboard stargate stellar address computer to convert world coordinate into local address
+	 */
+	@LuaFunction(mainThread = true)
+	public final List<Integer> locationToAddress(int x, int z, int dim) throws LuaException {
+		return Arrays.stream(StargateAddress.createAddressFromBlock(x, z, dim, getStargateComponent().getFamily()).encodeAddress()).boxed().collect(Collectors.toList());
 	}
 
 	/**
