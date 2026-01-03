@@ -1953,38 +1953,6 @@ public abstract class StargateComponent {
 			session.destinationDim == stargateTile.worldObj.dimension.id;
 	}
 
-	public void autoDial() {
-		if (stargateTile.x == -28 && stargateTile.y == 78 && stargateTile.z == 98) {
-			fastEncode(6);
-			fastEncode(17);
-			fastEncode(14);
-			fastEncode(7);
-			fastEncode(28);
-			fastEncode(27);
-			fastEncode(1);
-			fastEncode(19);
-			fastEncode(0);
-		} else {
-			fastEncode(17);
-			fastEncode(21);
-			fastEncode(16);
-			fastEncode(27);
-			fastEncode(24);
-			fastEncode(3);
-			fastEncode(1);
-			fastEncode(9);
-			fastEncode(0);
-		}
-
-		dial();
-
-		StargateMod.LOGGER.info("State: {}", state);
-
-		StargateMod.LOGGER.info("MilkyWay : {}", this.getAddressWithFamily(StargateFamily.MilkyWay).encodeAddress());
-		StargateMod.LOGGER.info("Pegasus : {}", this.getAddressWithFamily(StargateFamily.Pegasus).encodeAddress());
-		StargateMod.LOGGER.info("Universe : {}", this.getAddressWithFamily(StargateFamily.Universe).encodeAddress());
-	}
-
 	public abstract StargateFamily getFamily();
 
 	public Direction getOrientation() {

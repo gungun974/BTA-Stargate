@@ -258,24 +258,7 @@ public class BlockLogicStargate extends BlockLogic {
 			}
 		}
 
-		ItemStack heldItem = player.getHeldItem();
-		if (heldItem != null) {
-			return false;
-		}
-
-		TileEntityStargate stargate = findMainTileEntityStargate(world, x, y, z);
-		if (stargate == null) {
-			return false;
-		}
-
-		StargateComponent component = stargate.getStargateComponent();
-		if (component == null) {
-			return false;
-		}
-
-		component.autoDial();
-
-		return true;
+		return false;
 	}
 
 	private TileEntityStargate extractMainTileEntityStargate(World world, int x, int y, int z) {
