@@ -961,7 +961,35 @@ public abstract class StargateComponent {
 						continue;
 					}
 
-					stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
+					AABB boundingBox = AABB.getTemporaryBB(x - 0.01, y - 0.01, z - 0.01, x + 0.01, y + 0.01, z + 0.01);
+
+					Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
+					if (block != null) {
+						stargateTile.worldObj.collidingBoundingBoxes.clear();
+						block.getCollidingBoundingBoxes(stargateTile.worldObj, x, y, z, boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
+
+						boolean shouldBreak = false;
+
+						for (AABB aabb : stargateTile.worldObj.collidingBoundingBoxes) {
+							double closestX = Math.max(aabb.minX, Math.min(centerX, aabb.maxX));
+							double closestY = Math.max(aabb.minY, Math.min(centerY, aabb.maxY));
+							double closestZ = Math.max(aabb.minZ, Math.min(centerZ, aabb.maxZ));
+
+							double dx = centerX - closestX;
+							double dy = centerY - closestY;
+							double dz = centerZ - closestZ;
+							double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+							if (distanceSquared < 4) {
+								shouldBreak = true;
+								break;
+							}
+						}
+
+						if (shouldBreak) {
+							stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
+						}
+					}
 				}
 			}
 		}
@@ -1678,6 +1706,39 @@ public abstract class StargateComponent {
 					continue;
 				}
 
+				AABB boundingBox = AABB.getTemporaryBB(x - 0.01, y - 0.01, z - 0.01, x + 0.01, y + 0.01, z + 0.01);
+
+				boolean shouldTeleport = false;
+
+				@Nullable Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
+
+				if (block != null) {
+					stargateTile.worldObj.collidingBoundingBoxes.clear();
+					block.getCollidingBoundingBoxes(stargateTile.worldObj, x, y, z, boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
+
+
+					for (AABB aabb : stargateTile.worldObj.collidingBoundingBoxes) {
+						double closestX = Math.max(aabb.minX, Math.min(originX, aabb.maxX));
+						double closestY = Math.max(aabb.minY, Math.min(originY, aabb.maxY));
+						double closestZ = Math.max(aabb.minZ, Math.min(originZ, aabb.maxZ));
+
+						double dx = originX - closestX;
+						double dy = originY - closestY;
+						double dz = originZ - closestZ;
+						double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+						if (distanceSquared < 2.25) {
+							shouldTeleport = true;
+							break;
+						}
+					}
+
+				}
+
+				if (!shouldTeleport) {
+					continue;
+				}
+
 				int dx = x - originX;
 				int dy = y - originY;
 				int dz = z - originZ;
@@ -1688,8 +1749,6 @@ public abstract class StargateComponent {
 				int newX = destinationX + alpha * drx + beta * dux;
 				int newY = destinationY + alpha * dry + beta * duy;
 				int newZ = destinationZ + alpha * drz + beta * duz;
-
-				@Nullable Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
 
 				if (block != null && block.getLogic() instanceof BlockLogicRotatable) {
 					Direction blockDirection = BlockLogicRotatable.getDirectionFromMeta(meta);
