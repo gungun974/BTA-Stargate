@@ -1230,7 +1230,7 @@ public abstract class StargateComponent {
 
 		if (!EnvironmentHelper.isClientWorld()) {
 			if (getFamily() == StargateFamily.Universe) {
-				if (state != StargateState.IDLE && lastState == StargateState.IDLE) {
+				if (state != StargateState.IDLE && lastState == StargateState.IDLE && animation != StargateAnimation.KAWOOSH && animation != StargateAnimation.CLOSING) {
 					playAnimation(StargateAnimation.UNIVERSE_START);
 				}
 			}
