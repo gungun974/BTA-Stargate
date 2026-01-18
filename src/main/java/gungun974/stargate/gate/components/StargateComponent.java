@@ -2202,7 +2202,7 @@ public abstract class StargateComponent {
 	}
 
 	public StargateAddress getAddressWithFamily(StargateFamily family) {
-		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.y, stargateTile.worldObj.dimension.id, family);
+		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.z, stargateTile.worldObj.dimension.id, family);
 	}
 
 	public int getLightmap() {
