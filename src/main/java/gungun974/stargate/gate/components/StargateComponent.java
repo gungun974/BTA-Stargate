@@ -558,7 +558,10 @@ public abstract class StargateComponent {
 		stopSoundAtCenter("stargate:stargate.pegasus.roll");
 		stopSoundAtCenter("stargate:stargate.universe.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
-		StargateSessionManager.getInstance().removeSession(this);
+
+		if (this.stargateTile.worldObj != null && getIdForStargateBlock() != this.stargateTile.worldObj.getBlockId(this.stargateTile.x, this.stargateTile.y, this.stargateTile.z)) {
+			StargateSessionManager.getInstance().removeSession(this);
+		}
 	}
 
 	public Direction getDirection() {
