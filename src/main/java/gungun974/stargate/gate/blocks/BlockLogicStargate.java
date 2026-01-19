@@ -12,6 +12,7 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.enums.EnumDropCause;
+import net.minecraft.core.enums.LightLayer;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.block.ItemBlock;
@@ -129,6 +130,7 @@ public class BlockLogicStargate extends BlockLogic {
 				}
 
 				camouflageComponent.clearCamouflage();
+				world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
 				return;
 			}
 		}
@@ -148,6 +150,7 @@ public class BlockLogicStargate extends BlockLogic {
 
 			if (camouflageComponent.hasCamouflage()) {
 				camouflageComponent.clearCamouflage();
+				world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
 			}
 		}
 
@@ -248,6 +251,7 @@ public class BlockLogicStargate extends BlockLogic {
 								stargate.getCamouflageComponent().setCamouflage(newId, newMeta);
 
 								world.notifyBlockChange(x, y, z, id());
+								world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
 
 								return true;
 							}

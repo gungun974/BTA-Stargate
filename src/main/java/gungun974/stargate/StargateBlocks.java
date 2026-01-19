@@ -42,7 +42,8 @@ public class StargateBlocks {
 			.setHardness(2.5f)
 			.setResistance(5.0f)
 			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
-			.setBlockSound(BlockSounds.WOOD);
+			.setBlockSound(BlockSounds.WOOD)
+			.setLuminance(15);
 
 		BlockBuilder stargateBuildPartBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)
