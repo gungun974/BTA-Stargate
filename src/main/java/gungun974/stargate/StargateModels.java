@@ -1,5 +1,7 @@
 package gungun974.stargate;
 
+import gungun974.stargate.dhd.renders.TileEntityRendererDHD;
+import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.renders.*;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.tiles.TileEntityStargatePegasus;
@@ -8,6 +10,7 @@ import net.minecraft.client.render.EntityRenderDispatcher;
 import net.minecraft.client.render.TileEntityRenderDispatcher;
 import net.minecraft.client.render.block.color.BlockColorDispatcher;
 import net.minecraft.client.render.block.model.BlockModelDispatcher;
+import net.minecraft.client.render.block.model.BlockModelEmpty;
 import net.minecraft.client.render.item.model.ItemModelDispatcher;
 import net.minecraft.client.render.item.model.ItemModelStandard;
 import net.minecraft.client.render.texture.stitcher.TextureRegistry;
@@ -39,6 +42,8 @@ public class StargateModels implements ModelEntrypoint {
 			.setAllTextures(0, "minecraft:block/chest/planks/top")
 		);
 
+		ModelHelper.setBlockModel(StargateBlocks.DHD_MILKYWAY, () -> new BlockModelEmpty<>(StargateBlocks.DHD_MILKYWAY));
+
 		StargateMod.LOGGER.info("Block Models initialized.");
 	}
 
@@ -60,6 +65,8 @@ public class StargateModels implements ModelEntrypoint {
 		ModelHelper.setTileEntityModel(TileEntityStargateMilkyWay.class, TileEntityRenderStargateMilkyWay::new);
 		ModelHelper.setTileEntityModel(TileEntityStargatePegasus.class, TileEntityRenderStargatePegasus::new);
 		ModelHelper.setTileEntityModel(TileEntityStargateUniverse.class, TileEntityRenderStargateUniverse::new);
+
+		ModelHelper.setTileEntityModel(TileEntityDHD.class, TileEntityRendererDHD::new);
 
 		StargateMod.LOGGER.info("Tile Entity Models initialized.");
 	}

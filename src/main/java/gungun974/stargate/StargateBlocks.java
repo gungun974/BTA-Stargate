@@ -1,5 +1,7 @@
 package gungun974.stargate;
 
+import gungun974.stargate.dhd.blocks.BlockLogicDHD;
+import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.blocks.BlockLogicStargateBuildPart;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
@@ -24,6 +26,8 @@ public class StargateBlocks {
 
 	public static Block<BlockLogicStargate> STARGATE_UNIVERSE;
 	public static Block<BlockLogicStargateBuildPart> STARGATE_BUILD_PART_UNIVERSE;
+
+	public static Block<BlockLogicDHD> DHD_MILKYWAY;
 
 	private static int currentGeneratedId;
 
@@ -68,6 +72,16 @@ public class StargateBlocks {
 			.build("stargate_universe", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
 		STARGATE_BUILD_PART_UNIVERSE = stargateBuildPartBuilder
 			.build("stargate_build_part_universe", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
+
+		EntityHelper.createTileEntity(TileEntityDHD.class, NamespaceID.getPermanent(MOD_ID, "dhd_milkyway"));
+
+		new BlockBuilder(MOD_ID)
+			.setHardness(2.5f)
+			.setResistance(5.0f)
+			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
+			.setBlockSound(BlockSounds.WOOD)
+			.setTileEntity(TileEntityDHD::new)
+			.build("dhd_milkyway", generateNexId(), b -> new BlockLogicDHD(b, Material.wood));
 	}
 
 }
