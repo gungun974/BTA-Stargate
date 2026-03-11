@@ -1,11 +1,13 @@
 package gungun974.stargate.dhd.renders;
 
 import gungun974.stargate.core.WavefrontLoader;
+import gungun974.stargate.dhd.blocks.BlockLogicDHD;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
+import net.minecraft.core.util.helper.Direction;
 import org.lwjgl.opengl.GL11;
 
 public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
@@ -70,6 +72,23 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 		TileEntityStargate gate = tileEntity.findLinkedGate();
 		if (gate != null) {
 			stargateComponent = gate.getStargateComponent();
+		}
+
+		Direction direction = BlockLogicDHD.getDirectionFromMeta(tileEntity.getBlockMeta());
+
+		switch (direction) {
+			case EAST:
+				GL11.glRotatef(90, 0, 1, 0);
+				break;
+			case NORTH:
+				GL11.glRotatef(180, 0, 1, 0);
+				break;
+			case SOUTH:
+				break;
+			case WEST:
+				GL11.glRotatef(-90, 0, 1, 0);
+				break;
+			default:
 		}
 
 		DHD.render(tessellator);
