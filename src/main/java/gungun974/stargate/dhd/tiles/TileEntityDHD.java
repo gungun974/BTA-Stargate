@@ -155,6 +155,15 @@ public class TileEntityDHD extends TileEntity {
 			return;
 		}
 
-		gate.dial();
+		switch (gate.getState()) {
+			case IDLE:
+			case DIALLING:
+			case AWAIT:
+				gate.dial();
+			case OPENING:
+			case CONNECTED:
+			case CLOSING:
+				gate.closeGate();
+		}
 	}
 }

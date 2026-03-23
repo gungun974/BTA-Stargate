@@ -91,6 +91,23 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 			default:
 		}
 
+		if (stargateComponent != null) {
+			switch (stargateComponent.getState()) {
+				case IDLE:
+				case DIALLING:
+				case AWAIT:
+					DHD.mapMaterial("button", "button");
+					break;
+				case OPENING:
+				case CONNECTED:
+				case CLOSING:
+					DHD.mapMaterial("button", "button_active");
+			}
+		} else {
+			DHD.mapMaterial("button", "button");
+		}
+
+
 		DHD.render(tessellator);
 
 		for (int i = 0; i < KEYS.length; i++) {
@@ -111,6 +128,10 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 
 	private boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
 		if (stargateComponent == null) {
+			return false;
+		}
+
+		if (stargateComponent.isReceiverGate()) {
 			return false;
 		}
 

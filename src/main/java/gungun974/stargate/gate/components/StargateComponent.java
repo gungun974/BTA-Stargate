@@ -64,6 +64,7 @@ public abstract class StargateComponent {
 	private int lastAnimationTick = 0;
 	private int eventHorizonTick = 0;
 	private int lastEventHorizonTick = 0;
+	private boolean wasRecieverGate = false;
 
 	protected StargateComponent(TileEntity stargateTile) {
 		this.stargateTile = stargateTile;
@@ -2268,24 +2269,31 @@ public abstract class StargateComponent {
 	}
 
 	public boolean isReceiverGate() {
+		if (state == StargateState.CLOSING) {
+			return wasRecieverGate;
+		}
+
 		if (state != StargateState.CONNECTED) {
+			wasRecieverGate = false;
 			return false;
 		}
 
 		StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 		if (session == null) {
-			return false;
+			return wasRecieverGate;
 		}
 
 		if (stargateTile.worldObj == null) {
-			return false;
+			return wasRecieverGate;
 		}
 
-		return session.destinationX == stargateTile.x &&
+		wasRecieverGate = session.destinationX == stargateTile.x &&
 			session.destinationY == stargateTile.y &&
 			session.destinationZ == stargateTile.z &&
 			session.destinationDim == stargateTile.worldObj.dimension.id;
+
+		return wasRecieverGate;
 	}
 
 	public abstract StargateFamily getFamily();
