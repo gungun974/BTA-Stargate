@@ -2081,6 +2081,26 @@ public abstract class StargateComponent {
 		});
 	}
 
+	public void testEncode(int symbol) {
+		commandQueue.add(() -> {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING)) {
+				return;
+			}
+
+			currentDialingAddress[0] = symbol;
+			currentDialingAddressSize = 1;
+
+			if (symbol == 0 || currentDialingAddressSize == 9) {
+				state = StargateState.AWAIT;
+			} else {
+				state = StargateState.DIALLING;
+			}
+
+			stopSoundAtCenter("stargate:stargate.milkyway.roll");
+			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
+		});
+	}
+
 	public void dial() {
 		commandQueue.add(() -> {
 			if (state != StargateState.AWAIT) {

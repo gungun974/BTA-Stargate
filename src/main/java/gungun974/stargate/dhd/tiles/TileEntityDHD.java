@@ -119,7 +119,7 @@ public class TileEntityDHD extends TileEntity {
 		return gate;
 	}
 
-	public void dial() {
+	public void dial(int s) {
 		TileEntityStargate tile = findLinkedGate();
 
 		if (tile == null) {
@@ -132,16 +132,6 @@ public class TileEntityDHD extends TileEntity {
 			return;
 		}
 
-		gate.fastEncode(1);
-		gate.fastEncode(2);
-		gate.fastEncode(3);
-		gate.fastEncode(4);
-		gate.fastEncode(5);
-		gate.fastEncode(6);
-		gate.fastEncode(7);
-		gate.fastEncode(8);
-		gate.fastEncode(0);
-
-		gate.dial();
+		gate.testEncode(s);
 	}
 }
