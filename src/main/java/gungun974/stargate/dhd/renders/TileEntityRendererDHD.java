@@ -1,66 +1,83 @@
 package gungun974.stargate.dhd.renders;
 
 import gungun974.stargate.core.WavefrontLoader;
+import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHD;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
+import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
 import net.minecraft.core.util.helper.Direction;
+import net.minecraft.core.util.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
 public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
-
 	private static final WavefrontLoader DHD = new WavefrontLoader("/assets/stargate/models/DHD/DHD.obj");
 
-	private static final int[] KEY_IDS = {
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-		13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-		25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38
-	};
+	private static final WavefrontLoader Button = new WavefrontLoader("/assets/stargate/models/DHD/button.obj");
 
 	private static final WavefrontLoader[] KEYS = {
-		new WavefrontLoader("/assets/stargate/models/DHD/001.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/002.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/024.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/006.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/029.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/038.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/034.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/012.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/037.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/011.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/021.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/003.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/004.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/005.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/006.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/007.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/008.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/009.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/010.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/011.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/012.obj"),
-
-		new WavefrontLoader("/assets/stargate/models/DHD/014.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/015.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/016.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/017.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/018.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/019.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/020.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/021.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/022.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/023.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/024.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/025.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/026.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/027.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/028.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/029.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/030.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/031.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/009.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/005.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/032.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/001.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/019.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/022.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/007.obj"),
+
+		new WavefrontLoader("/assets/stargate/models/DHD/028.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/010.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/033.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/034.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/035.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/039.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/026.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/023.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/018.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/014.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/017.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/002.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/025.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/036.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/037.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/038.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/039.obj")
+		new WavefrontLoader("/assets/stargate/models/DHD/008.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/027.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/031.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/015.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/035.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/030.obj"),
+		new WavefrontLoader("/assets/stargate/models/DHD/016.obj")
 	};
+
+	private static final DHDGeometry.KeyPositions[] PRECOMPUTED_KEY_POSITIONS = generateKeyPositions();
+
+	private static DHDGeometry.KeyPositions[] generateKeyPositions() {
+		int segments = BlockLogicDHD.getSegments();
+		DHDGeometry.KeyPositions[] positions = new DHDGeometry.KeyPositions[segments * 2];
+
+		for (int i = 0; i < segments * 2; i++) {
+			double angle = 360.0 * i / segments;
+
+			if ((segments % 2) == 0) {
+				angle += 180.0 / segments;
+			}
+
+			positions[i] = DHDGeometry.calculateKeyPositions(i, segments, angle);
+		}
+
+		return positions;
+	}
 
 	@Override
 	public void doRender(Tessellator tessellator, TileEntityDHD tileEntity, double x, double y, double z, float partialTicks) {
@@ -72,6 +89,11 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 		TileEntityStargate gate = tileEntity.findLinkedGate();
 		if (gate != null) {
 			stargateComponent = gate.getStargateComponent();
+		}
+
+		int lightmap = 0;
+		if (LightmapHelper.isLightmapEnabled()) {
+			lightmap = tileEntity.getLightmap();
 		}
 
 		Direction direction = BlockLogicDHD.getDirectionFromMeta(tileEntity.getBlockMeta());
@@ -91,36 +113,113 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 			default:
 		}
 
+		DHD.render(tessellator);
+
+		boolean active = false;
+
 		if (stargateComponent != null) {
 			switch (stargateComponent.getState()) {
 				case IDLE:
 				case DIALLING:
 				case AWAIT:
-					DHD.mapMaterial("button", "button");
+					Button.mapMaterial("button", "button");
 					break;
 				case OPENING:
 				case CONNECTED:
 				case CLOSING:
-					DHD.mapMaterial("button", "button_active");
+					Button.mapMaterial("button", "button_active");
+					active = true;
 			}
 		} else {
-			DHD.mapMaterial("button", "button");
+			Button.mapMaterial("button", "button");
 		}
 
+		if (active && LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
+		}
 
-		DHD.render(tessellator);
+		Button.render(tessellator);
 
-		for (int i = 0; i < KEYS.length; i++) {
-			int keyId = KEY_IDS[i];
+		if (active && LightmapHelper.isLightmapEnabled()) {
+			LightmapHelper.setLightmapCoord(lightmap);
+		}
+
+		int segments = BlockLogicDHD.getSegments();
+
+		for (int i = 0; i < segments * 2; i++) {
+			int keyId = BlockLogicDHD.KEY_IDS[i];
 			WavefrontLoader key = KEYS[i];
 
 			if (isKeyActive(stargateComponent, keyId)) {
+				if (LightmapHelper.isLightmapEnabled()) {
+					LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
+				}
 				key.mapMaterial("glyph", "glyph_active");
 			} else {
 				key.mapMaterial("glyph", "glyph");
 			}
 
 			key.render(tessellator);
+
+			if (isKeyActive(stargateComponent, keyId) && LightmapHelper.isLightmapEnabled()) {
+				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
+			}
+
+			DHDGeometry.KeyPositions positions = PRECOMPUTED_KEY_POSITIONS[i];
+
+			tessellator.startDrawingQuads();
+
+			Vec3 v1 = Vec3.getTempVec3(positions.a3.x - positions.a4.x, positions.a3.y - positions.a4.y, positions.a3.z - positions.a4.z);
+			Vec3 v2 = Vec3.getTempVec3(positions.a1.x - positions.a4.x, positions.a1.y - positions.a4.y, positions.a1.z - positions.a4.z);
+			Vec3 normal = v1.crossProduct(v2).normalize();
+			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0.1, 0);
+			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0, 0.1);
+			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+
+
+			v1 = Vec3.getTempVec3(positions.b4.x - positions.b1.x, positions.b4.y - positions.b1.y, positions.b4.z - positions.b1.z);
+			v2 = Vec3.getTempVec3(positions.a1.x - positions.b1.x, positions.a1.y - positions.b1.y, positions.a1.z - positions.b1.z);
+			normal = v1.crossProduct(v2).normalize();
+			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+			tessellator.addVertexWithUV(positions.b1.x, positions.b1.y, positions.b1.z, 0, 0.1);
+			tessellator.addVertexWithUV(positions.b4.x, positions.b4.y, positions.b4.z, 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0.1, 0);
+			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+
+			v1 = Vec3.getTempVec3(positions.b3.x - positions.a3.x, positions.b3.y - positions.a3.y, positions.b3.z - positions.a3.z);
+			v2 = Vec3.getTempVec3(positions.a2.x - positions.a3.x, positions.a2.y - positions.a3.y, positions.a2.z - positions.a3.z);
+			normal = v1.crossProduct(v2).normalize();
+			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0);
+			tessellator.addVertexWithUV(positions.b3.x, positions.b3.y, positions.b3.z, 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.b2.x, positions.b2.y, positions.b2.z, 0, 0.1);
+			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0, 0);
+
+			v1 = Vec3.getTempVec3(positions.b2.x - positions.a2.x, positions.b2.y - positions.a2.y, positions.b2.z - positions.a2.z);
+			v2 = Vec3.getTempVec3(positions.a1.x - positions.a2.x, positions.a1.y - positions.a2.y, positions.a1.z - positions.a2.z);
+			normal = v1.crossProduct(v2).normalize();
+			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0.1, 0);
+			tessellator.addVertexWithUV(positions.b2.x, positions.b2.y, positions.b2.z, 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.b1.x, positions.b1.y, positions.b1.z, 0, 0.1);
+			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+
+			v1 = Vec3.getTempVec3(positions.b3.x - positions.b4.x, positions.b3.y - positions.b4.y, positions.b3.z - positions.b4.z);
+			v2 = Vec3.getTempVec3(positions.a4.x - positions.b4.x, positions.a4.y - positions.b4.y, positions.a4.z - positions.b4.z);
+			normal = v1.crossProduct(v2).normalize();
+			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+			tessellator.addVertexWithUV(positions.b4.x, positions.b4.y, positions.b4.z, 0, 0.1);
+			tessellator.addVertexWithUV(positions.b3.x, positions.b3.y, positions.b3.z, 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0);
+			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0, 0);
+
+			tessellator.draw();
+
+			if (isKeyActive(stargateComponent, keyId) && LightmapHelper.isLightmapEnabled()) {
+				LightmapHelper.setLightmapCoord(lightmap);
+			}
 		}
 
 		GL11.glPopMatrix();

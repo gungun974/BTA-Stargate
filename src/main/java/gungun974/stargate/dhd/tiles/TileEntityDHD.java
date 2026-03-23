@@ -2,6 +2,7 @@ package gungun974.stargate.dhd.tiles;
 
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
+import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkPosition;
@@ -165,5 +166,13 @@ public class TileEntityDHD extends TileEntity {
 			case CLOSING:
 				gate.closeGate();
 		}
+	}
+
+	public int getLightmap() {
+		if (worldObj == null) {
+			return LightmapHelper.getLightmapCoord(15, 15);
+		}
+
+		return worldObj.getLightmapCoord(x, y, z, worldObj.getBlockLightValue(x, y, z));
 	}
 }
