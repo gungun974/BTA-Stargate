@@ -205,7 +205,11 @@ public class BlockLogicDHD extends BlockLogicRotatable {
 		int keyId = RaycastHelper.detectPressedKey(KEY_TRIANGLES, x, y, z, direction, player);
 
 		if (keyId != -1) {
-			((TileEntityDHD) tileEntity).dial(keyId);
+			if (keyId == -0) {
+				((TileEntityDHD) tileEntity).dial();
+			} else {
+				((TileEntityDHD) tileEntity).encode(keyId - 1);
+			}
 
 			return true;
 		}
