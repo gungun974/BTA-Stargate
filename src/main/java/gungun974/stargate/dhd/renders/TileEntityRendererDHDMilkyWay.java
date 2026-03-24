@@ -6,6 +6,8 @@ import gungun974.stargate.dhd.blocks.BlockLogicDHDMilkyWay;
 import net.minecraft.client.render.tessellator.Tessellator;
 
 public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
+	private static final WavefrontLoader ButtonFrame = new WavefrontLoader("/assets/stargate/models/DHD/MilkywayButtonFrame.obj");
+
 	private static final WavefrontLoader[] KEYS = {
 		new WavefrontLoader("/assets/stargate/models/DHD/024.obj"),
 		new WavefrontLoader("/assets/stargate/models/DHD/006.obj"),
@@ -64,6 +66,11 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	protected void renderDHD(Tessellator tessellator, WavefrontLoader dhd) {
 		dhd.mapMaterial("foot", "foot");
 		dhd.mapMaterial("plate", "plate");
+
+		ButtonFrame.mapMaterial("foot", "foot");
+		ButtonFrame.mapMaterial("plate", "plate");
+
+		ButtonFrame.render(tessellator);
 
 		dhd.render(tessellator);
 
