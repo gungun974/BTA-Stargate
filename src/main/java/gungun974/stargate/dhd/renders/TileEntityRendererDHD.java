@@ -13,57 +13,13 @@ import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
-public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
+public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 	private static final WavefrontLoader DHD = new WavefrontLoader("/assets/stargate/models/DHD/DHD.obj");
 
 	private static final WavefrontLoader Button = new WavefrontLoader("/assets/stargate/models/DHD/button.obj");
 
-	private static final WavefrontLoader[] KEYS = {
-		new WavefrontLoader("/assets/stargate/models/DHD/024.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/006.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/029.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/038.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/034.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/012.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/037.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/011.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/021.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/003.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/004.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/020.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/009.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/005.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/032.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/001.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/019.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/022.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/007.obj"),
-
-		new WavefrontLoader("/assets/stargate/models/DHD/028.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/010.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/033.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/039.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/026.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/023.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/018.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/014.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/017.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/002.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/025.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/036.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/008.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/027.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/031.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/015.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/035.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/030.obj"),
-		new WavefrontLoader("/assets/stargate/models/DHD/016.obj")
-	};
-
-	private static final DHDGeometry.KeyPositions[] PRECOMPUTED_KEY_POSITIONS = generateKeyPositions();
-
-	private static DHDGeometry.KeyPositions[] generateKeyPositions() {
-		int segments = BlockLogicDHD.getSegments();
+	protected static DHDGeometry.KeyPositions[] generateKeyPositions(int[] keyIds) {
+		int segments = keyIds.length / 2;
 		DHDGeometry.KeyPositions[] positions = new DHDGeometry.KeyPositions[segments * 2];
 
 		for (int i = 0; i < segments * 2; i++) {
@@ -78,6 +34,10 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 
 		return positions;
 	}
+
+	protected abstract DHDGeometry.KeyPositions[] getKeyPositions();
+
+	protected abstract int[] getKeyIds();
 
 	@Override
 	public void doRender(Tessellator tessellator, TileEntityDHD tileEntity, double x, double y, double z, float partialTicks) {
@@ -113,7 +73,7 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 			default:
 		}
 
-		DHD.render(tessellator);
+		renderDHD(tessellator, DHD);
 
 		boolean active = false;
 
@@ -122,50 +82,44 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 				case IDLE:
 				case DIALLING:
 				case AWAIT:
-					Button.mapMaterial("button", "button");
 					break;
 				case OPENING:
 				case CONNECTED:
 				case CLOSING:
-					Button.mapMaterial("button", "button_active");
 					active = true;
 			}
-		} else {
-			Button.mapMaterial("button", "button");
 		}
 
 		if (active && LightmapHelper.isLightmapEnabled()) {
 			LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 		}
 
-		Button.render(tessellator);
+		renderDial(tessellator, Button, active);
 
 		if (active && LightmapHelper.isLightmapEnabled()) {
 			LightmapHelper.setLightmapCoord(lightmap);
 		}
 
-		int segments = BlockLogicDHD.getSegments();
+		int[] keyIds = getKeyIds();
+
+		int segments = keyIds.length / 2;
 
 		for (int i = 0; i < segments * 2; i++) {
-			int keyId = BlockLogicDHD.KEY_IDS[i];
-			WavefrontLoader key = KEYS[i];
+			int keyId = keyIds[i];
 
-			if (isKeyActive(stargateComponent, keyId)) {
-				if (LightmapHelper.isLightmapEnabled()) {
-					LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
-				}
-				key.mapMaterial("glyph", "glyph_active");
-			} else {
-				key.mapMaterial("glyph", "glyph");
+			boolean isActiveKey = isKeyActive(stargateComponent, keyId);
+
+			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
+				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 			}
 
-			key.render(tessellator);
+			renderKey(tessellator, i, isActiveKey);
 
-			if (isKeyActive(stargateComponent, keyId) && LightmapHelper.isLightmapEnabled()) {
+			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
 				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
 			}
 
-			DHDGeometry.KeyPositions positions = PRECOMPUTED_KEY_POSITIONS[i];
+			DHDGeometry.KeyPositions positions = getKeyPositions()[i];
 
 			tessellator.startDrawingQuads();
 
@@ -217,7 +171,7 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 
 			tessellator.draw();
 
-			if (isKeyActive(stargateComponent, keyId) && LightmapHelper.isLightmapEnabled()) {
+			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
 				LightmapHelper.setLightmapCoord(lightmap);
 			}
 		}
@@ -225,7 +179,13 @@ public class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 		GL11.glPopMatrix();
 	}
 
-	private boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
+	protected abstract void renderDHD(Tessellator tessellator, WavefrontLoader dhd);
+
+	protected abstract void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active);
+
+	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive);
+
+	protected boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
 		if (stargateComponent == null) {
 			return false;
 		}

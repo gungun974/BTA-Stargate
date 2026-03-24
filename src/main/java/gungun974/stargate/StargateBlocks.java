@@ -1,7 +1,10 @@
 package gungun974.stargate;
 
 import gungun974.stargate.dhd.blocks.BlockLogicDHD;
-import gungun974.stargate.dhd.tiles.TileEntityDHD;
+import gungun974.stargate.dhd.blocks.BlockLogicDHDMilkyWay;
+import gungun974.stargate.dhd.blocks.BlockLogicDHDPegasus;
+import gungun974.stargate.dhd.tiles.TileEntityDHDMilkyWay;
+import gungun974.stargate.dhd.tiles.TileEntityDHDPegasus;
 import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.blocks.BlockLogicStargateBuildPart;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
@@ -28,6 +31,7 @@ public class StargateBlocks {
 	public static Block<BlockLogicStargateBuildPart> STARGATE_BUILD_PART_UNIVERSE;
 
 	public static Block<BlockLogicDHD> DHD_MILKYWAY;
+	public static Block<BlockLogicDHD> DHD_PEGASUS;
 
 	private static int currentGeneratedId;
 
@@ -73,15 +77,22 @@ public class StargateBlocks {
 		STARGATE_BUILD_PART_UNIVERSE = stargateBuildPartBuilder
 			.build("stargate_build_part_universe", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
 
-		EntityHelper.createTileEntity(TileEntityDHD.class, NamespaceID.getPermanent(MOD_ID, "dhd_milkyway"));
+		EntityHelper.createTileEntity(TileEntityDHDMilkyWay.class, NamespaceID.getPermanent(MOD_ID, "dhd_milkyway"));
+		EntityHelper.createTileEntity(TileEntityDHDPegasus.class, NamespaceID.getPermanent(MOD_ID, "dhd_pegasus"));
 
-		new BlockBuilder(MOD_ID)
+		BlockBuilder dhdBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(2.5f)
 			.setResistance(5.0f)
-			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
-			.setBlockSound(BlockSounds.WOOD)
-			.setTileEntity(TileEntityDHD::new)
-			.build("dhd_milkyway", generateNexId(), b -> new BlockLogicDHD(b, Material.wood));
+			.setTags(BlockTags.MINEABLE_BY_AXE)
+			.setBlockSound(BlockSounds.WOOD);
+
+		DHD_MILKYWAY = dhdBuilder
+			.setTileEntity(TileEntityDHDMilkyWay::new)
+			.build("dhd_milkyway", generateNexId(), b -> new BlockLogicDHDMilkyWay(b, Material.wood));
+
+		DHD_PEGASUS = dhdBuilder
+			.setTileEntity(TileEntityDHDPegasus::new)
+			.build("dhd_pegasus", generateNexId(), b -> new BlockLogicDHDPegasus(b, Material.wood));
 	}
 
 }

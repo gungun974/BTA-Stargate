@@ -1,7 +1,9 @@
 package gungun974.stargate;
 
-import gungun974.stargate.dhd.renders.TileEntityRendererDHD;
-import gungun974.stargate.dhd.tiles.TileEntityDHD;
+import gungun974.stargate.dhd.renders.TileEntityRendererDHDMilkyWay;
+import gungun974.stargate.dhd.renders.TileEntityRendererDHDPegasus;
+import gungun974.stargate.dhd.tiles.TileEntityDHDMilkyWay;
+import gungun974.stargate.dhd.tiles.TileEntityDHDPegasus;
 import gungun974.stargate.gate.renders.*;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.tiles.TileEntityStargatePegasus;
@@ -66,7 +68,8 @@ public class StargateModels implements ModelEntrypoint {
 		ModelHelper.setTileEntityModel(TileEntityStargatePegasus.class, TileEntityRenderStargatePegasus::new);
 		ModelHelper.setTileEntityModel(TileEntityStargateUniverse.class, TileEntityRenderStargateUniverse::new);
 
-		ModelHelper.setTileEntityModel(TileEntityDHD.class, TileEntityRendererDHD::new);
+		ModelHelper.setTileEntityModel(TileEntityDHDMilkyWay.class, TileEntityRendererDHDMilkyWay::new);
+		ModelHelper.setTileEntityModel(TileEntityDHDPegasus.class, TileEntityRendererDHDPegasus::new);
 
 		StargateMod.LOGGER.info("Tile Entity Models initialized.");
 	}

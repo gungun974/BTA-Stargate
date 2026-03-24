@@ -13,20 +13,13 @@ import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.util.phys.Vec3;
 import net.minecraft.core.world.World;
 
-public class BlockLogicDHD extends BlockLogicRotatable {
-	public static final int[] KEY_IDS = {23, 5, 28, 37, 33, 11, 36, 10, 20, 2, 3, 19, 8, 4, 31, 0, 18, 21, 6, 27, 9, 32, 38, 25, 22, 17, 13, 16, 1, 24, 35, 7, 26, 30, 14, 34, 29, 15};
-	private static final RaycastHelper.KeyTriangles[] KEY_TRIANGLES = generateKeyTriangles();
-
+public abstract class BlockLogicDHD extends BlockLogicRotatable {
 	public BlockLogicDHD(Block<?> block, Material material) {
 		super(block, material);
 	}
 
-	public static int getSegments() {
-		return 19;
-	}
-
-	private static RaycastHelper.KeyTriangles[] generateKeyTriangles() {
-		int segments = getSegments();
+	protected static RaycastHelper.KeyTriangles[] generateKeyTriangles(int[] keyIds) {
+		int segments = keyIds.length / 2;
 
 		RaycastHelper.KeyTriangles[] triangles = new RaycastHelper.KeyTriangles[1 + segments * 2];
 
@@ -53,7 +46,7 @@ public class BlockLogicDHD extends BlockLogicRotatable {
 		});
 
 		for (int i = 0; i < segments * 2; i++) {
-			int keyId = KEY_IDS[i];
+			int keyId = keyIds[i];
 
 			double angle = 360.0 * i / segments;
 
@@ -87,7 +80,7 @@ public class BlockLogicDHD extends BlockLogicRotatable {
 		TileEntity tileEntity = world.getTileEntity(x, y, z);
 
 		Direction direction = getDirectionFromMeta(world.getBlockMetadata(x, y, z));
-		int keyId = RaycastHelper.detectPressedKey(KEY_TRIANGLES, x, y, z, direction, player);
+		int keyId = RaycastHelper.detectPressedKey(getKeyTriangles(), x, y, z, direction, player);
 
 		if (keyId != -1) {
 			if (keyId == -0) {
@@ -101,4 +94,6 @@ public class BlockLogicDHD extends BlockLogicRotatable {
 
 		return false;
 	}
+
+	protected abstract RaycastHelper.KeyTriangles[] getKeyTriangles();
 }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TileEntityDHD extends TileEntity {
+public abstract class TileEntityDHD extends TileEntity {
 	private boolean linked = false;
 	private TileEntityStargate linkedGate = null;
 	private int linkedGateX = 0;
