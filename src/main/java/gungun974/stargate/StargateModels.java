@@ -1,5 +1,6 @@
 package gungun974.stargate;
 
+import gungun974.stargate.dhd.renders.ItemModelDHD;
 import gungun974.stargate.dhd.renders.TileEntityRendererDHDMilkyWay;
 import gungun974.stargate.dhd.renders.TileEntityRendererDHDPegasus;
 import gungun974.stargate.dhd.tiles.TileEntityDHDMilkyWay;
@@ -54,6 +55,18 @@ public class StargateModels implements ModelEntrypoint {
 		ModelHelper.setItemModel(StargateItems.STARGATE_WAND, () -> {
 			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.STARGATE_WAND, MOD_ID);
 			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent("minecraft", "item/stick"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateBlocks.DHD_MILKYWAY.asItem(), () -> {
+			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_MILKYWAY.asItem(), MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/milkyway_dhd"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateBlocks.DHD_PEGASUS.asItem(), () -> {
+			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_PEGASUS.asItem(), MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/pegasus_dhd"));
 			return itemModelStandard;
 		});
 	}
