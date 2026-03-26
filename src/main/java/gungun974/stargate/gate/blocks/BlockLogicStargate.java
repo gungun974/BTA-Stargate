@@ -4,6 +4,7 @@ import gungun974.stargate.StargateBlocks;
 import gungun974.stargate.core.VirtualWorld;
 import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
+import gungun974.stargate.gate.items.ItemAddressCard;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLogic;
@@ -15,6 +16,7 @@ import net.minecraft.core.enums.EnumDropCause;
 import net.minecraft.core.enums.LightLayer;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.item.Items;
 import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.util.phys.AABB;
@@ -227,6 +229,18 @@ public class BlockLogicStargate extends BlockLogic {
 
 			if (tileEntity instanceof TileEntityStargate) {
 				TileEntityStargate stargate = (TileEntityStargate) tileEntity;
+
+				ItemStack hand = player.getCurrentEquippedItem();
+
+				StargateComponent gate = stargate.findMainStargateComponent();
+
+				if (gate != null && hand != null && hand.itemID == Items.PAPER.id) {
+					hand.stackSize -= 1;
+
+					player.inventory.insertItem(ItemAddressCard.createFromGate(gate), false);
+
+					return true;
+				}
 
 				if (!stargate.getCamouflageComponent().hasCamouflage()) {
 					ItemStack heldItem = player.getHeldItem();
