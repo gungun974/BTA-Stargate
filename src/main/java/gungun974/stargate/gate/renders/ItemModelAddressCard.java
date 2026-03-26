@@ -121,7 +121,7 @@ public class ItemModelAddressCard extends ItemModelStandard {
 
 		GL11.glScalef(0.015625F, 0.015625F, 0.015625F);
 		GL11.glNormal3f(0.0F, 0.0F, -1.0F);
-		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/minecraft/textures/misc/mapbg.png"));
+		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/address_card_bg.png"));
 		tessellator.startDrawingQuads();
 		tessellator.addVertexWithUV(-7.0F, 135.0F, 0.0F, 0.0F, 1.0F);
 		tessellator.addVertexWithUV(135.0F, 135.0F, 0.0F, 1.0F, 1.0F);

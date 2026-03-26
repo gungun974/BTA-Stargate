@@ -60,7 +60,7 @@ public class StargateModels implements ModelEntrypoint {
 
 		ModelHelper.setItemModel(StargateItems.ADDRESS_CARD, () -> {
 			ItemModelStandard itemModelStandard = new ItemModelAddressCard(StargateItems.ADDRESS_CARD, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent("minecraft", "item/paper"));
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/address_card"));
 			return itemModelStandard;
 		});
 
