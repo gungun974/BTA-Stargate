@@ -13,6 +13,12 @@ tile.stargate.stargate.chevron.universe.name = Universe Stargate Chevron
 tile.stargate.stargate.core.universe.name = Universe Stargate Core
 tile.stargate.stargate.universe.name = Universe Stargate
 
+tile.stargate.dhd.milkyway.name = Milky Way Dial Home Device
+tile.stargate.dhd.milkyway.desc = Device that controls the Stargate, more commonly known as the "D.H.D."
+
+tile.stargate.dhd.pegasus.name = Pegasus Dial Home Device
+tile.stargate.dhd.pegasus.desc = Device that controls the Stargate, more commonly known as the "D.H.D."
+
 item.stargate.stargate_wand.name = Stargate Wand
 item.stargate.stargate_wand.desc = Stargate magical wand to spawn a stargate quickly for testing purposes
 item.stargate.stargate_wand.milkyway.name = Stargate Wand [Milkyway]
@@ -22,6 +28,6 @@ item.stargate.stargate_wand.error = Can't place stargate here
 
 item.stargate.address_card.name = Address Card
 item.stargate.address_card.desc = The best way to know what key to press
-item.stargate.address_card.milkyway.name = Milkyway - X%d Z%d
+item.stargate.address_card.milkyway.name = Milky Way - X%d Z%d
 item.stargate.address_card.pegasus.name = Pegasus - X%d Z%d
 item.stargate.address_card.universe.name = Universe - X%d Z%d
