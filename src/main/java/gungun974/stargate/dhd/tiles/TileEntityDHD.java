@@ -99,7 +99,7 @@ public abstract class TileEntityDHD extends TileEntity implements IPeripheralTil
 		if (linked) {
 			TileEntity tile = worldObj.getTileEntity(linkedGateX, linkedGateY, linkedGateZ);
 
-			if (!tile.isInvalid() && tile instanceof TileEntityStargate) {
+			if (tile != null && !tile.isInvalid() && tile instanceof TileEntityStargate) {
 				TileEntityStargate gate = (TileEntityStargate) tile;
 
 				if (gate.getStargateComponent() != null) {
