@@ -7,6 +7,7 @@ import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.lang.I18n;
 import net.minecraft.core.util.collection.NamespaceID;
 
 import javax.annotation.Nonnull;
@@ -24,6 +25,22 @@ public class ItemAddressCard extends Item {
 	public static ItemStack createFromGate(StargateComponent gate) {
 		ItemStack stack = new ItemStack(StargateItems.ADDRESS_CARD);
 		updateAddresses(stack, gate);
+
+		switch (gate.getFamily()) {
+			case MilkyWay:
+				StargateAddress milkyway = gate.getAddressWithFamily(StargateFamily.MilkyWay);
+				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".milkyway.name", milkyway.getBlockX(), milkyway.getBlockZ()));
+				break;
+			case Pegasus:
+				StargateAddress pegasus = gate.getAddressWithFamily(StargateFamily.Pegasus);
+				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".pegasus.name", pegasus.getBlockX(), pegasus.getBlockZ()));
+				break;
+			case Universe:
+				StargateAddress universe = gate.getAddressWithFamily(StargateFamily.Universe);
+				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".universe.name", universe.getBlockX(), universe.getBlockZ()));
+				break;
+		}
+
 		return stack;
 	}
 

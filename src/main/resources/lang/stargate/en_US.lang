@@ -19,3 +19,9 @@ item.stargate.stargate_wand.milkyway.name = Stargate Wand [Milkyway]
 item.stargate.stargate_wand.pegasus.name = Stargate Wand [Pegasus]
 item.stargate.stargate_wand.universe.name = Stargate Wand [Universe]
 item.stargate.stargate_wand.error = Can't place stargate here
+
+item.stargate.address_card.name = Address Card
+item.stargate.address_card.desc = The best way to know what key to press
+item.stargate.address_card.milkyway.name = Milkyway - X%d Z%d
+item.stargate.address_card.pegasus.name = Pegasus - X%d Z%d
+item.stargate.address_card.universe.name = Universe - X%d Z%d
