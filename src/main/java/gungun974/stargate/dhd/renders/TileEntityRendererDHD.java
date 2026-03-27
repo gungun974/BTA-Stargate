@@ -1,5 +1,6 @@
 package gungun974.stargate.dhd.renders;
 
+import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHD;
@@ -105,9 +106,11 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 		int segments = keyIds.length / 2;
 
 		int addressSize = 0;
+		StargateFamily family = StargateFamily.MilkyWay;
 
 		if (stargateComponent != null) {
 			addressSize = stargateComponent.getCurrentDialingAddressSize();
+			family = stargateComponent.getFamily();
 		}
 
 		for (int i = 0; i < segments * 2; i++) {
@@ -119,7 +122,7 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 			}
 
-			renderKey(tessellator, i, isActiveKey, addressSize);
+			renderKey(tessellator, i, isActiveKey, addressSize, family);
 
 			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
 				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
@@ -189,7 +192,7 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 
 	protected abstract void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active);
 
-	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize);
+	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family);
 
 	protected boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
 		if (stargateComponent == null) {

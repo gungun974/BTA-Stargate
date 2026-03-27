@@ -53,7 +53,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family) {
 		this.loadTexture("/assets/stargate/models/Pegasus/pegasus_stargate_glyphs.png");
 
 		int keyId = BlockLogicDHDPegasus.KEY_IDS[i];
@@ -111,7 +111,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 		ItemStack hand = Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem();
 
 		if (hand != null && hand.itemID == StargateItems.ADDRESS_CARD.id) {
-			isHover = ItemAddressCard.getSymbol(hand, StargateFamily.Pegasus, addressSize) == keyId;
+			isHover = ItemAddressCard.getSymbol(hand, family, addressSize) == keyId;
 		}
 
 		if (isActive) {

@@ -93,7 +93,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family) {
 		WavefrontLoader key = KEYS[i];
 
 		int keyId = BlockLogicDHDMilkyWay.KEY_IDS[i];
@@ -103,7 +103,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 		ItemStack hand = Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem();
 
 		if (hand != null && hand.itemID == StargateItems.ADDRESS_CARD.id) {
-			isHover = ItemAddressCard.getSymbol(hand, StargateFamily.MilkyWay, addressSize) == keyId;
+			isHover = ItemAddressCard.getSymbol(hand, family, addressSize) == keyId;
 		}
 
 		if (isActive) {
