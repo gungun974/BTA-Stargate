@@ -1,18 +1,24 @@
 package gungun974.stargate.dhd.tiles;
 
+import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.api.peripheral.IPeripheralTile;
+import gungun974.stargate.dhd.cc.DHDPeripheral;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkPosition;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class TileEntityDHD extends TileEntity {
+public abstract class TileEntityDHD extends TileEntity implements IPeripheralTile {
 	private boolean linked = false;
 	private TileEntityStargate linkedGate = null;
 	private int linkedGateX = 0;
@@ -174,5 +180,11 @@ public abstract class TileEntityDHD extends TileEntity {
 		}
 
 		return worldObj.getLightmapCoord(x, y, z, worldObj.getBlockLightValue(x, y, z));
+	}
+
+	@Nonnull
+	@Override
+	public IPeripheral getPeripheral(@NotNull Direction side) {
+		return new DHDPeripheral(this);
 	}
 }

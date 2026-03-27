@@ -1,21 +1,28 @@
-package gungun974.stargate.gate.cc;
+package gungun974.stargate.dhd.cc;
 
-import dan200.computercraft.api.lua.LuaException;
+import dan200.computercraft.api.lua.*;
 import dan200.computercraft.api.peripheral.IPeripheral;
-import gungun974.stargate.core.StargateFamily;
+import gungun974.stargate.dhd.tiles.TileEntityDHD;
+import gungun974.stargate.gate.cc.BaseStargatePeripheral;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import org.jetbrains.annotations.NotNull;
 
-public class StargatePeripheral extends BaseStargatePeripheral {
-	private final TileEntityStargate stargate;
+public class DHDPeripheral extends BaseStargatePeripheral {
+	private final TileEntityDHD dhd;
 
-	public StargatePeripheral(TileEntityStargate stargate) {
-		this.stargate = stargate;
+	public DHDPeripheral(TileEntityDHD dhd) {
+		this.dhd = dhd;
 	}
 
 	@Override
 	protected StargateComponent getStargateComponent() throws LuaException {
+		TileEntityStargate stargate = dhd.findLinkedGate();
+
+		if (stargate == null) {
+			throw new LuaException("DHD is not linked");
+		}
+
 		StargateComponent stargateComponent = stargate.findMainStargateComponent();
 
 		if (stargateComponent == null) {
@@ -27,12 +34,12 @@ public class StargatePeripheral extends BaseStargatePeripheral {
 
 	@Override
 	protected boolean shouldAllowFastEncode() throws LuaException {
-		return getStargateComponent().getFamily() == StargateFamily.Pegasus;
+		return true;
 	}
 
 	@Override
 	public @NotNull String getType() {
-		return "stargate";
+		return "dhd";
 	}
 
 	@Override
@@ -40,10 +47,10 @@ public class StargatePeripheral extends BaseStargatePeripheral {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof StargatePeripheral)) {
+		if (!(other instanceof DHDPeripheral)) {
 			return false;
 		}
 
-		return stargate.findMainStargateComponent() == ((StargatePeripheral) other).stargate.findMainStargateComponent();
+		return dhd.findLinkedGate() == ((DHDPeripheral) other).dhd.findLinkedGate();
 	}
 }
