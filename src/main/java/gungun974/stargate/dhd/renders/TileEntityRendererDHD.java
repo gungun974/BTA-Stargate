@@ -104,7 +104,11 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 
 		int segments = keyIds.length / 2;
 
-		int addressSize = stargateComponent.getCurrentDialingAddressSize();
+		int addressSize = 0;
+
+		if (stargateComponent != null) {
+			addressSize = stargateComponent.getCurrentDialingAddressSize();
+		}
 
 		for (int i = 0; i < segments * 2; i++) {
 			int keyId = keyIds[i];
