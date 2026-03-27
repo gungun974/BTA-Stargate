@@ -26,9 +26,7 @@ import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.Dimension;
-import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
-import net.minecraft.core.world.chunk.ChunkPosition;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.player.PlayerServer;
 import net.minecraft.server.world.WorldServer;
@@ -2170,15 +2168,13 @@ public abstract class StargateComponent {
 
 			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
 				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
-					Chunk chunk = StargateChunkLoader.loadChunk(stargateTile.worldObj, destinationAddress.getDim(), cx, cz);
+					List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, destinationAddress.getDim(), cx, cz);
 
-					if (chunk == null) {
+					if (tileEntities == null) {
 						continue;
 					}
 
-					for (Map.Entry<ChunkPosition, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
-						TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
-
+					for (TileEntity tileEntity : tileEntities) {
 						if (tileEntity instanceof TileEntityStargate) {
 							StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
 
@@ -2216,14 +2212,27 @@ public abstract class StargateComponent {
 				}
 			}
 
-			Chunk chunk = StargateChunkLoader.loadChunk(stargateTile.worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
+			List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
 
-			if (chunk == null) {
+			if (tileEntities == null) {
 				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
 			}
 
-			StargateComponent destinationGate = ((TileEntityStargate) chunk.getTileEntity(target.x & 15, target.y, target.z & 15)).getStargateComponent();
+			TileEntity targetTileEntity = null;
+			for (TileEntity tileEntity : tileEntities) {
+				if (tileEntity.x == target.x && tileEntity.y == target.y && tileEntity.z == target.z) {
+					targetTileEntity = tileEntity;
+					break;
+				}
+			}
+
+			if (!(targetTileEntity instanceof TileEntityStargate)) {
+				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				return;
+			}
+
+			StargateComponent destinationGate = ((TileEntityStargate) targetTileEntity).getStargateComponent();
 
 			if (destinationGate == null) {
 				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);

@@ -1,6 +1,7 @@
 package gungun974.stargate.mixins;
 
 import com.mojang.nbt.tags.CompoundTag;
+import gungun974.stargate.core.StargateChunkLoader;
 import gungun974.stargate.core.StargateDematerializedManager;
 import gungun974.stargate.core.StargateSessionManager;
 import net.minecraft.core.world.save.LevelData;
@@ -19,6 +20,7 @@ public class LevelDataMixin {
 
 	@Inject(method = "readFromCompoundTag", at = @At("HEAD"))
 	void loadStargateSessions(CompoundTag tag, CallbackInfo ci) {
+		StargateChunkLoader.clearAll();
 		StargateSessionManager.getInstance().loadNBTData(tag.getCompound("StargateSessions"));
 		StargateDematerializedManager.getInstance().loadNBTData(tag.getCompound("StargateDematerialized"));
 	}

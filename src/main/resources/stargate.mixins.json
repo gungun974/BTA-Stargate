@@ -4,7 +4,6 @@
   "package": "gungun974.stargate.mixins",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "ChunkMixin",
     "LevelDataMixin",
     "LightUpdateMixin",
     "MenuInventoryCreativeMixin"
