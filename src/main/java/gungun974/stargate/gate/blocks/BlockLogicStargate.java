@@ -214,6 +214,14 @@ public class BlockLogicStargate extends BlockLogic {
 	@Override
 	public void onBlockRemoved(World world, int x, int y, int z, int data) {
 		checkIfStillValid(world, x, y, z);
+		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z - 1, 0);
+		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z + 1, 0);
+		world.notifyBlocksOfNeighborChange(x - 1, y + 1, z - 1, 0);
+		world.notifyBlocksOfNeighborChange(x - 1, y + 1, z + 1, 0);
+		world.notifyBlocksOfNeighborChange(x + 1, y - 1, z - 1, 0);
+		world.notifyBlocksOfNeighborChange(x + 1, y - 1, z + 1, 0);
+		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z - 1, 0);
+		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z + 1, 0);
 	}
 
 	@Override
