@@ -4,11 +4,18 @@ import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateItems;
 import gungun974.stargate.core.StargateAddress;
 import gungun974.stargate.core.StargateFamily;
+import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.components.StargateComponent;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
+import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.lang.I18n;
+import net.minecraft.core.player.gamemode.Gamemode;
 import net.minecraft.core.util.collection.NamespaceID;
+import net.minecraft.core.util.helper.Side;
+import net.minecraft.core.world.World;
 
 import javax.annotation.Nonnull;
 
@@ -122,5 +129,60 @@ public class ItemAddressCard extends Item {
 		}
 
 		return addressTag.getInteger("Address" + symbolIndex);
+	}
+
+	@Override
+	public boolean onUseItemOnBlock(ItemStack itemstack, Player player, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced) {
+		if (!player.isSneaking()) {
+			return false;
+		}
+
+		if (player.getGamemode() != Gamemode.creative) {
+			return false;
+		}
+
+		TileEntity tileEntity = world.getTileEntity(blockX, blockY, blockZ);
+
+		if (!(tileEntity instanceof TileEntityDHD)) {
+			return false;
+		}
+
+		TileEntityDHD dhd = ((TileEntityDHD) tileEntity);
+
+		TileEntityStargate tile = dhd.findLinkedGate();
+
+		if (tile == null) {
+			return false;
+		}
+
+		StargateComponent gate = tile.getStargateComponent();
+
+		if (gate == null) {
+			return false;
+		}
+
+		gate.clearAddress();
+
+		switch (gate.getFamily()) {
+			case MilkyWay:
+				for (int i = 0; i < 9; i++) {
+					dhd.encode(getSymbol(itemstack, StargateFamily.MilkyWay, i));
+				}
+				break;
+			case Pegasus:
+				for (int i = 0; i < 9; i++) {
+					dhd.encode(getSymbol(itemstack, StargateFamily.Pegasus, i));
+				}
+				break;
+			case Universe:
+				for (int i = 0; i < 9; i++) {
+					dhd.encode(getSymbol(itemstack, StargateFamily.Universe, i));
+				}
+				break;
+		}
+
+		dhd.dial();
+
+		return true;
 	}
 }

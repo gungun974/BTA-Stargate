@@ -65,6 +65,7 @@ public abstract class StargateComponent {
 	private int eventHorizonTick = 0;
 	private int lastEventHorizonTick = 0;
 	private boolean wasRecieverGate = false;
+
 	protected StargateComponent(TileEntity stargateTile) {
 		this.stargateTile = stargateTile;
 	}
@@ -2121,6 +2122,18 @@ public abstract class StargateComponent {
 				}
 			}
 			playAnimation(StargateAnimation.FAST_ENCODE_CHEVRON);
+		});
+	}
+
+	public void clearAddress() {
+		commandQueue.add(() -> {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING || state == StargateState.AWAIT)) {
+				return;
+			}
+
+			currentDialingAddressSize = 0;
+
+			state = StargateState.IDLE;
 		});
 	}
 
