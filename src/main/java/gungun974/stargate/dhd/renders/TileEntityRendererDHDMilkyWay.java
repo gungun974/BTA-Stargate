@@ -1,9 +1,14 @@
 package gungun974.stargate.dhd.renders;
 
+import gungun974.stargate.StargateItems;
+import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHDMilkyWay;
+import gungun974.stargate.gate.items.ItemAddressCard;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.core.item.ItemStack;
 
 public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	private static final WavefrontLoader ButtonFrame = new WavefrontLoader("/assets/stargate/models/DHD/MilkywayButtonFrame.obj");
@@ -88,11 +93,23 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize) {
 		WavefrontLoader key = KEYS[i];
+
+		int keyId = BlockLogicDHDMilkyWay.KEY_IDS[i];
+
+		boolean isHover = false;
+
+		ItemStack hand = Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem();
+
+		if (hand != null && hand.itemID == StargateItems.ADDRESS_CARD.id) {
+			isHover = ItemAddressCard.getSymbol(hand, StargateFamily.MilkyWay, addressSize) == keyId;
+		}
 
 		if (isActive) {
 			key.mapMaterial("glyph", "glyph_active");
+		} else if (isHover) {
+			key.mapMaterial("glyph", "glyph_hint");
 		} else {
 			key.mapMaterial("glyph", "glyph");
 		}

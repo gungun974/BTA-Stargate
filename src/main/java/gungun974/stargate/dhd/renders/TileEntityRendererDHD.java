@@ -104,6 +104,8 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 
 		int segments = keyIds.length / 2;
 
+		int addressSize = stargateComponent.getCurrentDialingAddressSize();
+
 		for (int i = 0; i < segments * 2; i++) {
 			int keyId = keyIds[i];
 
@@ -113,7 +115,7 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 			}
 
-			renderKey(tessellator, i, isActiveKey);
+			renderKey(tessellator, i, isActiveKey, addressSize);
 
 			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
 				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
@@ -183,7 +185,7 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 
 	protected abstract void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active);
 
-	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive);
+	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize);
 
 	protected boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
 		if (stargateComponent == null) {

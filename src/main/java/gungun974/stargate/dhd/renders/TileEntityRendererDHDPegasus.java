@@ -1,9 +1,14 @@
 package gungun974.stargate.dhd.renders;
 
+import gungun974.stargate.StargateItems;
+import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHDPegasus;
+import gungun974.stargate.gate.items.ItemAddressCard;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 
@@ -48,7 +53,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize) {
 		this.loadTexture("/assets/stargate/models/Pegasus/pegasus_stargate_glyphs.png");
 
 		int keyId = BlockLogicDHDPegasus.KEY_IDS[i];
@@ -101,8 +106,18 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 			GL11.glColor4f(1, 1, 1, 1);
 		}
 
+		boolean isHover = false;
+
+		ItemStack hand = Minecraft.getMinecraft().thePlayer.getCurrentEquippedItem();
+
+		if (hand != null && hand.itemID == StargateItems.ADDRESS_CARD.id) {
+			isHover = ItemAddressCard.getSymbol(hand, StargateFamily.Pegasus, addressSize) == keyId;
+		}
+
 		if (isActive) {
 			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_active.png");
+		} else if (isHover) {
+			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_hint.png");
 		} else {
 			this.loadTexture("/assets/stargate/models/DHD/pegasus_key.png");
 		}

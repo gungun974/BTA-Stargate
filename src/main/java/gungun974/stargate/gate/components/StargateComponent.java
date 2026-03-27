@@ -65,7 +65,6 @@ public abstract class StargateComponent {
 	private int eventHorizonTick = 0;
 	private int lastEventHorizonTick = 0;
 	private boolean wasRecieverGate = false;
-
 	protected StargateComponent(TileEntity stargateTile) {
 		this.stargateTile = stargateTile;
 	}
@@ -151,6 +150,10 @@ public abstract class StargateComponent {
 			mc.currentWorld.updateEntityWithOptionalForce(player, false);
 		}
 
+	}
+
+	public short getCurrentDialingAddressSize() {
+		return currentDialingAddressSize;
 	}
 
 	protected double computeTargetAngle(int symbol) {
