@@ -390,6 +390,14 @@ public abstract class StargateComponent {
 			int pz = stargateTile.z + direction.getOffsetX() * i;
 
 			stargateTile.worldObj.notifyBlockChange(px, py, pz, 0);
+
+			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(px, py, pz);
+
+			if (tileEntity instanceof TileEntityStargate) {
+				((TileEntityStargate) tileEntity).destroyed();
+
+				stargateTile.worldObj.removeBlockTileEntity(px, py, pz);
+			}
 		}
 	}
 
@@ -561,6 +569,14 @@ public abstract class StargateComponent {
 			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
 
 			stargateTile.worldObj.notifyBlockChange(px, stargateTile.y, pz, 0);
+
+			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(px, stargateTile.y, pz);
+
+			if (tileEntity instanceof TileEntityStargate) {
+				((TileEntityStargate) tileEntity).destroyed();
+
+				stargateTile.worldObj.removeBlockTileEntity(px, stargateTile.y, pz);
+			}
 		}
 	}
 
