@@ -176,6 +176,46 @@ public class StargateUniverseComponent extends StargateComponent {
 	}
 
 	@Override
+	public void removeSymbol(int symbol) {
+		commandQueue.add(() -> {
+			if (!(state == StargateState.IDLE || state == StargateState.DIALLING || state == StargateState.AWAIT)) {
+				return;
+			}
+
+			int symbolIndex = -1;
+			for (int i = 0; i < currentDialingAddressSize; i++) {
+				if (currentDialingAddress[i] == symbol) {
+					symbolIndex = i;
+					break;
+				}
+			}
+
+			if (symbolIndex == -1) {
+				return;
+			}
+
+			for (int i = symbolIndex; i < currentDialingAddressSize - 1; i++) {
+				currentDialingAddress[i] = currentDialingAddress[i + 1];
+			}
+
+			currentDialingAddressSize -= 1;
+			ringDirection = !ringDirection;
+
+			if (currentDialingAddressSize == 0) {
+				state = StargateState.IDLE;
+			} else {
+				int lastSymbol = currentDialingAddress[currentDialingAddressSize - 1];
+				if (lastSymbol == 0 || currentDialingAddressSize == 9) {
+					state = StargateState.AWAIT;
+				} else {
+					state = StargateState.DIALLING;
+				}
+			}
+			playAnimation(StargateAnimation.UNIVERSE_FAST_ENCODE_CHEVRON);
+		});
+	}
+
+	@Override
 	protected void resetGateDirection() {
 		this.ringDirection = true;
 
