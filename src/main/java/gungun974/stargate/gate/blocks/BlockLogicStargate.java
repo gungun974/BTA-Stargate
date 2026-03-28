@@ -222,6 +222,13 @@ public class BlockLogicStargate extends BlockLogic {
 		world.notifyBlocksOfNeighborChange(x + 1, y - 1, z + 1, 0);
 		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z - 1, 0);
 		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z + 1, 0);
+
+		TileEntity tileEntity = world.getTileEntity(x, y, z);
+
+		if (tileEntity instanceof TileEntityStargate) {
+			((TileEntityStargate) tileEntity).destroyed();
+		}
+
 	}
 
 	@Override

@@ -51,13 +51,11 @@ public abstract class TileEntityStargate extends TileEntity implements IPeripher
 		StargateChunkLoader.loadTileEntity(this);
 	}
 
-	@Override
-	public void invalidate() {
+	public void destroyed() {
 		StargateChunkLoader.unloadTileEntity(this);
 		if (stargateComponent != null) {
 			stargateComponent.invalidate();
 		}
-		super.invalidate();
 	}
 
 	@Override
