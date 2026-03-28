@@ -3,7 +3,7 @@
 	"id": "stargate",
 	"version": "${version}",
 	"name": "Stargate",
-	"description": "A recreation of the legendary SGCraft.",
+	"description": "Stargate for BTA",
 	"authors": [
 		"gungun974"
 	],
