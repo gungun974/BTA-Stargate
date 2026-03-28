@@ -338,7 +338,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			case PROPER_TOOL:
 			case SILK_TOUCH:
 			case PISTON_CRUSH:
-				return new ItemStack[]{new ItemStack(block.id(), 1, meta)};
+				return new ItemStack[]{new ItemStack(block.id(), 1, 0)};
 			default:
 				return null;
 		}

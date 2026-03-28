@@ -190,6 +190,10 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	public void restoreOriginalBlock(World world, int x, int y, int z) {
+		if (world instanceof VirtualWorld) {
+			return;
+		}
+
 		if (world.isAirBlock(x, y, z)) {
 			return;
 		}
@@ -207,9 +211,10 @@ public class BlockLogicStargate extends BlockLogic {
 				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
 
 				if (camoufledBlock != null) {
-					camoufledBlock.dropBlockWithCause(world, EnumDropCause.SILK_TOUCH, x, y, z, world.getBlockMetadata(x, y, z), null, null);
+					camoufledBlock.dropBlockWithCause(world, EnumDropCause.SILK_TOUCH, x, y, z, camouflageComponent.getBlockMeta(), null, null);
 				}
 
+				camouflageComponent.clearCamouflage();
 			}
 		}
 
@@ -218,11 +223,17 @@ public class BlockLogicStargate extends BlockLogic {
 
 	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, int blockId) {
+		if (world instanceof VirtualWorld) {
+			return;
+		}
 		checkIfStillValid(world, x, y, z);
 	}
 
 	@Override
 	public void onBlockRemoved(World world, int x, int y, int z, int data) {
+		if (world instanceof VirtualWorld) {
+			return;
+		}
 		checkIfStillValid(world, x, y, z);
 		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z - 1, 0);
 		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z + 1, 0);
@@ -284,7 +295,7 @@ public class BlockLogicStargate extends BlockLogic {
 
 								VirtualWorld virtualWorld = new VirtualWorld(world);
 
-								virtualWorld.setBlockWithNotify(x, y, z, 0);
+								virtualWorld.setBlockAndMetadataWithNotify(x, y, z, 0, 0);
 
 								itemBlock.onUseItemOnBlock(heldItem, player, virtualWorld, x, y, z, side, xHit, yHit);
 
