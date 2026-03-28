@@ -2,6 +2,7 @@ package gungun974.stargate;
 
 import gungun974.stargate.gate.items.ItemAddressCard;
 import gungun974.stargate.gate.items.ItemStargateWand;
+import net.minecraft.core.item.tag.ItemTags;
 import net.minecraft.core.util.collection.NamespaceID;
 import turniplabs.halplibe.helper.ItemBuilder;
 
@@ -26,6 +27,7 @@ public class StargateItems {
 
 		ADDRESS_CARD = new ItemBuilder(MOD_ID)
 			.setKey("item.address_card")
+			.setTags(ItemTags.NOT_IN_CREATIVE_MENU)
 			.build((new ItemAddressCard(NamespaceID.getPermanent(MOD_ID, "address_card"), generateNexId())));
 	}
 

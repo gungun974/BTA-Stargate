@@ -47,17 +47,17 @@ public class StargateBlocks {
 		EntityHelper.createTileEntity(TileEntityStargateUniverse.class, NamespaceID.getPermanent(MOD_ID, "stargate_universe"));
 
 		BlockBuilder stargateBuilder = new BlockBuilder(MOD_ID)
-			.setHardness(2.5f)
-			.setResistance(5.0f)
-			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
-			.setBlockSound(BlockSounds.WOOD)
+			.setHardness(20f)
+			.setResistance(8000.0f)
+			.setTags(BlockTags.MINEABLE_BY_PICKAXE, BlockTags.NOT_IN_CREATIVE_MENU)
+			.setBlockSound(BlockSounds.METAL)
 			.setLuminance(15);
 
 		BlockBuilder stargateBuildPartBuilder = new BlockBuilder(MOD_ID)
-			.setHardness(2.5f)
-			.setResistance(5.0f)
-			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_AXE)
-			.setBlockSound(BlockSounds.WOOD);
+			.setHardness(5f)
+			.setResistance(80f)
+			.setTags(BlockTags.FENCES_CONNECT, BlockTags.MINEABLE_BY_PICKAXE)
+			.setBlockSound(BlockSounds.METAL);
 
 		STARGATE_MILKYWAY = stargateBuilder
 			.setTileEntity(TileEntityStargateMilkyWay::new)
@@ -81,10 +81,10 @@ public class StargateBlocks {
 		EntityHelper.createTileEntity(TileEntityDHDPegasus.class, NamespaceID.getPermanent(MOD_ID, "dhd_pegasus"));
 
 		BlockBuilder dhdBuilder = new BlockBuilder(MOD_ID)
-			.setHardness(2.5f)
-			.setResistance(5.0f)
-			.setTags(BlockTags.MINEABLE_BY_AXE)
-			.setBlockSound(BlockSounds.WOOD);
+			.setHardness(5f)
+			.setResistance(10f)
+			.setTags(BlockTags.MINEABLE_BY_PICKAXE)
+			.setBlockSound(BlockSounds.METAL);
 
 		DHD_MILKYWAY = dhdBuilder
 			.setTileEntity(TileEntityDHDMilkyWay::new)

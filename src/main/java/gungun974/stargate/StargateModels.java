@@ -36,19 +36,19 @@ public class StargateModels implements ModelEntrypoint {
 			throw new RuntimeException(e);
 		}
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY, "stargate:block/chest/planks/top"));
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY, "stargate:block/gate/milkyway_ring"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY)
 			.setAllTextures(0, "stargate:block/gate/milkyway_ring")
 		);
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_PEGASUS, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_PEGASUS, "minecraft:block/chest/planks/top"));
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_PEGASUS, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_PEGASUS, "stargate:block/gate/pegasus_ring"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_PEGASUS)
 			.setAllTextures(0, "stargate:block/gate/pegasus_ring")
 		);
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_UNIVERSE, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_UNIVERSE, "minecraft:block/chest/planks/top"));
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_UNIVERSE, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_UNIVERSE, "stargate:block/gate/universe_ring"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE)
 			.setAllTextures(0, "stargate:block/gate/universe_ring")
