@@ -1289,6 +1289,10 @@ public abstract class StargateComponent {
 				}
 			}
 
+			if (state == StargateState.OPENING && session != null && animation == StargateAnimation.KAWOOSH) {
+				currentDialingAddressSize = session.dialingAddressSize;
+			}
+
 			if (state == StargateState.CONNECTED && session != null && animation != StargateAnimation.KAWOOSH) {
 				boolean needUpdate = currentDialingAddressSize != session.dialingAddressSize;
 				currentDialingAddressSize = session.dialingAddressSize;

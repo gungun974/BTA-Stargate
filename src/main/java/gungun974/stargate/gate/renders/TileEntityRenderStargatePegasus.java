@@ -61,6 +61,10 @@ public class TileEntityRenderStargatePegasus extends TileEntityRenderStargate {
 				glyph = segment;
 			}
 
+			if (stargateCore.isReceiverGate()) {
+				glyph = segment;
+			}
+
 			if (glyph == -1) {
 				if ((segment % 4 == 0)) {
 					int currentChevron;

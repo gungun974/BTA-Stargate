@@ -69,26 +69,30 @@ public class TileEntityRenderStargateUniverse extends TileEntityRenderStargate {
 			int i = segment % 6;
 			int j = segment / 6;
 
-			if (stargateCore.interpolatedChevronActive(0, partialTicks) && segment == stargateCore.getChevronActiveSymbol(0)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(1, partialTicks) && segment == stargateCore.getChevronActiveSymbol(1)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(2, partialTicks) && segment == stargateCore.getChevronActiveSymbol(2)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(3, partialTicks) && segment == stargateCore.getChevronActiveSymbol(3)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(4, partialTicks) && segment == stargateCore.getChevronActiveSymbol(4)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(5, partialTicks) && segment == stargateCore.getChevronActiveSymbol(5)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(6, partialTicks) && segment == stargateCore.getChevronActiveSymbol(6)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(7, partialTicks) && segment == stargateCore.getChevronActiveSymbol(7)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else if (stargateCore.interpolatedChevronActive(8, partialTicks) && segment == stargateCore.getChevronActiveSymbol(8)) {
-				GL11.glColor4f(1f, 1f, 1f, 1f);
-			} else {
+			if (stargateCore.isReceiverGate()) {
 				GL11.glColor4f(0.15f, 0.15f, 0.15f, 1f);
+			} else {
+				if (stargateCore.interpolatedChevronActive(0, partialTicks) && segment == stargateCore.getChevronActiveSymbol(0)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(1, partialTicks) && segment == stargateCore.getChevronActiveSymbol(1)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(2, partialTicks) && segment == stargateCore.getChevronActiveSymbol(2)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(3, partialTicks) && segment == stargateCore.getChevronActiveSymbol(3)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(4, partialTicks) && segment == stargateCore.getChevronActiveSymbol(4)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(5, partialTicks) && segment == stargateCore.getChevronActiveSymbol(5)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(6, partialTicks) && segment == stargateCore.getChevronActiveSymbol(6)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(7, partialTicks) && segment == stargateCore.getChevronActiveSymbol(7)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else if (stargateCore.interpolatedChevronActive(8, partialTicks) && segment == stargateCore.getChevronActiveSymbol(8)) {
+					GL11.glColor4f(1f, 1f, 1f, 1f);
+				} else {
+					GL11.glColor4f(0.15f, 0.15f, 0.15f, 1f);
+				}
 			}
 
 
