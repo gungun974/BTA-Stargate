@@ -1,5 +1,6 @@
 package gungun974.stargate.core;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,6 +55,7 @@ public abstract class StargateAddress {
 		return res;
 	}
 
+	@Nullable
 	public static StargateAddress createAddressFromBlock(int x, int y, int dim, StargateFamily family) {
 		switch (family) {
 			case MilkyWay:

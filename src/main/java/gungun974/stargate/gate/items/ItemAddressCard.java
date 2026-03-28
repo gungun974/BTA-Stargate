@@ -36,15 +36,27 @@ public class ItemAddressCard extends Item {
 		switch (gate.getFamily()) {
 			case MilkyWay:
 				StargateAddress milkyway = gate.getAddressWithFamily(StargateFamily.MilkyWay);
-				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".milkyway.name", milkyway.getBlockX(), milkyway.getBlockZ()));
+				if (milkyway != null) {
+					stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".milkyway.name", milkyway.getBlockX(), milkyway.getBlockZ()));
+				} else {
+					stack.setCustomName("???");
+				}
 				break;
 			case Pegasus:
 				StargateAddress pegasus = gate.getAddressWithFamily(StargateFamily.Pegasus);
-				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".pegasus.name", pegasus.getBlockX(), pegasus.getBlockZ()));
+				if (pegasus != null) {
+					stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".pegasus.name", pegasus.getBlockX(), pegasus.getBlockZ()));
+				} else {
+					stack.setCustomName("???");
+				}
 				break;
 			case Universe:
 				StargateAddress universe = gate.getAddressWithFamily(StargateFamily.Universe);
-				stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".universe.name", universe.getBlockX(), universe.getBlockZ()));
+				if (universe != null) {
+					stack.setCustomName(I18n.getInstance().translateKeyAndFormat(stack.getItemKey() + ".universe.name", universe.getBlockX(), universe.getBlockZ()));
+				} else {
+					stack.setCustomName("???");
+				}
 				break;
 		}
 
@@ -56,48 +68,56 @@ public class ItemAddressCard extends Item {
 		StargateAddress pegasus = gate.getAddressWithFamily(StargateFamily.Pegasus);
 		StargateAddress universe = gate.getAddressWithFamily(StargateFamily.Universe);
 
-		int[] milkywayAddress = milkyway.encodeAddress();
+		if (milkyway != null) {
+			int[] milkywayAddress = milkyway.encodeAddress();
 
-		CompoundTag milkywayTag = new CompoundTag();
+			CompoundTag milkywayTag = new CompoundTag();
 
-		milkywayTag.putInt("Address0", milkywayAddress[0]);
-		milkywayTag.putInt("Address1", milkywayAddress[1]);
-		milkywayTag.putInt("Address2", milkywayAddress[2]);
-		milkywayTag.putInt("Address3", milkywayAddress[3]);
-		milkywayTag.putInt("Address4", milkywayAddress[4]);
-		milkywayTag.putInt("Address5", milkywayAddress[5]);
-		milkywayTag.putInt("Address6", milkywayAddress[6]);
-		milkywayTag.putInt("Address7", milkywayAddress[7]);
+			milkywayTag.putInt("Address0", milkywayAddress[0]);
+			milkywayTag.putInt("Address1", milkywayAddress[1]);
+			milkywayTag.putInt("Address2", milkywayAddress[2]);
+			milkywayTag.putInt("Address3", milkywayAddress[3]);
+			milkywayTag.putInt("Address4", milkywayAddress[4]);
+			milkywayTag.putInt("Address5", milkywayAddress[5]);
+			milkywayTag.putInt("Address6", milkywayAddress[6]);
+			milkywayTag.putInt("Address7", milkywayAddress[7]);
 
-		int[] pegasusAddress = pegasus.encodeAddress();
+			stack.getData().putCompound(NBT_ADDRESS_MILKYWAY, milkywayTag);
+		}
 
-		CompoundTag pegasusTag = new CompoundTag();
+		if (pegasus != null) {
+			int[] pegasusAddress = pegasus.encodeAddress();
 
-		pegasusTag.putInt("Address0", pegasusAddress[0]);
-		pegasusTag.putInt("Address1", pegasusAddress[1]);
-		pegasusTag.putInt("Address2", pegasusAddress[2]);
-		pegasusTag.putInt("Address3", pegasusAddress[3]);
-		pegasusTag.putInt("Address4", pegasusAddress[4]);
-		pegasusTag.putInt("Address5", pegasusAddress[5]);
-		pegasusTag.putInt("Address6", pegasusAddress[6]);
-		pegasusTag.putInt("Address7", pegasusAddress[7]);
+			CompoundTag pegasusTag = new CompoundTag();
 
-		int[] universeAddress = universe.encodeAddress();
+			pegasusTag.putInt("Address0", pegasusAddress[0]);
+			pegasusTag.putInt("Address1", pegasusAddress[1]);
+			pegasusTag.putInt("Address2", pegasusAddress[2]);
+			pegasusTag.putInt("Address3", pegasusAddress[3]);
+			pegasusTag.putInt("Address4", pegasusAddress[4]);
+			pegasusTag.putInt("Address5", pegasusAddress[5]);
+			pegasusTag.putInt("Address6", pegasusAddress[6]);
+			pegasusTag.putInt("Address7", pegasusAddress[7]);
 
-		CompoundTag universeTag = new CompoundTag();
+			stack.getData().putCompound(NBT_ADDRESS_PEGASUS, pegasusTag);
+		}
 
-		universeTag.putInt("Address0", universeAddress[0]);
-		universeTag.putInt("Address1", universeAddress[1]);
-		universeTag.putInt("Address2", universeAddress[2]);
-		universeTag.putInt("Address3", universeAddress[3]);
-		universeTag.putInt("Address4", universeAddress[4]);
-		universeTag.putInt("Address5", universeAddress[5]);
-		universeTag.putInt("Address6", universeAddress[6]);
-		universeTag.putInt("Address7", universeAddress[7]);
+		if (universe != null) {
+			int[] universeAddress = universe.encodeAddress();
 
-		stack.getData().putCompound(NBT_ADDRESS_MILKYWAY, milkywayTag);
-		stack.getData().putCompound(NBT_ADDRESS_PEGASUS, pegasusTag);
-		stack.getData().putCompound(NBT_ADDRESS_UNIVERSE, universeTag);
+			CompoundTag universeTag = new CompoundTag();
+
+			universeTag.putInt("Address0", universeAddress[0]);
+			universeTag.putInt("Address1", universeAddress[1]);
+			universeTag.putInt("Address2", universeAddress[2]);
+			universeTag.putInt("Address3", universeAddress[3]);
+			universeTag.putInt("Address4", universeAddress[4]);
+			universeTag.putInt("Address5", universeAddress[5]);
+			universeTag.putInt("Address6", universeAddress[6]);
+			universeTag.putInt("Address7", universeAddress[7]);
+
+			stack.getData().putCompound(NBT_ADDRESS_UNIVERSE, universeTag);
+		}
 	}
 
 	public static int getSymbol(@Nonnull ItemStack stack, StargateFamily family, int symbolIndex) {
@@ -129,6 +149,27 @@ public class ItemAddressCard extends Item {
 		}
 
 		return addressTag.getInteger("Address" + symbolIndex);
+	}
+
+	public static boolean hasAddress(@Nonnull ItemStack stack, StargateFamily family) {
+		CompoundTag nbt = stack.getData();
+		String nbtKey;
+
+		switch (family) {
+			case MilkyWay:
+				nbtKey = NBT_ADDRESS_MILKYWAY;
+				break;
+			case Pegasus:
+				nbtKey = NBT_ADDRESS_PEGASUS;
+				break;
+			case Universe:
+				nbtKey = NBT_ADDRESS_UNIVERSE;
+				break;
+			default:
+				return false;
+		}
+
+		return nbt.containsKey(nbtKey);
 	}
 
 	@Override

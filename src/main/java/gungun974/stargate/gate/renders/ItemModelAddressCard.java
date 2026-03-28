@@ -133,22 +133,32 @@ public class ItemModelAddressCard extends ItemModelStandard {
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, 0, -1.0F);
 
-		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/milkyway_glyphs.png"));
+		if (ItemAddressCard.hasAddress(stack, StargateFamily.MilkyWay)) {
+			mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/milkyway_glyphs.png"));
 
-		for (int i = 0; i < 9; i++) {
-			drawSymbol39(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.MilkyWay, i), i * 14, 86, 14);
+			for (int i = 0; i < 9; i++) {
+				drawSymbol39(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.MilkyWay, i), i * 14, 86, 14);
+			}
+		} else {
+			GL11.glTranslatef(0, -7.0F, 0);
 		}
 
-		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/pegasus_glyphs.png"));
+		if (ItemAddressCard.hasAddress(stack, StargateFamily.Pegasus)) {
+			mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/pegasus_glyphs.png"));
 
-		for (int i = 0; i < 9; i++) {
-			drawSymbol36(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.Pegasus, i), i * 14, 100, 14);
+			for (int i = 0; i < 9; i++) {
+				drawSymbol36(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.Pegasus, i), i * 14, 100, 14);
+			}
+		} else {
+			GL11.glTranslatef(0, -7.0F, 0);
 		}
 
-		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/universe_glyphs.png"));
+		if (ItemAddressCard.hasAddress(stack, StargateFamily.Universe)) {
+			mc.textureManager.bindTexture(mc.textureManager.loadTexture("/assets/stargate/textures/font/universe_glyphs.png"));
 
-		for (int i = 0; i < 9; i++) {
-			drawSymbol36(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.Universe, i), i * 14, 114, 14);
+			for (int i = 0; i < 9; i++) {
+				drawSymbol36(tessellator, ItemAddressCard.getSymbol(stack, StargateFamily.Universe, i), i * 14, 114, 14);
+			}
 		}
 
 		GL11.glPopMatrix();

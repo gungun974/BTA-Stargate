@@ -2180,6 +2180,11 @@ public abstract class StargateComponent {
 			{
 				StargateAddress originAddress = getAddress();
 
+				if (originAddress == null) {
+					cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+					return;
+				}
+
 				for (int cx = originAddress.getStartChunkX(); cx <= originAddress.getEndChunkX(); cx++) {
 					for (int cz = originAddress.getStartChunkZ(); cz <= originAddress.getEndChunkZ(); cz++) {
 						List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, originAddress.getDim(), cx, cz);
@@ -2426,10 +2431,12 @@ public abstract class StargateComponent {
 		this.orientation = orientation;
 	}
 
+	@Nullable
 	public StargateAddress getAddress() {
 		return getAddressWithFamily(getFamily());
 	}
 
+	@Nullable
 	public StargateAddress getAddressWithFamily(StargateFamily family) {
 		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.z, stargateTile.worldObj.dimension.id, family);
 	}

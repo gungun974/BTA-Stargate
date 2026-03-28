@@ -188,7 +188,7 @@ public class StargateSessionManager {
 			destination.stargateTile.worldObj.dimension.id,
 			destination.getDirection(),
 			destination.getOrientation(),
-			destination.getAddress(),
+			destination.getAddressWithFamily(origin.getFamily()),
 			dialingAddressSize,
 			MAX_OPENING_TIME,
 			0
