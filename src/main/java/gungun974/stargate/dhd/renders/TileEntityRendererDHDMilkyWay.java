@@ -93,7 +93,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
 		WavefrontLoader key = KEYS[i];
 
 		int keyId = BlockLogicDHDMilkyWay.KEY_IDS[i];
@@ -108,7 +108,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 
 		if (isActive) {
 			key.mapMaterial("glyph", "glyph_active");
-		} else if (isHover) {
+		} else if (isHover && !isGateActive) {
 			key.mapMaterial("glyph", "glyph_hint");
 		} else {
 			key.mapMaterial("glyph", "glyph");

@@ -53,7 +53,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family) {
+	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
 		this.loadTexture("/assets/stargate/models/Pegasus/pegasus_stargate_glyphs.png");
 
 		int keyId = BlockLogicDHDPegasus.KEY_IDS[i];
@@ -116,7 +116,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 
 		if (isActive) {
 			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_active.png");
-		} else if (isHover) {
+		} else if (isHover && !isGateActive) {
 			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_hint.png");
 		} else {
 			this.loadTexture("/assets/stargate/models/DHD/pegasus_key.png");
