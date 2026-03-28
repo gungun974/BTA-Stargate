@@ -164,11 +164,27 @@ public abstract class StargateComponent {
 	}
 
 	public int[] getCurrentDialingAddress() {
-		return Arrays.copyOfRange(
+		switch (getState()) {
+			case IDLE:
+			case DIALLING:
+			case AWAIT: {
+				return Arrays.copyOfRange(
+					currentDialingAddress,
+					0,
+					currentDialingAddressSize
+				);
+			}
+			case OPENING:
+			case CONNECTED:
+			case CLOSING:
+		}
+
+		int[] result = Arrays.copyOfRange(
 			currentDialingAddress,
 			0,
-			currentDialingAddressSize
+			Math.max(currentDialingAddressSize - 1, 0)
 		);
+		return result.length >= 9 ? result : Arrays.copyOf(result, result.length + 1);
 	}
 
 	public void checkIfStillValid() {
