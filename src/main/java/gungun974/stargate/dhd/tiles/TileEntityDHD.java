@@ -11,6 +11,7 @@ import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkPosition;
 import org.jetbrains.annotations.NotNull;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -127,6 +128,10 @@ public abstract class TileEntityDHD extends TileEntity implements IPeripheralTil
 	}
 
 	public void encode(int s) {
+		if (EnvironmentHelper.isClientWorld()) {
+			return;
+		}
+
 		TileEntityStargate tile = findLinkedGate();
 
 		if (tile == null) {
@@ -150,6 +155,10 @@ public abstract class TileEntityDHD extends TileEntity implements IPeripheralTil
 	}
 
 	public void dial() {
+		if (EnvironmentHelper.isClientWorld()) {
+			return;
+		}
+
 		TileEntityStargate tile = findLinkedGate();
 
 		if (tile == null) {

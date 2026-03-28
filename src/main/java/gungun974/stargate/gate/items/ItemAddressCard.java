@@ -16,6 +16,7 @@ import net.minecraft.core.player.gamemode.Gamemode;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import javax.annotation.Nonnull;
 
@@ -174,6 +175,10 @@ public class ItemAddressCard extends Item {
 
 	@Override
 	public boolean onUseItemOnBlock(ItemStack itemstack, Player player, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced) {
+		if (EnvironmentHelper.isClientWorld()) {
+			return false;
+		}
+
 		if (!player.isSneaking()) {
 			return false;
 		}

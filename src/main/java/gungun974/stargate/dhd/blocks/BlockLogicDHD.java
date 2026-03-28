@@ -12,6 +12,7 @@ import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.util.phys.Vec3;
 import net.minecraft.core.world.World;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
 public abstract class BlockLogicDHD extends BlockLogicRotatable {
 	public BlockLogicDHD(Block<?> block, Material material) {
@@ -77,6 +78,10 @@ public abstract class BlockLogicDHD extends BlockLogicRotatable {
 
 	@Override
 	public boolean onBlockRightClicked(World world, int x, int y, int z, Player player, Side side, double xHit, double yHit) {
+		if (EnvironmentHelper.isClientWorld()) {
+			return false;
+		}
+
 		TileEntity tileEntity = world.getTileEntity(x, y, z);
 
 		Direction direction = getDirectionFromMeta(world.getBlockMetadata(x, y, z));

@@ -6,6 +6,8 @@ import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.items.ItemAddressCard;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLogic;
 import net.minecraft.core.block.Blocks;
@@ -22,6 +24,7 @@ import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
+import net.minecraft.server.entity.player.PlayerServer;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import java.util.ArrayList;
@@ -29,6 +32,13 @@ import java.util.ArrayList;
 public class BlockLogicStargate extends BlockLogic {
 	public BlockLogicStargate(Block<?> block, Material material) {
 		super(block, material);
+	}
+
+	@Environment(EnvType.SERVER)
+	private static void updateServerInventory(Player player) {
+		if (player instanceof PlayerServer) {
+			((PlayerServer) player).updateCraftingInventory(player.inventorySlots, player.inventorySlots.getSlotStackList());
+		}
 	}
 
 	private int getIdForStargateBuildPartBlock() {
@@ -252,7 +262,11 @@ public class BlockLogicStargate extends BlockLogic {
 				if (gate != null && hand != null && hand.itemID == Items.PAPER.id) {
 					hand.stackSize -= 1;
 
-					player.inventory.insertItem(ItemAddressCard.createFromGate(gate), false);
+					player.inventory.insertItem(ItemAddressCard.createFromGate(gate), true);
+
+					if (EnvironmentHelper.isServerEnvironment()) {
+						updateServerInventory(player);
+					}
 
 					return true;
 				}
