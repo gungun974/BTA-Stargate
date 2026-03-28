@@ -40,13 +40,13 @@ public class BlockModelStargateBuildPart<T extends BlockLogic> extends BlockMode
 
 			assert original != null;
 
-			return TextureRegistry.getTexture("minecraft:block/block_redstone");
+			return TextureRegistry.getTexture(original.namespaceId.namespace() + ":block/" + original.namespaceId.value().replace("ring", "chevron"));
 		} else if (currentMetadata == BlockLogicStargateBuildPart.CORE_META && (side == Side.SOUTH)) {
 			IconCoordinate original = this.blockTextures.get(side);
 
 			assert original != null;
 
-			return TextureRegistry.getTexture("minecraft:block/block_lapis");
+			return TextureRegistry.getTexture(original.namespaceId.namespace() + ":block/" + original.namespaceId.value().replace("ring", "core"));
 		} else {
 			return this.blockTextures.get(Side.getSideById(index));
 		}

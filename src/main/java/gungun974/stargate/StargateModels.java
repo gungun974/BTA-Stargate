@@ -16,6 +16,7 @@ import net.minecraft.client.render.block.model.BlockModelDispatcher;
 import net.minecraft.client.render.block.model.BlockModelEmpty;
 import net.minecraft.client.render.item.model.ItemModelDispatcher;
 import net.minecraft.client.render.item.model.ItemModelStandard;
+import net.minecraft.client.render.texture.stitcher.IconCoordinate;
 import net.minecraft.client.render.texture.stitcher.TextureRegistry;
 import net.minecraft.core.util.collection.NamespaceID;
 import turniplabs.halplibe.helper.ModelHelper;
@@ -27,22 +28,30 @@ public class StargateModels implements ModelEntrypoint {
 
 	@Override
 	public void initBlockModels(BlockModelDispatcher dispatcher) {
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY, "minecraft:block/chest/planks/top"));
+		final IconCoordinate a = TextureRegistry.getTexture("stargate:block/gate/milkyway_ring");
+
+		try {
+			TextureRegistry.initializeAllFiles("stargate", a.parentAtlas, true);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY, "stargate:block/chest/planks/top"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
+			.setAllTextures(0, "stargate:block/gate/milkyway_ring")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_PEGASUS, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_PEGASUS, "minecraft:block/chest/planks/top"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_PEGASUS)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
+			.setAllTextures(0, "stargate:block/gate/pegasus_ring")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_UNIVERSE, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_UNIVERSE, "minecraft:block/chest/planks/top"));
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE)
-			.setAllTextures(0, "minecraft:block/chest/planks/top")
+			.setAllTextures(0, "stargate:block/gate/universe_ring")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.DHD_MILKYWAY, () -> new BlockModelEmpty<>(StargateBlocks.DHD_MILKYWAY));
