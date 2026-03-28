@@ -2179,12 +2179,18 @@ public abstract class StargateComponent {
 							StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
 
 							if (destinationGate != null && this != destinationGate) {
+								if (currentDialingAddressSize == 7 && destinationGate.getFamily() != getFamily()) {
+									continue;
+								}
+
 								locations.add(new StargateLocation(
 									tileEntity.x,
 									tileEntity.y,
 									tileEntity.z,
 									destinationAddress.getDim(),
-									destinationAddress
+									destinationAddress,
+									((TileEntityStargate) tileEntity).hasDHD(),
+									destinationGate.getFamily()
 								));
 							}
 						}
@@ -2206,7 +2212,22 @@ public abstract class StargateComponent {
 				int diffZ = destinationAddress.getBlockZ() - location.z;
 				int distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
 
-				if (distance < closestDistance) {
+				boolean shouldUpdate = false;
+
+				if (location.hasDHD && !target.hasDHD) {
+					shouldUpdate = true;
+				} else if (location.hasDHD == target.hasDHD) {
+					int candidateFamilyPriority = location.family == StargateFamily.Pegasus ? 2 : (location.family == StargateFamily.MilkyWay ? 1 : 0);
+					int targetFamilyPriority = target.family == StargateFamily.Pegasus ? 2 : (target.family == StargateFamily.MilkyWay ? 1 : 0);
+
+					if (candidateFamilyPriority > targetFamilyPriority) {
+						shouldUpdate = true;
+					} else if (candidateFamilyPriority == targetFamilyPriority && distance < closestDistance) {
+						shouldUpdate = true;
+					}
+				}
+
+				if (shouldUpdate) {
 					target = location;
 					closestDistance = distance;
 				}
