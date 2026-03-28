@@ -2141,6 +2141,37 @@ public abstract class StargateComponent {
 				return;
 			}
 
+			{
+				StargateAddress originAddress = getAddress();
+
+				for (int cx = originAddress.getStartChunkX(); cx <= originAddress.getEndChunkX(); cx++) {
+					for (int cz = originAddress.getStartChunkZ(); cz <= originAddress.getEndChunkZ(); cz++) {
+						List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, originAddress.getDim(), cx, cz);
+
+						if (tileEntities == null) {
+							continue;
+						}
+
+						for (TileEntity tileEntity : tileEntities) {
+							if (tileEntity instanceof TileEntityStargate) {
+								StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
+
+								if (destinationGate != null && this != destinationGate) {
+									if (destinationGate.getFamily() == getFamily()) {
+										StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
+
+										if (currentPresentSession != null) {
+											cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+											return;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
 			if (currentDialingAddressSize < 7) {
 				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
 				return;
@@ -2179,7 +2210,14 @@ public abstract class StargateComponent {
 							StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
 
 							if (destinationGate != null && this != destinationGate) {
-								if (currentDialingAddressSize == 7 && destinationGate.getFamily() != getFamily()) {
+								if (destinationGate.getFamily() == getFamily()) {
+									StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
+
+									if (currentPresentSession != null) {
+										cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+										return;
+									}
+								} else if (currentDialingAddressSize == 7) {
 									continue;
 								}
 
