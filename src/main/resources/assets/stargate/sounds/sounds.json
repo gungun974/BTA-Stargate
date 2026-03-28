@@ -52,11 +52,6 @@
       }
     ]
   },
-  "stargate.pegasus.encode.lock": {
-    "sounds": [
-      "pegasus/lock.ogg"
-    ]
-  },
   "stargate.pegasus.encode.fast": {
     "sounds": [
       "pegasus/encode.ogg"
