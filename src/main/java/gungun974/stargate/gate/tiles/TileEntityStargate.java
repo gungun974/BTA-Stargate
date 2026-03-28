@@ -118,7 +118,7 @@ public abstract class TileEntityStargate extends TileEntity implements IPeripher
 					TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
 
 					if (tileEntity instanceof TileEntityDHD) {
-						if (((TileEntityDHD) tileEntity).findLinkedGate() != null) {
+						if (((TileEntityDHD) tileEntity).findLinkedGate() == this) {
 							hasDHD = true;
 							return;
 						}
