@@ -54,7 +54,7 @@ public class BlockLogicStargate extends BlockLogic {
 		return StargateBlocks.STARGATE_BUILD_PART_MILKYWAY.id();
 	}
 
-	private int originalBlockMetadata(World world, int x, int y, int z, int rawMetadata, boolean includeDirection) {
+	private int originalBlockMetadata(TileEntity tileEntity, int rawMetadata, boolean includeDirection) {
 		int ringMetadata = rawMetadata & 0b1111;
 
 		int ringMetadataOffset = rawMetadata & 0b11000000;
@@ -77,7 +77,6 @@ public class BlockLogicStargate extends BlockLogic {
 					break;
 				}
 
-				TileEntity tileEntity = world.getTileEntity(x, y, z);
 				if (tileEntity instanceof TileEntityStargate) {
 
 					StargateComponent gate = ((TileEntityStargate) tileEntity).getStargateComponent();
@@ -122,8 +121,7 @@ public class BlockLogicStargate extends BlockLogic {
 					}
 				}
 
-
-				return new ItemStack[]{new ItemStack(getIdForStargateBuildPartBlock(), 1, originalBlockMetadata(world, entity.x, entity.y, entity.z, meta, false))};
+				return new ItemStack[]{new ItemStack(getIdForStargateBuildPartBlock(), 1, originalBlockMetadata(entity, meta, false))};
 			default:
 				return null;
 		}
@@ -218,7 +216,7 @@ public class BlockLogicStargate extends BlockLogic {
 			}
 		}
 
-		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), originalBlockMetadata(world, x, y, z, world.getBlockMetadata(x, y, z), true));
+		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), originalBlockMetadata(world.getTileEntity(x, y, z), world.getBlockMetadata(x, y, z), true));
 	}
 
 	@Override
