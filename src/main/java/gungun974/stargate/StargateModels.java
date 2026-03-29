@@ -73,6 +73,36 @@ public class StargateModels implements ModelEntrypoint {
 			return itemModelStandard;
 		});
 
+		ModelHelper.setItemModel(StargateItems.NAQUADAH, () -> {
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH, MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateItems.NAQUADAH_DUST, () -> {
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_DUST, MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_dust"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateItems.NAQUADAH_CRUDE_ALLOY, () -> {
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_CRUDE_ALLOY, MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_crude_alloy"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateItems.NAQUADAH_ALLOY, () -> {
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_ALLOY, MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_alloy"));
+			return itemModelStandard;
+		});
+
+		ModelHelper.setItemModel(StargateItems.CONTROL_CRYSTAL, () -> {
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.CONTROL_CRYSTAL, MOD_ID);
+			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/control_crystal"));
+			return itemModelStandard;
+		});
+
 		ModelHelper.setItemModel(StargateBlocks.DHD_MILKYWAY.asItem(), () -> {
 			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_MILKYWAY.asItem(), MOD_ID);
 			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/milkyway_dhd"));

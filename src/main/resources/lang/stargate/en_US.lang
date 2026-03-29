@@ -31,3 +31,18 @@ item.stargate.address_card.desc = The best way to know what key to press
 item.stargate.address_card.milkyway.name = Milky Way - X%d Z%d
 item.stargate.address_card.pegasus.name = Pegasus - X%d Z%d
 item.stargate.address_card.universe.name = Universe - X%d Z%d
+
+item.stargate.naquadah.name = Naquadah
+item.stargate.naquadah.desc = A rare, super-heavy, and extremely dense chemical element.
+
+item.stargate.naquadah_dust.name = Naquadah Dust
+item.stargate.naquadah_dust.desc = A crushed form of Naquadah, used to enrich crude steel.
+
+item.stargate.naquadah_crude_alloy.name = Crude Naquadah Alloy
+item.stargate.naquadah_crude_alloy.desc = Crude steel enriched with Naquadah; it still requires further refinement.
+
+item.stargate.naquadah_alloy.name = Naquadah Alloy
+item.stargate.naquadah_alloy.desc = Used to create advanced technologies such as Stargates or weapons of mass destruction.
+
+item.stargate.control_crystal.name = Control Crystal
+item.stargate.control_crystal.desc = Regulate various functions in advanced technology.
