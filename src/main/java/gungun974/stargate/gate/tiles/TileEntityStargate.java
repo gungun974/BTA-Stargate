@@ -1,27 +1,21 @@
 package gungun974.stargate.gate.tiles;
 
 import com.mojang.nbt.tags.CompoundTag;
-import dan200.computercraft.api.peripheral.IPeripheral;
-import dan200.computercraft.api.peripheral.IPeripheralTile;
 import gungun974.stargate.core.StargateChunkLoader;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.blocks.BlockLogicStargate;
-import gungun974.stargate.gate.cc.StargatePeripheral;
 import gungun974.stargate.gate.components.CamouflageComponent;
 import gungun974.stargate.gate.components.StargateComponent;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
-import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.chunk.ChunkPosition;
-import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 
-public abstract class TileEntityStargate extends TileEntity implements IPeripheralTile {
+public abstract class TileEntityStargate extends TileEntity {
 	private final CamouflageComponent camouflageComponent = new CamouflageComponent();
 	private Role role = Role.RING;
 	private StargateComponent stargateComponent;
@@ -153,13 +147,6 @@ public abstract class TileEntityStargate extends TileEntity implements IPeripher
 
 		return stargate.getStargateComponent();
 	}
-
-	@Nonnull
-	@Override
-	public IPeripheral getPeripheral(@NotNull Direction side) {
-		return new StargatePeripheral(this);
-	}
-
 
 	public CamouflageComponent getCamouflageComponent() {
 		return camouflageComponent;

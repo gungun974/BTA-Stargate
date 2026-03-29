@@ -1,5 +1,6 @@
 package gungun974.stargate;
 
+import gungun974.stargate.cc.CCPlugin;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.sound.SoundRepository;
@@ -25,6 +26,12 @@ public class StargateMod implements ModInitializer, GameStartEntrypoint {
 		StargateItems.RegisterItems();
 
 		NetworkHandler.registerNetworkMessage(PlayerEnterStargateMessage::new);
+
+		try {
+			Class.forName("dan200.computercraft.api.ComputerCraftAPI");
+			registerCCPlugin();
+		} catch (ClassNotFoundException ignored) {
+		}
 	}
 
 	@Override
@@ -42,4 +49,9 @@ public class StargateMod implements ModInitializer, GameStartEntrypoint {
 	public void afterGameStart() {
 
 	}
+
+	private void registerCCPlugin() {
+		CCPlugin.register();
+	}
+
 }
