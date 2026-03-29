@@ -1,16 +1,25 @@
 tile.stargate.stargate.ring.milkyway.name = Milky Way Stargate Ring
+tile.stargate.stargate.ring.milkyway.desc = Building block to construct the Milky Way Stargate
 tile.stargate.stargate.chevron.milkyway.name = Milky Way Stargate Chevron
+tile.stargate.stargate.chevron.milkyway.desc = Building block to construct the Milky Way Stargate
 tile.stargate.stargate.core.milkyway.name = Milky Way Stargate Core
+tile.stargate.stargate.core.milkyway.desc = Building block to construct the Milky Way Stargate
 tile.stargate.stargate.milkyway.name = Milky Way Stargate
 
 tile.stargate.stargate.ring.pegasus.name = Pegasus Stargate Ring
+tile.stargate.stargate.ring.pegasus.desc = Building block to construct the Pegasus Stargate
 tile.stargate.stargate.chevron.pegasus.name = Pegasus Stargate Chevron
+tile.stargate.stargate.chevron.pegasus.desc = Building block to construct the Pegasus Stargate
 tile.stargate.stargate.core.pegasus.name = Pegasus Stargate Core
+tile.stargate.stargate.core.pegasus.desc = Building block to construct the Pegasus Stargate
 tile.stargate.stargate.pegasus.name = Pegasus Stargate
 
 tile.stargate.stargate.ring.universe.name = Universe Stargate Ring
+tile.stargate.stargate.ring.universe.desc = Building block to construct the Universe Stargate
 tile.stargate.stargate.chevron.universe.name = Universe Stargate Chevron
+tile.stargate.stargate.chevron.universe.desc = Building block to construct the Universe Stargate
 tile.stargate.stargate.core.universe.name = Universe Stargate Core
+tile.stargate.stargate.core.universe.desc = Building block to construct the Universe Stargate
 tile.stargate.stargate.universe.name = Universe Stargate
 
 tile.stargate.dhd.milkyway.name = Milky Way Dial Home Device

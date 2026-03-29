@@ -1,0 +1,57 @@
+tile.stargate.stargate.ring.milkyway.name = Anneau de Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.ring.milkyway.desc = Bloc de construction pour construire le Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.chevron.milkyway.name = Chevron de Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.chevron.milkyway.desc = Bloc de construction pour construire le Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.core.milkyway.name = Cœur de Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.core.milkyway.desc = Bloc de construction pour construire le Porte des Étoiles de la Voie Lactée
+tile.stargate.stargate.milkyway.name = Porte des Étoiles de la Voie Lactée
+
+tile.stargate.stargate.ring.pegasus.name = Anneau de Porte des Étoiles de Pégase
+tile.stargate.stargate.ring.pegasus.desc = Bloc de construction pour construire le Porte des Étoiles de Pégase
+tile.stargate.stargate.chevron.pegasus.name = Chevron de Porte des Étoiles de Pégase
+tile.stargate.stargate.chevron.pegasus.desc = Bloc de construction pour construire le Porte des Étoiles de Pégase
+tile.stargate.stargate.core.pegasus.name = Cœur de Porte des Étoiles de Pégase
+tile.stargate.stargate.core.pegasus.desc = Bloc de construction pour construire le Porte des Étoiles de Pégase
+tile.stargate.stargate.pegasus.name = Porte des Étoiles de Pégase
+
+tile.stargate.stargate.ring.universe.name = Anneau de Porte des Étoiles d'Univers
+tile.stargate.stargate.ring.universe.desc = Bloc de construction pour construire le Porte des Étoiles d'Univers
+tile.stargate.stargate.chevron.universe.name = Chevron de Porte des Étoiles d'Univers
+tile.stargate.stargate.chevron.universe.desc = Bloc de construction pour construire le Porte des Étoiles d'Univers
+tile.stargate.stargate.core.universe.name = Cœur de Porte des Étoiles d'Univers
+tile.stargate.stargate.core.universe.desc = Bloc de construction pour construire le Porte des Étoiles d'Univers
+tile.stargate.stargate.universe.name = Porte des Étoiles d'Univers
+
+tile.stargate.dhd.milkyway.name = DHD de la Voie Lactée
+tile.stargate.dhd.milkyway.desc = Appareil qui contrôle le Porte des Étoiles, plus connu sous le nom de « D.H.D. »
+
+tile.stargate.dhd.pegasus.name = DHD de Pégase
+tile.stargate.dhd.pegasus.desc = Appareil qui contrôle le Porte des Étoiles, plus connu sous le nom de « D.H.D. »
+
+item.stargate.stargate_wand.name = Baguette Porte des Étoiles
+item.stargate.stargate_wand.desc = Baguette magique pour invoquer un Porte des Étoiles rapidement à des fins de test
+item.stargate.stargate_wand.milkyway.name = Baguette Porte des Étoiles [Voie Lactée]
+item.stargate.stargate_wand.pegasus.name = Baguette Porte des Étoiles [Pégase]
+item.stargate.stargate_wand.universe.name = Baguette Porte des Étoiles [Univers]
+item.stargate.stargate_wand.error = Impossible de placer un Porte des Étoiles ici
+
+item.stargate.address_card.name = Carte d'Adresse
+item.stargate.address_card.desc = Le meilleur moyen de savoir quelle touche appuyer
+item.stargate.address_card.milkyway.name = Voie Lactée - X%d Z%d
+item.stargate.address_card.pegasus.name = Pégase - X%d Z%d
+item.stargate.address_card.universe.name = Univers - X%d Z%d
+
+item.stargate.naquadah.name = Naquadah
+item.stargate.naquadah.desc = Un élément chimique rare, super-lourd et extrêmement dense.
+
+item.stargate.naquadah_dust.name = Poussière de Naquadah
+item.stargate.naquadah_dust.desc = Forme broyée de Naquadah, utilisée pour enrichir l'acier brut.
+
+item.stargate.naquadah_crude_alloy.name = Alliage Brut de Naquadah
+item.stargate.naquadah_crude_alloy.desc = Acier brut enrichi au Naquadah ; il nécessite encore un raffinage supplémentaire.
+
+item.stargate.naquadah_alloy.name = Alliage de Naquadah
+item.stargate.naquadah_alloy.desc = Utilisé pour créer des technologies avancées comme les Porte des Étoiless ou des armes de destruction massive.
+
+item.stargate.control_crystal.name = Cristal de Contrôle
+item.stargate.control_crystal.desc = Régule diverses fonctions dans la technologie avancée.
