@@ -1,0 +1,117 @@
+[
+  {
+    "name": "stargate:workbench/control_crystal",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "RDR",
+      "DQD",
+      "RDR"
+    ],
+    "symbols": [
+      {
+        "symbol": "Q",
+        "stack": {
+          "key": "item.quartz",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "D",
+        "stack": {
+          "key": "item.diamond",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "R",
+        "stack": {
+          "key": "item.dust.redstone",
+          "amount": 1,
+          "meta": 0
+        }
+      }
+    ],
+    "result": {
+      "key": "item.stargate.control_crystal",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/naquadah_crude_alloy",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SSS",
+      "NNN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_dust",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel.crude",
+          "amount": 1,
+          "meta": 0
+        }
+      }
+    ],
+    "result": {
+      "key": "item.stargate.naquadah_crude_alloy",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/naquadah",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "GNG",
+      "NCN",
+      "GNG"
+    ],
+    "symbols": [
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.coal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.nethercoal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "G",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 2
+        }
+      }
+    ],
+    "result": {
+      "key": "item.stargate.naquadah",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  }
+]

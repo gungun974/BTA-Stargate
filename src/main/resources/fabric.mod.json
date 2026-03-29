@@ -28,7 +28,7 @@
 			"gungun974.stargate.StargateMod"
 		],
 		"recipesReady": [
-			"gungun974.stargate.StargateMod"
+			"gungun974.stargate.StargateRecipe"
 		]
 	},
 	"mixins": [

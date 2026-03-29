@@ -8,10 +8,9 @@ import org.slf4j.LoggerFactory;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 import turniplabs.halplibe.util.GameStartEntrypoint;
-import turniplabs.halplibe.util.RecipeEntrypoint;
 
 
-public class StargateMod implements ModInitializer, RecipeEntrypoint, GameStartEntrypoint {
+public class StargateMod implements ModInitializer, GameStartEntrypoint {
 	public static final String MOD_ID = "stargate";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
@@ -26,16 +25,6 @@ public class StargateMod implements ModInitializer, RecipeEntrypoint, GameStartE
 		StargateItems.RegisterItems();
 
 		NetworkHandler.registerNetworkMessage(PlayerEnterStargateMessage::new);
-	}
-
-	@Override
-	public void onRecipesReady() {
-
-	}
-
-	@Override
-	public void initNamespaces() {
-
 	}
 
 	@Override

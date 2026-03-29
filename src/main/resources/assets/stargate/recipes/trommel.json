@@ -1,0 +1,30 @@
+[
+  {
+    "name": "stargate:trommel/naquadah_dust",
+    "type": "minecraft:trommeling",
+    "input": {
+      "stack": {
+        "key": "item.stargate.naquadah",
+        "amount": 1,
+        "meta": 0
+      }
+    },
+    "outputs": [
+      {
+        "loot": {
+          "random": true,
+          "yield": {
+            "min": 1,
+            "max": 2
+          },
+          "stack": {
+            "key": "item.stargate.naquadah_dust",
+            "amount": 1,
+            "meta": 0
+          }
+        },
+        "weight": 0.8
+      }
+    ]
+  }
+]
