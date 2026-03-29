@@ -116,7 +116,7 @@ dependencies {
 	implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
 	implementation("org.apache.logging.log4j:log4j-1.2-api:$log4jVersion")
 
-	modImplementation("gungun974:computercraft:1.96.12-7.3_04")
+	modImplementation("gungun974:computercraft:1.96.13-7.3_04")
 
 	implementation("org.apache.commons:commons-lang3:3.12.0")
 	include("org.apache.commons:commons-lang3:3.12.0")

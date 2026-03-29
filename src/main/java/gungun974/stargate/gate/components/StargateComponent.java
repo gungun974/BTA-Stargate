@@ -996,7 +996,7 @@ public abstract class StargateComponent {
 						continue;
 					}
 
-					AABB boundingBox = AABB.getTemporaryBB(x - 0.01, y - 0.01, z - 0.01, x + 0.01, y + 0.01, z + 0.01);
+					AABB boundingBox = AABB.getTemporaryBB(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
 
 					Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
 					if (block != null) {
@@ -1745,7 +1745,7 @@ public abstract class StargateComponent {
 					continue;
 				}
 
-				AABB boundingBox = AABB.getTemporaryBB(x - 0.01, y - 0.01, z - 0.01, x + 0.01, y + 0.01, z + 0.01);
+				AABB boundingBox = AABB.getTemporaryBB(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
 
 				boolean shouldTeleport = false;
 
