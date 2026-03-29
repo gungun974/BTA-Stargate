@@ -113,5 +113,520 @@
       "meta": 0
     },
     "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/milkyway_ring",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SSS",
+      "NCN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 14
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.milkyway",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/milkyway_chevron",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NGN",
+      "SCS"
+    ],
+    "symbols": [
+      {
+        "symbol": "G",
+        "stack": {
+          "key": "item.dust.glowstone",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 14
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.milkyway",
+      "amount": 1,
+      "meta": 1
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/milkyway_core",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NYN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "Y",
+        "stack": {
+          "key": "item.stargate.control_crystal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 14
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.milkyway",
+      "amount": 1,
+      "meta": 2
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/pegasus_ring",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SSS",
+      "NCN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 6
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.pegasus",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/pegasus_chevron",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NGN",
+      "SCS"
+    ],
+    "symbols": [
+      {
+        "symbol": "G",
+        "stack": {
+          "key": "item.dust.glowstone",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 6
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.pegasus",
+      "amount": 1,
+      "meta": 1
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/pegasus_core",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NYN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "Y",
+        "stack": {
+          "key": "item.stargate.control_crystal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 6
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.pegasus",
+      "amount": 1,
+      "meta": 2
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/universe_ring",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SSS",
+      "NCN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 15
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.universe",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/universe_chevron",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NGN",
+      "SCS"
+    ],
+    "symbols": [
+      {
+        "symbol": "G",
+        "stack": {
+          "key": "item.dust.glowstone",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 15
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.universe",
+      "amount": 1,
+      "meta": 1
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/universe_core",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      "SCS",
+      "NYN",
+      "SSS"
+    ],
+    "symbols": [
+      {
+        "symbol": "Y",
+        "stack": {
+          "key": "item.stargate.control_crystal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 15
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.stargate.build.part.universe",
+      "amount": 1,
+      "meta": 2
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/milkyway_dhd",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      " C ",
+      "SYS",
+      "SNS"
+    ],
+    "symbols": [
+      {
+        "symbol": "Y",
+        "stack": {
+          "key": "item.stargate.control_crystal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 14
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.dhd.milkyway",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
+  },
+  {
+    "name": "stargate:workbench/pegasus_dhd",
+    "type": "minecraft:crafting/shaped",
+    "pattern": [
+      " C ",
+      "SYS",
+      "SNS"
+    ],
+    "symbols": [
+      {
+        "symbol": "Y",
+        "stack": {
+          "key": "item.stargate.control_crystal",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "S",
+        "stack": {
+          "key": "item.ingot.steel",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "N",
+        "stack": {
+          "key": "item.stargate.naquadah_alloy",
+          "amount": 1,
+          "meta": 0
+        }
+      },
+      {
+        "symbol": "C",
+        "stack": {
+          "key": "item.dye",
+          "amount": 1,
+          "meta": 6
+        }
+      }
+    ],
+    "result": {
+      "key": "tile.stargate.dhd.pegasus",
+      "amount": 1,
+      "meta": 0
+    },
+    "consumeContainers": false
   }
 ]
