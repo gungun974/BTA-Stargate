@@ -124,7 +124,7 @@ public class WavefrontLoader {
 
 					Path mtl = Paths.get(wavefrontPath).getParent().resolve(elements[1]);
 
-					loadMaterials(mtl.toString());
+					loadMaterials(mtl.toString().replace("\\", "/"));
 				}
 				if (Objects.equals(elements[0], "usemtl")) {
 					if (elements.length < 2) {
@@ -244,7 +244,7 @@ public class WavefrontLoader {
 						Path texture = Paths.get(wavefrontPath).getParent().resolve(currentMaterial.texture);
 
 						TextureManager textureManager = Minecraft.getMinecraft().textureManager;
-						textureManager.bindTexture(textureManager.loadTexture(texture.toString()));
+						textureManager.bindTexture(textureManager.loadTexture(texture.toString().replace("\\", "/")));
 					}
 				}
 
