@@ -8,7 +8,8 @@
     "LightUpdateMixin",
     "LookupFuelFurnaceBlastMixin",
     "LookupFuelFurnaceMixin",
-    "MenuInventoryCreativeMixin"
+    "MenuInventoryCreativeMixin",
+    "PlayerMixin"
   ],
   "client": [
     "MinecraftMixin",

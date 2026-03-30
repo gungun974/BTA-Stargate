@@ -1,5 +1,6 @@
 package gungun974.stargate;
 
+import gungun974.stargate.core.DangerousItemFood;
 import gungun974.stargate.gate.items.ItemAddressCard;
 import gungun974.stargate.gate.items.ItemStargateWand;
 import net.minecraft.core.item.Item;
@@ -43,7 +44,7 @@ public class StargateItems {
 			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah"), generateNexId())));
 		NAQUADAH_DUST = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah_dust")
-			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah_dust"), generateNexId())));
+			.build((new DangerousItemFood("item.naquadah_dust", MOD_ID + ":naquadah_dust", generateNexId(), -16, 16, false, 64)));
 		NAQUADAH_CRUDE_ALLOY = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah_crude_alloy")
 			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah_crude_alloy"), generateNexId())));
