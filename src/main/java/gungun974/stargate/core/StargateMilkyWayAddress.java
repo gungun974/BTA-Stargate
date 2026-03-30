@@ -38,6 +38,11 @@ public class StargateMilkyWayAddress extends StargateAddress {
 	}
 
 	@Override
+	protected int getSpecialSymbol() {
+		return 12;
+	}
+
+	@Override
 	public StargateFamily getFamily() {
 		return StargateFamily.MilkyWay;
 	}
