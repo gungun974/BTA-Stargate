@@ -2177,9 +2177,9 @@ public abstract class StargateComponent {
 				return;
 			}
 
-			{
-				StargateAddress originAddress = getAddress();
+			StargateAddress originAddress = getAddress();
 
+			{
 				if (originAddress == null) {
 					cancelDial();
 					return;
@@ -2218,10 +2218,10 @@ public abstract class StargateComponent {
 				return;
 			}
 
-			if (currentDialingAddressSize == 7) {
-				int[] originAddress = this.getAddress().encodeAddress();
+			int[] originRawAddress = originAddress.encodeAddress();
 
-				currentDialingAddress[6] = originAddress[6];
+			if (currentDialingAddressSize == 7) {
+				currentDialingAddress[6] = originRawAddress[6];
 				currentDialingAddress[7] = 0;
 				currentDialingAddress[8] = 0;
 			} else if (currentDialingAddressSize == 8) {
@@ -2259,6 +2259,12 @@ public abstract class StargateComponent {
 										return;
 									}
 								} else if (currentDialingAddressSize == 7) {
+									continue;
+								}
+
+								StargateAddress realDestinationAddress = destinationGate.getAddress();
+
+								if (realDestinationAddress != null && Arrays.equals(originRawAddress, realDestinationAddress.encodeAddress())) {
 									continue;
 								}
 
