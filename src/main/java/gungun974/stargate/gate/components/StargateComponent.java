@@ -2181,7 +2181,7 @@ public abstract class StargateComponent {
 				StargateAddress originAddress = getAddress();
 
 				if (originAddress == null) {
-					cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+					cancelDial();
 					return;
 				}
 
@@ -2202,7 +2202,7 @@ public abstract class StargateComponent {
 										StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
 										if (currentPresentSession != null) {
-											cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+											cancelDial();
 											return;
 										}
 									}
@@ -2214,7 +2214,7 @@ public abstract class StargateComponent {
 			}
 
 			if (currentDialingAddressSize < 7) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
@@ -2232,7 +2232,7 @@ public abstract class StargateComponent {
 			StargateAddress destinationAddress = StargateAddress.createAddressFromEncoded(currentDialingAddress, getFamily());
 
 			if (destinationAddress == null) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
@@ -2255,7 +2255,7 @@ public abstract class StargateComponent {
 									StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
 									if (currentPresentSession != null) {
-										cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+										cancelDial();
 										return;
 									}
 								} else if (currentDialingAddressSize == 7) {
@@ -2278,7 +2278,7 @@ public abstract class StargateComponent {
 			}
 
 			if (locations.isEmpty()) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
@@ -2315,7 +2315,7 @@ public abstract class StargateComponent {
 			List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
 
 			if (tileEntities == null) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
@@ -2328,21 +2328,21 @@ public abstract class StargateComponent {
 			}
 
 			if (!(targetTileEntity instanceof TileEntityStargate)) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
 			StargateComponent destinationGate = ((TileEntityStargate) targetTileEntity).getStargateComponent();
 
 			if (destinationGate == null) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
 			StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
 			if (currentPresentSession != null) {
-				cancelDial(stargateTile.x, stargateTile.y, stargateTile.z);
+				cancelDial();
 				return;
 			}
 
@@ -2353,12 +2353,16 @@ public abstract class StargateComponent {
 		});
 	}
 
-	protected void cancelDial(int x, int y, int z) {
+	public void cancelDial() {
+		if (state != StargateState.AWAIT && state != StargateState.DIALLING) {
+			return;
+		}
+
 		state = StargateState.IDLE;
 		currentDialingAddressSize = 0;
 
 		if (stargateTile.worldObj != null) {
-			stargateTile.worldObj.markBlockNeedsUpdate(x, y, z);
+			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
 		}
 
 		playAnimation(StargateAnimation.CANCEL);

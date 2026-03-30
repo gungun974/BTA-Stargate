@@ -269,9 +269,30 @@ public abstract class BaseStargatePeripheral implements IPeripheral {
 	}
 
 	@LuaFunction()
+	public final @NotNull MethodResult removeSymbol(ILuaContext context, int symbol) throws LuaException {
+		if (!shouldAllowFastEncode()) {
+			throw new LuaException("Remove symbol is not available for this gate");
+		}
+		context.issueMainThreadTask(() -> {
+			getStargateComponent().removeSymbol(symbol);
+			return null;
+		});
+		return waitCommandQueue(context);
+	}
+
+	@LuaFunction()
 	public final @NotNull MethodResult dial(ILuaContext context) throws LuaException {
 		context.issueMainThreadTask(() -> {
 			getStargateComponent().dial();
+			return null;
+		});
+		return waitCommandQueue(context);
+	}
+
+	@LuaFunction()
+	public final @NotNull MethodResult cancel(ILuaContext context) throws LuaException {
+		context.issueMainThreadTask(() -> {
+			getStargateComponent().cancelDial();
 			return null;
 		});
 		return waitCommandQueue(context);
