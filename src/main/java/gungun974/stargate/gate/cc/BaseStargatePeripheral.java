@@ -61,6 +61,10 @@ public abstract class BaseStargatePeripheral implements IPeripheral {
 
 	@LuaFunction()
 	public final @NotNull MethodResult rotateClockwise(ILuaContext context) throws LuaException {
+		if (getStargateComponent().getFamily() == StargateFamily.Pegasus) {
+			throw new LuaException("Gate can't rotate, use `moveToSymbol` instead");
+		}
+
 		context.issueMainThreadTask(() -> {
 			getStargateComponent().rotateClockwise(
 				() -> {
@@ -83,6 +87,10 @@ public abstract class BaseStargatePeripheral implements IPeripheral {
 
 	@LuaFunction()
 	public final @NotNull MethodResult rotateCounterClockwise(ILuaContext context) throws LuaException {
+		if (getStargateComponent().getFamily() == StargateFamily.Pegasus) {
+			throw new LuaException("Gate can't rotate, use `moveToSymbol` instead");
+		}
+
 		context.issueMainThreadTask(() -> {
 			getStargateComponent().rotateCounterClockwise(
 				() -> {
