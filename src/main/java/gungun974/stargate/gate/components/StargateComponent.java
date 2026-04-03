@@ -2,34 +2,20 @@ package gungun974.stargate.gate.components;
 
 import com.mojang.nbt.tags.CompoundTag;
 import gungun974.stargate.StargateBlocks;
-import gungun974.stargate.StargateMod;
 import gungun974.stargate.core.*;
 import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.renders.StargateEventHorizon;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.LightmapHelper;
-import net.minecraft.client.world.WorldClient;
 import net.minecraft.core.block.*;
 import net.minecraft.core.block.entity.TileEntity;
-import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.net.packet.PacketGameRule;
-import net.minecraft.core.net.packet.PacketPlayerGamemode;
-import net.minecraft.core.net.packet.PacketRespawn;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
-import net.minecraft.core.world.Dimension;
-import net.minecraft.core.world.chunk.ChunkCoordinates;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.entity.player.PlayerServer;
-import net.minecraft.server.world.WorldServer;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 
@@ -71,84 +57,6 @@ public abstract class StargateComponent {
 	public static double angularDistance(double angle1, double angle2) {
 		double diff = Math.abs(angle1 - angle2) % 360.0;
 		return diff > 180.0 ? 360.0 - diff : diff;
-	}
-
-	@Environment(EnvType.SERVER)
-	private static void serverTeleport(Player rawPlayer, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
-		PlayerServer player = (PlayerServer) rawPlayer;
-
-		if (player.dimension == dimension) {
-			player.teleport(newX, newY, newZ, newYaw, newPitch);
-			return;
-		}
-
-		MinecraftServer ms = MinecraftServer.getInstance();
-
-		WorldServer worldServerOrigin = ms.getDimensionWorld(player.dimension);
-		player.dimension = dimension;
-		WorldServer worldServerDestination = ms.getDimensionWorld(dimension);
-		player.playerNetServerHandler.sendPacket(new PacketRespawn((byte) dimension, (byte) Registries.WORLD_TYPES.getNumericIdOfItem(worldServerDestination.worldType)));
-		worldServerOrigin.removePlayer(player);
-		player.removed = false;
-		player.teleport(newX, newY, newZ, newYaw, newPitch);
-
-		player.dimensionEnterCoordinate = new ChunkCoordinates((int) newX, (int) newY, (int) newZ);
-
-		if (player.isAlive()) {
-			worldServerOrigin.updateEntityWithOptionalForce(player, false);
-		}
-
-		if (player.isAlive()) {
-			worldServerDestination.entityJoinedWorld(player);
-			player.teleport(newX, newY, newZ, newYaw, newPitch);
-			worldServerDestination.updateEntityWithOptionalForce(player, false);
-		}
-
-		ms.playerList.syncPlayerDimension(player);
-		player.playerNetServerHandler.teleportAndRotate(newX, newY, newZ, newYaw, newPitch);
-		ms.playerList.sendPacketToAllPlayers(new PacketPlayerGamemode(player.id, player.gamemode.getId()));
-		player.setWorld(worldServerDestination);
-		ms.playerList.setTime(player, worldServerDestination);
-		ms.playerList.initializePlayerObject(player);
-		player.playerNetServerHandler.sendPacket(new PacketGameRule(ms.getDimensionWorld(0).getLevelData().getGameRules()));
-	}
-
-	@Environment(EnvType.CLIENT)
-	static private void singlePlayerTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
-		if (player.dimension == dimension) {
-			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
-			return;
-		}
-
-		Dimension lastDim = Dimension.getDimensionList().get(player.dimension);
-		Dimension newDim = Dimension.getDimensionList().get(dimension);
-
-		StargateMod.LOGGER.info("Switching to dimension \"{}\"!!", newDim.getTranslatedName());
-
-		player.dimension = dimension;
-
-		Minecraft mc = Minecraft.getMinecraft();
-
-		mc.currentWorld.setEntityDead(player);
-		mc.thePlayer.removed = false;
-		player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
-		if (player.isAlive()) {
-			mc.currentWorld.updateEntityWithOptionalForce(player, false);
-		}
-
-		WorldClient world = new WorldClient(mc.currentWorld, newDim);
-		if (newDim == lastDim.homeDim) {
-			mc.changeWorld(world, "Leaving " + lastDim.getTranslatedName(), player);
-		} else {
-			mc.changeWorld(world, "Entering " + newDim.getTranslatedName(), player);
-		}
-
-		player.world = mc.currentWorld;
-		if (player.isAlive()) {
-			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
-			mc.currentWorld.updateEntityWithOptionalForce(player, false);
-		}
-
 	}
 
 	public short getCurrentDialingAddressSize() {
@@ -1575,13 +1483,8 @@ public abstract class StargateComponent {
 		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
 		SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) newX, (float) newY, (float) newZ, 1.0f, 1.0f);
 
-		if (EnvironmentHelper.isServerEnvironment() && entity instanceof Player) {
-			serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
-		} else if (EnvironmentHelper.isSinglePlayer() && entity instanceof Player) {
-			singlePlayerTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
-		} else {
-			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
-			StargateDematerializedManager.getInstance().dematerializeEntity(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, entity);
+		if (entity.vehicle == null) {
+			StargateDematerializedManager.getInstance().dematerializeEntity(newX, newY, newZ, newYaw, newPitch, session, entity);
 		}
 	}
 

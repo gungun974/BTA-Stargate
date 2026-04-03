@@ -2,24 +2,38 @@ package gungun974.stargate.core;
 
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
+import gungun974.stargate.StargateMod;
 import gungun974.stargate.gate.components.StargateComponent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.world.WorldClient;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.entity.TileEntityDispatcher;
+import net.minecraft.core.data.registry.Registries;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
+import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.net.packet.PacketGameRule;
+import net.minecraft.core.net.packet.PacketPlayerGamemode;
+import net.minecraft.core.net.packet.PacketRespawn;
+import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.entity.player.PlayerServer;
+import net.minecraft.server.world.WorldServer;
 import org.jetbrains.annotations.NotNull;
+import turniplabs.halplibe.helper.EnvironmentHelper;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class StargateDematerializedManager {
 	private static StargateDematerializedManager instance;
 
 	private final List<StargateDematerializedEntity> dematerializedEntities = new ArrayList<>();
 	private final List<StargateDematerializedBlock> dematerializedBlocks = new ArrayList<>();
+	private Map<String, Entity> teleportedPlayers = new HashMap<>();
 
 	private StargateDematerializedManager() {
 	}
@@ -30,6 +44,87 @@ public class StargateDematerializedManager {
 		}
 
 		return instance;
+	}
+
+	@Environment(EnvType.SERVER)
+	private static Player serverTeleport(Player rawPlayer, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
+		PlayerServer player = (PlayerServer) rawPlayer;
+
+		if (player.dimension == dimension) {
+			player.teleport(newX, newY, newZ, newYaw, newPitch);
+			return player;
+		}
+
+		MinecraftServer ms = MinecraftServer.getInstance();
+
+		WorldServer worldServerOrigin = ms.getDimensionWorld(player.dimension);
+		player.dimension = dimension;
+		WorldServer worldServerDestination = ms.getDimensionWorld(dimension);
+		player.playerNetServerHandler.sendPacket(new PacketRespawn((byte) dimension, (byte) Registries.WORLD_TYPES.getNumericIdOfItem(worldServerDestination.worldType)));
+		worldServerOrigin.removePlayer(player);
+		player.removed = false;
+		player.teleport(newX, newY, newZ, newYaw, newPitch);
+
+		player.dimensionEnterCoordinate = new ChunkCoordinates((int) newX, (int) newY, (int) newZ);
+
+		if (player.isAlive()) {
+			worldServerOrigin.updateEntityWithOptionalForce(player, false);
+		}
+
+		if (player.isAlive()) {
+			worldServerDestination.entityJoinedWorld(player);
+			player.teleport(newX, newY, newZ, newYaw, newPitch);
+			worldServerDestination.updateEntityWithOptionalForce(player, false);
+		}
+
+		ms.playerList.syncPlayerDimension(player);
+		player.playerNetServerHandler.teleportAndRotate(newX, newY, newZ, newYaw, newPitch);
+		ms.playerList.sendPacketToAllPlayers(new PacketPlayerGamemode(player.id, player.gamemode.getId()));
+		player.setWorld(worldServerDestination);
+		ms.playerList.setTime(player, worldServerDestination);
+		ms.playerList.initializePlayerObject(player);
+		player.playerNetServerHandler.sendPacket(new PacketGameRule(ms.getDimensionWorld(0).getLevelData().getGameRules()));
+
+		return player;
+	}
+
+	@Environment(EnvType.CLIENT)
+	static private Player singlePlayerTeleport(Player player, double newX, double newY, double newZ, float newYaw, float newPitch, int dimension) {
+		if (player.dimension == dimension) {
+			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			return player;
+		}
+
+		Dimension lastDim = Dimension.getDimensionList().get(player.dimension);
+		Dimension newDim = Dimension.getDimensionList().get(dimension);
+
+		StargateMod.LOGGER.info("Switching to dimension \"{}\"!!", newDim.getTranslatedName());
+
+		player.dimension = dimension;
+
+		Minecraft mc = Minecraft.getMinecraft();
+
+		mc.currentWorld.setEntityDead(player);
+		mc.thePlayer.removed = false;
+		player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+		if (player.isAlive()) {
+			mc.currentWorld.updateEntityWithOptionalForce(player, false);
+		}
+
+		WorldClient world = new WorldClient(mc.currentWorld, newDim);
+		if (newDim == lastDim.homeDim) {
+			mc.changeWorld(world, "Leaving " + lastDim.getTranslatedName(), player);
+		} else {
+			mc.changeWorld(world, "Entering " + newDim.getTranslatedName(), player);
+		}
+
+		player.world = mc.currentWorld;
+		if (player.isAlive()) {
+			player.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			mc.currentWorld.updateEntityWithOptionalForce(player, false);
+		}
+
+		return player;
 	}
 
 	public @NotNull CompoundTag createNBTData() {
@@ -48,6 +143,9 @@ public class StargateDematerializedManager {
 			dematerializedEntityTag.putInt("DestinationDim", dematerializedEntity.destinationDim);
 
 			dematerializedEntityTag.putCompound("Entity", dematerializedEntity.dematerializedData);
+
+			dematerializedEntityTag.putString("EntityId", dematerializedEntity.entityId);
+			dematerializedEntityTag.putString("PassengerId", dematerializedEntity.passengerId);
 
 			dematerializedEntitiesTag.put(String.valueOf(i), dematerializedEntityTag);
 		}
@@ -89,7 +187,6 @@ public class StargateDematerializedManager {
 		return rootTag;
 	}
 
-
 	public void loadNBTData(CompoundTag rootTag) {
 		dematerializedEntities.clear();
 
@@ -110,7 +207,9 @@ public class StargateDematerializedManager {
 						dematerializedEntityTag.getInteger("DestinationY"),
 						dematerializedEntityTag.getInteger("DestinationZ"),
 						dematerializedEntityTag.getInteger("DestinationDim"),
-						dematerializedEntityTag.getCompound("Entity")
+						dematerializedEntityTag.getCompound("Entity"),
+						dematerializedEntityTag.getString("EntityId"),
+						dematerializedEntityTag.getString("PassengerId")
 					));
 				} catch (Exception ignored) {
 				}
@@ -159,24 +258,50 @@ public class StargateDematerializedManager {
 		}
 	}
 
-	public void dematerializeEntity(
-		int destinationX,
-		int destinationY,
-		int destinationZ,
-		int destinationDim,
-		Entity entity
+	public String dematerializeEntity(
+		double newX, double newY, double newZ, float newYaw, float newPitch, StargateSession session, Entity entity
 	) {
-		CompoundTag dematerializedData = new CompoundTag();
-		entity.save(dematerializedData);
-		entity.remove();
+		boolean isPlayer = EnvironmentHelper.isServerEnvironment() && entity instanceof Player || EnvironmentHelper.isSinglePlayer() && entity instanceof Player;
 
-		dematerializedEntities.add(new StargateDematerializedEntity(
-			destinationX,
-			destinationY,
-			destinationZ,
-			destinationDim,
-			dematerializedData
-		));
+		CompoundTag dematerializedData = new CompoundTag();
+
+		if (!isPlayer) {
+			entity.absMoveTo(newX, newY, newZ, newYaw, newPitch);
+			entity.save(dematerializedData);
+		}
+
+		Entity rider = entity.ejectRider();
+
+		String entityId = System.nanoTime() + "-" + entity.id;
+		String passengerId = "";
+
+		if (rider != null) {
+			passengerId = this.dematerializeEntity(newX, newY, newZ, rider.yRot + 180, rider.xRot, session, rider);
+		}
+
+		if (EnvironmentHelper.isServerEnvironment() && entity instanceof Player) {
+			Entity player = serverTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
+			teleportedPlayers.put(entityId, player);
+		} else if (EnvironmentHelper.isSinglePlayer() && entity instanceof Player) {
+			Entity player = singlePlayerTeleport((Player) entity, newX, newY, newZ, newYaw, newPitch, session.destinationDim);
+			teleportedPlayers.put(entityId, player);
+		} else {
+			if (!entity.removed) {
+				dematerializedEntities.add(new StargateDematerializedEntity(
+					session.destinationX,
+					session.destinationY,
+					session.destinationZ,
+					session.destinationDim,
+					dematerializedData,
+					entityId,
+					passengerId
+				));
+			}
+
+			entity.remove();
+		}
+
+		return entityId;
 	}
 
 	public void materializeEntities(StargateComponent gate) {
@@ -194,6 +319,8 @@ public class StargateDematerializedManager {
 
 		Iterator<StargateDematerializedEntity> iterator = dematerializedEntities.iterator();
 
+		Map<String, Entity> entities = new HashMap<>();
+
 		while (iterator.hasNext()) {
 			StargateDematerializedEntity dematerializedEntity = iterator.next();
 
@@ -207,6 +334,17 @@ public class StargateDematerializedManager {
 				continue;
 			}
 			tile.worldObj.entityJoinedWorld(materializedEntity);
+
+			entities.put(dematerializedEntity.entityId, materializedEntity);
+
+			if (entities.containsKey(dematerializedEntity.passengerId)) {
+				entities.get(dematerializedEntity.passengerId).startRiding(materializedEntity);
+			}
+
+			if (teleportedPlayers.containsKey(dematerializedEntity.passengerId)) {
+				Entity rider = teleportedPlayers.get(dematerializedEntity.passengerId);
+				rider.startRiding(materializedEntity);
+			}
 
 			iterator.remove();
 		}
