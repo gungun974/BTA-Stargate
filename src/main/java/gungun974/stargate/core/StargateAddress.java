@@ -22,10 +22,7 @@ public abstract class StargateAddress {
 	protected StargateAddress() {
 		int n = numberOfSymbol();
 
-		long quantity = 1;
-		for (int i = 1; i <= 6; i++) {
-			quantity *= (n - i);
-		}
+		long quantity = partialPermutation(n - 1, 6);
 
 		int maxCoord = (int) (Math.sqrt(quantity) / 2);
 
@@ -116,24 +113,6 @@ public abstract class StargateAddress {
 			throw new IllegalArgumentException();
 		}
 
-		int specialSymbol = getSpecialSymbol();
-
-		if (specialSymbol >= 0) {
-			if (address[6] == specialSymbol || address[7] == specialSymbol) {
-				throw new IllegalArgumentException();
-			}
-		}
-
-		boolean specialInFirst6 = false;
-		if (specialSymbol >= 0) {
-			for (int i = 0; i < 6; i++) {
-				if (address[i] == specialSymbol) {
-					specialInFirst6 = true;
-					break;
-				}
-			}
-		}
-
 		List<Integer> symbols = new LinkedList<>();
 		for (int i = 1; i < numberOfSymbol(); i++) symbols.add(i);
 
@@ -141,14 +120,6 @@ public abstract class StargateAddress {
 
 		final long S = (long) computedMaxCoord - (long) computedMinCoord + 1L;
 		final long plane = S * S;
-
-		if (partialPermutation(N, 6) < plane || (N - 6) < (computedMaxDim + 1)) {
-			throw new IllegalArgumentException();
-		}
-
-		if (specialSymbol >= 0 && !specialInFirst6) {
-			symbols.remove(Integer.valueOf(specialSymbol));
-		}
 
 		long rankXZ = 0L;
 		long mult = 1L;
@@ -165,10 +136,6 @@ public abstract class StargateAddress {
 
 		if (rankXZ < 0 || rankXZ >= plane) {
 			throw new IllegalArgumentException();
-		}
-
-		if (specialSymbol >= 0) {
-			symbols.remove(Integer.valueOf(specialSymbol));
 		}
 
 		int idxDim = symbols.indexOf(address[6]);
@@ -195,10 +162,6 @@ public abstract class StargateAddress {
 		this.x = x;
 		this.z = z;
 		this.dim = dim;
-
-		if (specialSymbol >= 0 && specialInFirst6 && !isAtEdge()) {
-			throw new IllegalArgumentException();
-		}
 
 		if (idxLocal < 0) {
 			this.gx = 2;
@@ -232,16 +195,6 @@ public abstract class StargateAddress {
 	protected abstract int numberOfSymbol();
 
 	protected abstract int distanceBetweenGate();
-
-	protected int getSpecialSymbol() {
-		return -1;
-	}
-
-	private boolean isAtEdge() {
-		long distFromCenter = Math.max(Math.abs((long)x), Math.abs((long)z));
-		long threshold = (long)(computedMaxCoord * 0.75);
-		return distFromCenter > threshold;
-	}
 
 	public int getBlockX() {
 		return x * distanceBetweenGate() + distanceBetweenGate() * gx / 5;
@@ -277,13 +230,6 @@ public abstract class StargateAddress {
 
 		for (int i = 1; i < numberOfSymbol(); i++) symbols.add(i);
 
-		int specialSymbol = getSpecialSymbol();
-		boolean atEdge = isAtEdge();
-
-		if (specialSymbol >= 0 && !atEdge) {
-			symbols.remove(Integer.valueOf(specialSymbol));
-		}
-
 		final long S = (long) computedMaxCoord - (long) computedMinCoord + 1L;
 
 		long ix = (long) x - computedMinCoord;
@@ -300,10 +246,6 @@ public abstract class StargateAddress {
 			int idx = (int) (rankXZ % base);
 			rankXZ /= base;
 			address[i] = symbols.remove(idx);
-		}
-
-		if (specialSymbol >= 0) {
-			symbols.remove(Integer.valueOf(specialSymbol));
 		}
 
 		address[6] = symbols.remove(dim);
