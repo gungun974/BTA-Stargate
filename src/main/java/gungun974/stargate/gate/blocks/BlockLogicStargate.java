@@ -634,4 +634,27 @@ public class BlockLogicStargate extends BlockLogic {
 			}
 		}
 	}
+
+	@Override
+	public boolean canPlaceOnSurfaceOnCondition(World world, int x, int y, int z) {
+		TileEntity entity = world.getTileEntity(x, y, z);
+
+		if (entity instanceof TileEntityStargate) {
+			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+
+			if (camouflageComponent.hasCamouflage()) {
+				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+
+				if (camoufledBlock != null) {
+					VirtualWorld virtualWorld = new VirtualWorld(world);
+
+					virtualWorld.setBlockAndMetadataRaw(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta());
+
+					return camoufledBlock.canPlaceOnSurfaceOnCondition(virtualWorld, x, y, z);
+				}
+			}
+		}
+
+		return this.canPlaceOnSurfaceOnCondition(world, x, y, z);
+	}
 }
