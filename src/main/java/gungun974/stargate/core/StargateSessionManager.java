@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class StargateSessionManager {
 	private static final int MAX_OPENING_TIME = 20 * 60 * 38;
-	private static final int END_SESSION_TIME = 20 * 5;
+	private static final int FAST_CLOSING_TIME = 20 * 5;
 
 	private static StargateSessionManager instance;
 	private final List<StargateSession> sessions = new ArrayList<>();
@@ -82,6 +82,8 @@ public class StargateSessionManager {
 
 			sessionTag.putInt("RemainingTick", session.remainingTick);
 			sessionTag.putInt("OpenTick", session.openTick);
+			sessionTag.putInt("FastCloseTick", session.fastCloseTick);
+			sessionTag.putBoolean("FastClosing", session.fastClosing);
 
 			sessionsTag.put(String.valueOf(i), sessionTag);
 		}
@@ -141,7 +143,9 @@ public class StargateSessionManager {
 					),
 					sessionTag.getShort("DialingAddressSize"),
 					sessionTag.getInteger("RemainingTick"),
-					sessionTag.getInteger("OpenTick")
+					sessionTag.getInteger("OpenTick"),
+					sessionTag.getInteger("FastCloseTick"),
+					sessionTag.getBoolean("FastClosing")
 				));
 			} catch (Exception ignored) {
 			}
@@ -191,7 +195,9 @@ public class StargateSessionManager {
 			destination.getAddressWithFamily(origin.getFamily()),
 			dialingAddressSize,
 			MAX_OPENING_TIME,
-			0
+			0,
+			0,
+			false
 		));
 	}
 
@@ -267,16 +273,41 @@ public class StargateSessionManager {
 
 		for (StargateSession session : sessions) {
 			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
-				session.remainingTick = END_SESSION_TIME;
+				session.fastClosing = true;
 				return;
 			}
 
 			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
-				session.remainingTick = END_SESSION_TIME;
+				session.fastClosing = true;
 				return;
 			}
 		}
+	}
 
+	public void resetEndSession(StargateComponent gate) {
+		TileEntity tile = gate.stargateTile;
+
+		if (tile == null) {
+			return;
+		}
+
+		if (tile.worldObj == null) {
+			return;
+		}
+
+		int dim = tile.worldObj.dimension.id;
+
+		for (StargateSession session : sessions) {
+			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
+				session.fastCloseTick = 0;
+				return;
+			}
+
+			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
+				session.fastCloseTick = 0;
+				return;
+			}
+		}
 	}
 
 	public void tick() {
@@ -291,8 +322,13 @@ public class StargateSessionManager {
 
 			session.remainingTick -= 1;
 			session.openTick += 1;
+			if (session.fastClosing) {
+				session.fastCloseTick += 1;
+			}
 
 			if (session.remainingTick <= 0) {
+				iterator.remove();
+			} else if (session.fastCloseTick >= FAST_CLOSING_TIME) {
 				iterator.remove();
 			}
 		}

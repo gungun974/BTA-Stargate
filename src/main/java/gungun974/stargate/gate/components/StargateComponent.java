@@ -10,6 +10,8 @@ import gungun974.stargate.network.server.PlayerEnterStargateMessage;
 import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.core.block.*;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.block.piston.BlockLogicPistonHead;
+import net.minecraft.core.block.piston.BlockLogicPistonMoving;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.sound.SoundCategory;
@@ -1654,6 +1656,11 @@ public abstract class StargateComponent {
 
 				@Nullable Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
 
+				if (block != null && (block.getLogic() instanceof BlockLogicPistonHead || block.getLogic() instanceof BlockLogicPistonMoving)) {
+					StargateSessionManager.getInstance().resetEndSession(this);
+					continue;
+				}
+
 				if (block != null) {
 					stargateTile.worldObj.collidingBoundingBoxes.clear();
 					block.getCollidingBoundingBoxes(stargateTile.worldObj, x, y, z, boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
@@ -1674,7 +1681,6 @@ public abstract class StargateComponent {
 							break;
 						}
 					}
-
 				}
 
 				if (!shouldTeleport) {
@@ -1692,7 +1698,7 @@ public abstract class StargateComponent {
 				int newY = destinationY + alpha * dry + beta * duy;
 				int newZ = destinationZ + alpha * drz + beta * duz;
 
-				if (block != null && block.getLogic() instanceof BlockLogicRotatable) {
+				if (block.getLogic() instanceof BlockLogicRotatable) {
 					Direction blockDirection = BlockLogicRotatable.getDirectionFromMeta(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
@@ -1708,7 +1714,7 @@ public abstract class StargateComponent {
 					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
-				if (block != null && block.getLogic() instanceof BlockLogicVeryRotatable) {
+				if (block.getLogic() instanceof BlockLogicVeryRotatable) {
 					Direction blockDirection = BlockLogicVeryRotatable.metaToDirection(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
@@ -1724,7 +1730,7 @@ public abstract class StargateComponent {
 					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
-				if (block != null && block.getLogic() instanceof BlockLogicFullyRotatable) {
+				if (block.getLogic() instanceof BlockLogicFullyRotatable) {
 					Direction blockDirection = BlockLogicFullyRotatable.metaToDirection(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
@@ -1740,7 +1746,7 @@ public abstract class StargateComponent {
 					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
 				}
 
-				if (block != null && block.getLogic() instanceof BlockLogicAxisAligned) {
+				if (block.getLogic() instanceof BlockLogicAxisAligned) {
 					Axis blockAxis = BlockLogicAxisAligned.metaToAxis(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {

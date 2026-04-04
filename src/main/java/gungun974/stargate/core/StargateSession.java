@@ -23,6 +23,8 @@ public class StargateSession {
 
 	public int remainingTick;
 	public int openTick;
+	public int fastCloseTick;
+	public boolean fastClosing;
 
 	public StargateSession(
 		int originX,
@@ -41,7 +43,9 @@ public class StargateSession {
 		StargateAddress destinationAddress,
 		short dialingAddressSize,
 		int remainingTick,
-		int openTick
+		int openTick,
+		int fastCloseTick,
+		boolean fastClosing
 	) {
 		this.originX = originX;
 		this.originY = originY;
@@ -60,5 +64,7 @@ public class StargateSession {
 		this.dialingAddressSize = dialingAddressSize;
 		this.remainingTick = remainingTick;
 		this.openTick = openTick;
+		this.fastCloseTick = fastCloseTick;
+		this.fastClosing = fastClosing;
 	}
 }
