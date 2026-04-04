@@ -134,13 +134,17 @@ public class StargateChunkLoader {
 			return loadTileEntitiesFromDisk(dimension, chunkX, chunkZ);
 		}
 
-		Chunk worldChunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+		if (world.isChunkLoaded(chunkX, chunkZ)) {
+			Chunk worldChunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
 
-		if (worldChunk.isChunkEmpty()) {
-			return loadTileEntitiesFromDisk(dimension, chunkX, chunkZ);
+			if (worldChunk.isChunkEmpty()) {
+				return loadTileEntitiesFromDisk(dimension, chunkX, chunkZ);
+			}
+
+			return new ArrayList<>(worldChunk.tileEntityMap.values());
 		}
 
-		return new ArrayList<>(worldChunk.tileEntityMap.values());
+		return loadTileEntitiesFromDisk(dimension, chunkX, chunkZ);
 	}
 
 	static private List<TileEntity> loadTileEntitiesFromDisk(int dimension, int chunkX, int chunkZ) {
