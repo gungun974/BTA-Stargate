@@ -177,8 +177,8 @@ public abstract class StargateAddress {
 		int x = Math.floorDiv(bx, distanceBetweenGate());
 		int z = Math.floorDiv(bz, distanceBetweenGate());
 
-		int gx = Math.floorDiv(mod(bx, distanceBetweenGate()), 5);
-		int gz = Math.floorDiv(mod(bz, distanceBetweenGate()), 5);
+		int gx = mod(bx, distanceBetweenGate()) * 5 / distanceBetweenGate();
+		int gz = mod(bz, distanceBetweenGate()) * 5 / distanceBetweenGate();
 
 		if (x < computedMinCoord || x > computedMaxCoord || z < computedMinCoord || z > computedMaxCoord
 			|| dim < 0 || dim > computedMaxDim) {
