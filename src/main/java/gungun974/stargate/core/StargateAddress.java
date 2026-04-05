@@ -260,4 +260,12 @@ public abstract class StargateAddress {
 	}
 
 	public abstract StargateFamily getFamily();
+
+	public boolean isSameRegion(StargateAddress targetAddress) {
+		return this.x == targetAddress.x && this.z == targetAddress.z && this.dim == targetAddress.dim;
+	}
+
+	public boolean isSameSubRegion(StargateAddress targetAddress) {
+		return this.gx == targetAddress.gx && this.gz == targetAddress.gz;
+	}
 }

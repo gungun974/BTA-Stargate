@@ -3,7 +3,7 @@ package gungun974.stargate.core;
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.gate.components.StargateComponent;
-import net.minecraft.core.block.entity.TileEntity;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.util.helper.Direction;
 import org.jetbrains.annotations.NotNull;
 import turniplabs.halplibe.helper.EnvironmentHelper;
@@ -170,26 +170,18 @@ public class StargateSessionManager {
 			return;
 		}
 
-		if (origin.stargateTile.worldObj == null) {
-			return;
-		}
-
-		if (destination.stargateTile.worldObj == null) {
-			return;
-		}
-
 		sessions.add(new StargateSession(
 			origin.stargateTile.x,
 			origin.stargateTile.y,
 			origin.stargateTile.z,
-			origin.stargateTile.worldObj.dimension.id,
+			origin.stargateTile.dim,
 			origin.getDirection(),
 			origin.getOrientation(),
 			origin.getAddress(),
 			destination.stargateTile.x,
 			destination.stargateTile.y,
 			destination.stargateTile.z,
-			destination.stargateTile.worldObj.dimension.id,
+			destination.stargateTile.dim,
 			destination.getDirection(),
 			destination.getOrientation(),
 			destination.getAddressWithFamily(origin.getFamily()),
@@ -203,17 +195,13 @@ public class StargateSessionManager {
 
 	@Nullable
 	public StargateSession getSession(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return null;
 		}
 
-		if (tile.worldObj == null) {
-			return null;
-		}
-
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
 			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
@@ -228,17 +216,13 @@ public class StargateSessionManager {
 	}
 
 	public void removeSession(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return;
 		}
 
-		if (tile.worldObj == null) {
-			return;
-		}
-
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		Iterator<StargateSession> iterator = sessions.iterator();
 
@@ -259,17 +243,13 @@ public class StargateSessionManager {
 	}
 
 	public void endSession(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return;
 		}
 
-		if (tile.worldObj == null) {
-			return;
-		}
-
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
 			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
@@ -285,17 +265,13 @@ public class StargateSessionManager {
 	}
 
 	public void resetEndSession(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return;
 		}
 
-		if (tile.worldObj == null) {
-			return;
-		}
-
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
 			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {

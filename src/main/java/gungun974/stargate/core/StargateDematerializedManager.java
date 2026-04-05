@@ -4,6 +4,7 @@ import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.Tag;
 import gungun974.stargate.StargateMod;
 import gungun974.stargate.gate.components.StargateComponent;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -305,7 +306,7 @@ public class StargateDematerializedManager {
 	}
 
 	public void materializeEntities(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return;
@@ -315,7 +316,7 @@ public class StargateDematerializedManager {
 			return;
 		}
 
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		Iterator<StargateDematerializedEntity> iterator = dematerializedEntities.iterator();
 
@@ -390,7 +391,7 @@ public class StargateDematerializedManager {
 	}
 
 	public void materializeBlocks(StargateComponent gate) {
-		TileEntity tile = gate.stargateTile;
+		TileEntityStargate tile = gate.stargateTile;
 
 		if (tile == null) {
 			return;
@@ -400,7 +401,7 @@ public class StargateDematerializedManager {
 			return;
 		}
 
-		int dim = tile.worldObj.dimension.id;
+		int dim = tile.dim;
 
 		Iterator<StargateDematerializedBlock> iterator = dematerializedBlocks.iterator();
 

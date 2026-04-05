@@ -3,14 +3,14 @@ package gungun974.stargate.gate.components;
 import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.StargateState;
 import gungun974.stargate.core.StargateUniverseAddress;
-import net.minecraft.core.block.entity.TileEntity;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.sound.SoundCategory;
 
 public class StargateUniverseComponent extends StargateComponent {
 	public final static double symbolAngle = 360.0 / 54;
 	private boolean shouldResetRingDirection = false;
 
-	public StargateUniverseComponent(TileEntity stargateTile) {
+	public StargateUniverseComponent(TileEntityStargate stargateTile) {
 		super(stargateTile);
 	}
 

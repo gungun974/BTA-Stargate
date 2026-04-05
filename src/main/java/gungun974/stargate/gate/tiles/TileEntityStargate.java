@@ -1,7 +1,7 @@
 package gungun974.stargate.gate.tiles;
 
 import com.mojang.nbt.tags.CompoundTag;
-import gungun974.stargate.core.StargateChunkLoader;
+import gungun974.stargate.core.StargateNetworkManager;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.components.CamouflageComponent;
@@ -17,6 +17,7 @@ import java.util.Map;
 
 public abstract class TileEntityStargate extends TileEntity {
 	private final CamouflageComponent camouflageComponent = new CamouflageComponent();
+	public int dim;
 	private Role role = Role.RING;
 	private StargateComponent stargateComponent;
 	private boolean hasDHD = false;
@@ -30,7 +31,9 @@ public abstract class TileEntityStargate extends TileEntity {
 
 		if (role == Role.CORE) {
 			stargateComponent = provideStargateComponent();
+			StargateNetworkManager.getInstance().registerPublicStargate(this);
 		} else {
+			StargateNetworkManager.getInstance().unregisterPublicStargate(this);
 			stargateComponent = null;
 		}
 	}
@@ -42,11 +45,11 @@ public abstract class TileEntityStargate extends TileEntity {
 	@Override
 	public void validate() {
 		super.validate();
-		StargateChunkLoader.loadTileEntity(this);
+		StargateNetworkManager.getInstance().registerPublicStargate(this);
 	}
 
 	public void destroyed() {
-		StargateChunkLoader.unloadTileEntity(this);
+		StargateNetworkManager.getInstance().unregisterPublicStargate(this);
 		if (stargateComponent != null) {
 			stargateComponent.invalidate();
 		}
@@ -61,6 +64,11 @@ public abstract class TileEntityStargate extends TileEntity {
 	public void readFromNBT(CompoundTag compoundTag) {
 		role = Role.values()[compoundTag.getIntegerOrDefault("Role", role.ordinal())];
 		hasDHD = compoundTag.getBooleanOrDefault("HasDHD", false);
+		dim = compoundTag.getIntegerOrDefault("Dim", 0);
+
+		if (worldObj != null) {
+			dim = worldObj.dimension.id;
+		}
 
 		setRole(role);
 
@@ -75,6 +83,11 @@ public abstract class TileEntityStargate extends TileEntity {
 	public void writeToNBT(CompoundTag compoundTag) {
 		compoundTag.putInt("Role", role.ordinal());
 		compoundTag.putBoolean("HasDHD", hasDHD);
+		compoundTag.putInt("Dim", dim);
+
+		if (worldObj != null) {
+			dim = worldObj.dimension.id;
+		}
 
 		if (stargateComponent != null) {
 			stargateComponent.writeToNBT(compoundTag);

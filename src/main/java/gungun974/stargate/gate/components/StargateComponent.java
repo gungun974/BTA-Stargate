@@ -26,7 +26,7 @@ import java.util.*;
 
 public abstract class StargateComponent {
 	public final static double symbolAngle = 360.0 / StargateMilkyWayAddress.NUMBER_OF_SYMBOL;
-	public final TileEntity stargateTile;
+	public final TileEntityStargate stargateTile;
 	protected final Queue<Runnable> commandQueue = new ArrayDeque<>();
 	public StargateEventHorizon eventHorizon = new StargateEventHorizon();
 	protected StargateState state = StargateState.IDLE;
@@ -52,7 +52,7 @@ public abstract class StargateComponent {
 	private int lastEventHorizonTick = 0;
 	private boolean wasRecieverGate = false;
 
-	protected StargateComponent(TileEntity stargateTile) {
+	protected StargateComponent(TileEntityStargate stargateTile) {
 		this.stargateTile = stargateTile;
 	}
 
@@ -1135,7 +1135,7 @@ public abstract class StargateComponent {
 
 					if (distanceSq < 7.5) {
 						if (entity instanceof Player && EnvironmentHelper.isClientWorld()) {
-							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(stargateTile.x, stargateTile.y, stargateTile.z, stargateTile.worldObj.dimension.id, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
+							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(stargateTile.x, stargateTile.y, stargateTile.z, stargateTile.dim, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
 						} else {
 							StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
@@ -2094,34 +2094,23 @@ public abstract class StargateComponent {
 					return;
 				}
 
-				for (int cx = originAddress.getStartChunkX(); cx <= originAddress.getEndChunkX(); cx++) {
-					for (int cz = originAddress.getStartChunkZ(); cz <= originAddress.getEndChunkZ(); cz++) {
-						List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, originAddress.getDim(), cx, cz);
+				List<TileEntityStargate> tileEntities = StargateNetworkManager.getInstance().findStargates(originAddress, true);
 
-						if (tileEntities == null) {
-							continue;
-						}
+				for (TileEntityStargate tileEntity : tileEntities) {
+					StargateComponent destinationGate = tileEntity.getStargateComponent();
 
-						for (TileEntity tileEntity : tileEntities) {
-							if (tileEntity instanceof TileEntityStargate) {
-								StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
+					if (destinationGate != null && this != destinationGate) {
+						if (destinationGate.getFamily() == getFamily()) {
+							StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
-								if (destinationGate != null && this != destinationGate) {
-									if (destinationGate.getFamily() == getFamily()) {
-										StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
-
-										if (currentPresentSession != null) {
-											cancelDial();
-											return;
-										}
-									}
-								}
+							if (currentPresentSession != null) {
+								cancelDial();
+								return;
 							}
 						}
 					}
 				}
 			}
-
 			if (currentDialingAddressSize < 7) {
 				cancelDial();
 				return;
@@ -2147,51 +2136,43 @@ public abstract class StargateComponent {
 
 			List<StargateLocation> locations = new ArrayList<>();
 
-			for (int cx = destinationAddress.getStartChunkX(); cx <= destinationAddress.getEndChunkX(); cx++) {
-				for (int cz = destinationAddress.getStartChunkZ(); cz <= destinationAddress.getEndChunkZ(); cz++) {
-					List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, destinationAddress.getDim(), cx, cz);
+			{
+				List<TileEntityStargate> tileEntities = StargateNetworkManager.getInstance().findStargates(destinationAddress, currentDialingAddressSize == 9);
 
-					if (tileEntities == null) {
-						continue;
-					}
+				for (TileEntityStargate tileEntity : tileEntities) {
+					StargateComponent destinationGate = tileEntity.getStargateComponent();
 
-					for (TileEntity tileEntity : tileEntities) {
-						if (tileEntity instanceof TileEntityStargate) {
-							StargateComponent destinationGate = ((TileEntityStargate) tileEntity).getStargateComponent();
+					if (destinationGate != null && this != destinationGate) {
+						if (destinationGate.getFamily() == getFamily()) {
+							StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
 
-							if (destinationGate != null && this != destinationGate) {
-								if (destinationGate.getFamily() == getFamily()) {
-									StargateSession currentPresentSession = StargateSessionManager.getInstance().getSession(destinationGate);
-
-									if (currentPresentSession != null) {
-										cancelDial();
-										return;
-									}
-								} else if (currentDialingAddressSize == 7) {
-									continue;
-								}
-
-								StargateAddress realDestinationAddress = destinationGate.getAddress();
-
-								if (realDestinationAddress != null && Arrays.equals(originRawAddress, realDestinationAddress.encodeAddress())) {
-									continue;
-								}
-
-								locations.add(new StargateLocation(
-									tileEntity.x,
-									tileEntity.y,
-									tileEntity.z,
-									destinationAddress.getDim(),
-									destinationAddress,
-									((TileEntityStargate) tileEntity).hasDHD(),
-									destinationGate.getFamily()
-								));
+							if (currentPresentSession != null) {
+								cancelDial();
+								return;
 							}
+						} else if (currentDialingAddressSize == 7) {
+							continue;
 						}
+
+						StargateAddress realDestinationAddress = destinationGate.getAddress();
+
+						if (realDestinationAddress != null && Arrays.equals(originRawAddress, realDestinationAddress.encodeAddress())) {
+							continue;
+						}
+
+						locations.add(new StargateLocation(
+							tileEntity.x,
+							tileEntity.y,
+							tileEntity.z,
+							destinationAddress.getDim(),
+							destinationAddress,
+							tileEntity.hasDHD(),
+							destinationGate.getFamily(),
+							tileEntity
+						));
 					}
 				}
 			}
-
 			if (locations.isEmpty()) {
 				cancelDial();
 				return;
@@ -2227,27 +2208,7 @@ public abstract class StargateComponent {
 				}
 			}
 
-			List<TileEntity> tileEntities = StargateChunkLoader.loadTileEntities(stargateTile.worldObj, target.dim, Math.floorDiv(target.x, 16), Math.floorDiv(target.z, 16));
-
-			if (tileEntities == null) {
-				cancelDial();
-				return;
-			}
-
-			TileEntity targetTileEntity = null;
-			for (TileEntity tileEntity : tileEntities) {
-				if (tileEntity.x == target.x && tileEntity.y == target.y && tileEntity.z == target.z) {
-					targetTileEntity = tileEntity;
-					break;
-				}
-			}
-
-			if (!(targetTileEntity instanceof TileEntityStargate)) {
-				cancelDial();
-				return;
-			}
-
-			StargateComponent destinationGate = ((TileEntityStargate) targetTileEntity).getStargateComponent();
+			StargateComponent destinationGate = target.gate.getStargateComponent();
 
 			if (destinationGate == null) {
 				cancelDial();
@@ -2335,7 +2296,7 @@ public abstract class StargateComponent {
 		wasRecieverGate = session.destinationX == stargateTile.x &&
 			session.destinationY == stargateTile.y &&
 			session.destinationZ == stargateTile.z &&
-			session.destinationDim == stargateTile.worldObj.dimension.id;
+			session.destinationDim == stargateTile.dim;
 
 		return wasRecieverGate;
 	}
@@ -2357,7 +2318,7 @@ public abstract class StargateComponent {
 
 	@Nullable
 	public StargateAddress getAddressWithFamily(StargateFamily family) {
-		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.z, stargateTile.worldObj.dimension.id, family);
+		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.z, stargateTile.dim, family);
 	}
 
 	public int getLightmap() {

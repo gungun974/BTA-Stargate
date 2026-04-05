@@ -3,7 +3,7 @@ package gungun974.stargate.gate.components;
 import gungun974.stargate.core.StargateFamily;
 import gungun974.stargate.core.StargatePegasusAddress;
 import gungun974.stargate.core.StargateState;
-import net.minecraft.core.block.entity.TileEntity;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.sound.SoundCategory;
 
 public class StargatePegasusComponent extends StargateComponent {
@@ -11,7 +11,7 @@ public class StargatePegasusComponent extends StargateComponent {
 	int currentSymbol = 0;
 	boolean ringMoveShouldGoCenterFirst = false;
 
-	public StargatePegasusComponent(TileEntity stargateTile) {
+	public StargatePegasusComponent(TileEntityStargate stargateTile) {
 		super(stargateTile);
 	}
 

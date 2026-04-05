@@ -1,10 +1,10 @@
 package gungun974.stargate.gate.components;
 
 import gungun974.stargate.core.StargateFamily;
-import net.minecraft.core.block.entity.TileEntity;
+import gungun974.stargate.gate.tiles.TileEntityStargate;
 
 public class StargateMilkyWayComponent extends StargateComponent {
-	public StargateMilkyWayComponent(TileEntity stargateTile) {
+	public StargateMilkyWayComponent(TileEntityStargate stargateTile) {
 		super(stargateTile);
 	}
 
