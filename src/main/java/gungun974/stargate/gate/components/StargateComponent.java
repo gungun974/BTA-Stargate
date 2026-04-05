@@ -18,6 +18,7 @@ import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.phys.AABB;
+import net.minecraft.core.world.chunk.Chunk;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 
@@ -1007,6 +1008,13 @@ public abstract class StargateComponent {
 	}
 
 	public void tick() {
+		if ((state != lastState || animation != lastAnimation) && stargateTile.worldObj != null) {
+			Chunk chunk = stargateTile.worldObj.getChunkFromBlockCoords(this.stargateTile.x, this.stargateTile.z);
+			if (chunk != null) {
+				chunk.setChunkModified();
+			}
+		}
+
 		if (animation == StargateAnimation.KAWOOSH && stargateTile.worldObj != null) {
 			kawooshDestroyInnerBlocks();
 			AABB detectionBox = this.getKawooshDetectionBox();
@@ -2247,6 +2255,16 @@ public abstract class StargateComponent {
 	}
 
 	private void openGate() {
+		if (stargateTile.worldObj == null) {
+			state = StargateState.CONNECTED;
+			return;
+		}
+
+		if (!stargateTile.worldObj.isChunkLoaded(Math.floorDiv(stargateTile.x, 16), Math.floorDiv(stargateTile.z, 16))) {
+			state = StargateState.CONNECTED;
+			return;
+		}
+
 		state = StargateState.OPENING;
 
 		playAnimation(StargateAnimation.KAWOOSH);
