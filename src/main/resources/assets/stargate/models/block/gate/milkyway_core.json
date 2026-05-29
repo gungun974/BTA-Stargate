@@ -1,0 +1,8 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "front": "stargate:block/gate/milkyway_core",
+    "side": "stargate:block/gate/milkyway_ring",
+    "top": "stargate:block/gate/milkyway_ring"
+  }
+}

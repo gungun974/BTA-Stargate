@@ -31,6 +31,7 @@
 			"gungun974.stargate.StargateRecipe"
 		]
 	},
+	"accessWidener": "stargate.accesswidener",
 	"mixins": [
 		"stargate.mixins.json"
 	],

@@ -34,6 +34,11 @@ public class StargateEventHorizon {
 	}
 
 	public double[][][] getEventHorizonGrid() {
+		if (true) {
+			int m = TileEntityRenderStargate.eventHorizonGridRadialSize;
+			int n = TileEntityRenderStargate.eventHorizonGridPolarSize;
+			return new double[2][n + 2][m + 1];
+		}
 		if (eventHorizonGrid == null) {
 			int m = TileEntityRenderStargate.eventHorizonGridRadialSize;
 			int n = TileEntityRenderStargate.eventHorizonGridPolarSize;

@@ -7,6 +7,8 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.item.tag.ItemTags;
 import net.minecraft.core.util.collection.NamespaceID;
 import turniplabs.halplibe.helper.ItemBuilder;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryCategory;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryPlacement;
 
 import static gungun974.stargate.StargateMod.MOD_ID;
 
@@ -32,29 +34,35 @@ public class StargateItems {
 
 		STARGATE_WAND = new ItemBuilder(MOD_ID)
 			.setKey("item.stargate_wand")
-			.build((new ItemStargateWand(NamespaceID.getPermanent(MOD_ID, "stargate_wand"), generateNexId())));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build((new ItemStargateWand(new NamespaceID(MOD_ID, "stargate_wand"), "stargate.stargate_wand", generateNexId())));
 
 		ADDRESS_CARD = new ItemBuilder(MOD_ID)
 			.setKey("item.address_card")
 			.setTags(ItemTags.NOT_IN_CREATIVE_MENU)
-			.build((new ItemAddressCard(NamespaceID.getPermanent(MOD_ID, "address_card"), generateNexId())));
+			.build((new ItemAddressCard(new NamespaceID(MOD_ID, "address_card"), "stargate.address_card", generateNexId())));
 
 		NAQUADAH = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah")
-			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah"), generateNexId())));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build((new Item(new NamespaceID(MOD_ID, "naquadah"), "stargate.naquadah", generateNexId())));
 		NAQUADAH_DUST = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah_dust")
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
 			.build((new DangerousItemFood("item.naquadah_dust", MOD_ID + ":naquadah_dust", generateNexId(), -16, 16, false, 64)));
 		NAQUADAH_CRUDE_ALLOY = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah_crude_alloy")
-			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah_crude_alloy"), generateNexId())));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build((new Item(new NamespaceID(MOD_ID, "naquadah_crude_alloy"), "stargate.naquadah_crude_alloy", generateNexId())));
 		NAQUADAH_ALLOY = new ItemBuilder(MOD_ID)
 			.setKey("item.naquadah_alloy")
-			.build((new Item(NamespaceID.getPermanent(MOD_ID, "naquadah_alloy"), generateNexId())));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build((new Item(new NamespaceID(MOD_ID, "naquadah_alloy"), "stargate.naquadah_alloy", generateNexId())));
 
 		CONTROL_CRYSTAL = new ItemBuilder(MOD_ID)
 			.setKey("item.control_crystal")
-			.build((new Item(NamespaceID.getPermanent(MOD_ID, "control_crystal"), generateNexId())));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build((new Item(new NamespaceID(MOD_ID, "control_crystal"), "stargate.control_crystal", generateNexId())));
 	}
 
 }

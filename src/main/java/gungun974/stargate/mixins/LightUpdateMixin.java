@@ -8,14 +8,15 @@ import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.enums.LightLayer;
 import net.minecraft.core.world.World;
-import net.minecraft.core.world.chunk.LightUpdate;
+import net.minecraft.core.world.lighting.LightingEngineLegacy;
+import net.minecraft.core.world.pos.TilePos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Mixin(value = LightUpdate.class, remap = false)
+@Mixin(value = LightingEngineLegacy.LightUpdate.class, remap = false)
 public abstract class LightUpdateMixin {
 
 	@Final
@@ -40,18 +41,14 @@ public abstract class LightUpdateMixin {
 		if (this.layer != LightLayer.Block) {
 			return blockLightValue;
 		}
-
-		BlockLogicStargate blockLogicStargate = world.getBlockLogic(x, y, z, BlockLogicStargate.class);
+		BlockLogicStargate blockLogicStargate = world.getBlockLogic(new TilePos(x, y, z), BlockLogicStargate.class);
 		if (blockLogicStargate == null) {
 			return blockLightValue;
 		}
-
-		TileEntity tileEntity = world.getTileEntity(x, y, z);
-		if (!(tileEntity instanceof TileEntityStargate)) {
+		TileEntity tileEntity = world.getTileEntity(new TilePos(x, y, z));
+		if (!(tileEntity instanceof TileEntityStargate stargateTile)) {
 			return 0;
 		}
-
-		TileEntityStargate stargateTile = (TileEntityStargate) tileEntity;
 		CamouflageComponent camouflageComponent = stargateTile.getCamouflageComponent();
 		if (camouflageComponent.hasCamouflage()) {
 			return Blocks.lightEmission[camouflageComponent.getBlockId()];
@@ -77,15 +74,12 @@ public abstract class LightUpdateMixin {
 		if (this.layer != LightLayer.Block) {
 			return blockLightOpacity;
 		}
-
-		BlockLogicStargate blockLogicStargate = world.getBlockLogic(x, y, z, BlockLogicStargate.class);
+		BlockLogicStargate blockLogicStargate = world.getBlockLogic(new TilePos(x, y, z), BlockLogicStargate.class);
 		if (blockLogicStargate == null) {
 			return blockLightOpacity;
 		}
-
-		TileEntity tileEntity = world.getTileEntity(x, y, z);
-		if (tileEntity instanceof TileEntityStargate) {
-			TileEntityStargate stargateTile = (TileEntityStargate) tileEntity;
+		TileEntity tileEntity = world.getTileEntity(new TilePos(x, y, z));
+		if (tileEntity instanceof TileEntityStargate stargateTile) {
 			CamouflageComponent camouflageComponent = stargateTile.getCamouflageComponent();
 			if (camouflageComponent.hasCamouflage()) {
 				int opacity = Blocks.lightBlock[camouflageComponent.getBlockId()];

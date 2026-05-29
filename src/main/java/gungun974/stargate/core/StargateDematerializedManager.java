@@ -9,6 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.WorldClient;
+import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.entity.TileEntityDispatcher;
 import net.minecraft.core.data.registry.Registries;
@@ -21,6 +22,7 @@ import net.minecraft.core.net.packet.PacketRespawn;
 import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.core.world.pos.TilePos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.player.PlayerServer;
 import net.minecraft.server.world.WorldServer;
@@ -34,7 +36,7 @@ public class StargateDematerializedManager {
 
 	private final List<StargateDematerializedEntity> dematerializedEntities = new ArrayList<>();
 	private final List<StargateDematerializedBlock> dematerializedBlocks = new ArrayList<>();
-	private Map<String, Entity> teleportedPlayers = new HashMap<>();
+	private final Map<String, Entity> teleportedPlayers = new HashMap<>();
 
 	private StargateDematerializedManager() {
 	}
@@ -61,7 +63,8 @@ public class StargateDematerializedManager {
 		WorldServer worldServerOrigin = ms.getDimensionWorld(player.dimension);
 		player.dimension = dimension;
 		WorldServer worldServerDestination = ms.getDimensionWorld(dimension);
-		player.playerNetServerHandler.sendPacket(new PacketRespawn((byte) dimension, (byte) Registries.WORLD_TYPES.getNumericIdOfItem(worldServerDestination.worldType)));
+		player.playerNetServerHandler.sendPacket(new PacketRespawn((byte) dimension, (byte) Registries.WORLD_TYPES.getNumericIdOfItem(worldServerDestination.getWorldType())));
+
 		worldServerOrigin.removePlayer(player);
 		player.removed = false;
 		player.teleport(newX, newY, newZ, newYaw, newPitch);
@@ -138,15 +141,15 @@ public class StargateDematerializedManager {
 
 			CompoundTag dematerializedEntityTag = new CompoundTag();
 
-			dematerializedEntityTag.putInt("DestinationX", dematerializedEntity.destinationX);
-			dematerializedEntityTag.putInt("DestinationY", dematerializedEntity.destinationY);
-			dematerializedEntityTag.putInt("DestinationZ", dematerializedEntity.destinationZ);
-			dematerializedEntityTag.putInt("DestinationDim", dematerializedEntity.destinationDim);
+			dematerializedEntityTag.putInt("DestinationX", dematerializedEntity.destinationX());
+			dematerializedEntityTag.putInt("DestinationY", dematerializedEntity.destinationY());
+			dematerializedEntityTag.putInt("DestinationZ", dematerializedEntity.destinationZ());
+			dematerializedEntityTag.putInt("DestinationDim", dematerializedEntity.destinationDim());
 
-			dematerializedEntityTag.putCompound("Entity", dematerializedEntity.dematerializedData);
+			dematerializedEntityTag.putCompound("Entity", dematerializedEntity.dematerializedData());
 
-			dematerializedEntityTag.putString("EntityId", dematerializedEntity.entityId);
-			dematerializedEntityTag.putString("PassengerId", dematerializedEntity.passengerId);
+			dematerializedEntityTag.putString("EntityId", dematerializedEntity.entityId());
+			dematerializedEntityTag.putString("PassengerId", dematerializedEntity.passengerId());
 
 			dematerializedEntitiesTag.put(String.valueOf(i), dematerializedEntityTag);
 		}
@@ -160,25 +163,25 @@ public class StargateDematerializedManager {
 
 			CompoundTag dematerializedBlockTag = new CompoundTag();
 
-			dematerializedBlockTag.putInt("DestinationX", dematerializedBlock.destinationX);
-			dematerializedBlockTag.putInt("DestinationY", dematerializedBlock.destinationY);
-			dematerializedBlockTag.putInt("DestinationZ", dematerializedBlock.destinationZ);
-			dematerializedBlockTag.putInt("DestinationDim", dematerializedBlock.destinationDim);
+			dematerializedBlockTag.putInt("DestinationX", dematerializedBlock.destinationX());
+			dematerializedBlockTag.putInt("DestinationY", dematerializedBlock.destinationY());
+			dematerializedBlockTag.putInt("DestinationZ", dematerializedBlock.destinationZ());
+			dematerializedBlockTag.putInt("DestinationDim", dematerializedBlock.destinationDim());
 
-			dematerializedBlockTag.putInt("Id", dematerializedBlock.dematerializedId);
-			dematerializedBlockTag.putInt("Meta", dematerializedBlock.dematerializedMeta);
+			dematerializedBlockTag.putInt("Id", dematerializedBlock.dematerializedId());
+			dematerializedBlockTag.putInt("Meta", dematerializedBlock.dematerializedMeta());
 
-			if (dematerializedBlock.dematerializedTile != null) {
+			if (dematerializedBlock.dematerializedTile() != null) {
 				CompoundTag dematerializedData = new CompoundTag();
 
-				dematerializedBlock.dematerializedTile.writeToNBT(dematerializedData);
+				dematerializedBlock.dematerializedTile().writeToNBT(dematerializedData);
 
 				dematerializedBlockTag.putCompound("Tile", dematerializedData);
 			}
 
-			dematerializedBlockTag.putInt("X", dematerializedBlock.dematerializedX);
-			dematerializedBlockTag.putInt("Y", dematerializedBlock.dematerializedY);
-			dematerializedBlockTag.putInt("Z", dematerializedBlock.dematerializedZ);
+			dematerializedBlockTag.putInt("X", dematerializedBlock.dematerializedX());
+			dematerializedBlockTag.putInt("Y", dematerializedBlock.dematerializedY());
+			dematerializedBlockTag.putInt("Z", dematerializedBlock.dematerializedZ());
 
 			dematerializedBlocksTag.put(String.valueOf(i), dematerializedBlockTag);
 		}
@@ -197,11 +200,9 @@ public class StargateDematerializedManager {
 			for (Map.Entry<String, Tag<?>> entry : dematerializedEntitiesTag.getValue().entrySet()) {
 				try {
 					final Tag<?> tag = entry.getValue();
-					if (!(tag instanceof CompoundTag)) {
+					if (!(tag instanceof CompoundTag dematerializedEntityTag)) {
 						continue;
 					}
-
-					final CompoundTag dematerializedEntityTag = (CompoundTag) tag;
 
 					dematerializedEntities.add(new StargateDematerializedEntity(
 						dematerializedEntityTag.getInteger("DestinationX"),
@@ -226,11 +227,9 @@ public class StargateDematerializedManager {
 			for (Map.Entry<String, Tag<?>> entry : dematerializedBlocksTag.getValue().entrySet()) {
 				try {
 					final Tag<?> tag = entry.getValue();
-					if (!(tag instanceof CompoundTag)) {
+					if (!(tag instanceof CompoundTag dematerializedBlockTag)) {
 						continue;
 					}
-
-					final CompoundTag dematerializedBlockTag = (CompoundTag) tag;
 
 					TileEntity tileEntity = null;
 
@@ -325,25 +324,25 @@ public class StargateDematerializedManager {
 		while (iterator.hasNext()) {
 			StargateDematerializedEntity dematerializedEntity = iterator.next();
 
-			if (tile.x != dematerializedEntity.destinationX || tile.y != dematerializedEntity.destinationY || tile.z != dematerializedEntity.destinationZ || dim != dematerializedEntity.destinationDim) {
+			if (tile.tilePos.x != dematerializedEntity.destinationX() || tile.tilePos.y != dematerializedEntity.destinationY() || tile.tilePos.z != dematerializedEntity.destinationZ() || dim != dematerializedEntity.destinationDim()) {
 				continue;
 			}
 
-			Entity materializedEntity = EntityDispatcher.createEntityFromNBT(dematerializedEntity.dematerializedData, tile.worldObj);
+			Entity materializedEntity = EntityDispatcher.getInstance().createEntityFromNBT(dematerializedEntity.dematerializedData(), tile.worldObj);
 			if (materializedEntity == null) {
 				iterator.remove();
 				continue;
 			}
 			tile.worldObj.entityJoinedWorld(materializedEntity);
 
-			entities.put(dematerializedEntity.entityId, materializedEntity);
+			entities.put(dematerializedEntity.entityId(), materializedEntity);
 
-			if (entities.containsKey(dematerializedEntity.passengerId)) {
-				entities.get(dematerializedEntity.passengerId).startRiding(materializedEntity);
+			if (entities.containsKey(dematerializedEntity.passengerId())) {
+				entities.get(dematerializedEntity.passengerId()).startRiding(materializedEntity);
 			}
 
-			if (teleportedPlayers.containsKey(dematerializedEntity.passengerId)) {
-				Entity rider = teleportedPlayers.get(dematerializedEntity.passengerId);
+			if (teleportedPlayers.containsKey(dematerializedEntity.passengerId())) {
+				Entity rider = teleportedPlayers.get(dematerializedEntity.passengerId());
 				rider.startRiding(materializedEntity);
 			}
 
@@ -364,13 +363,13 @@ public class StargateDematerializedManager {
 		int targetY,
 		int targetZ
 	) {
-		int id = world.getBlockId(sourceX, sourceY, sourceZ);
-		int meta = world.getBlockMetadata(sourceX, sourceY, sourceZ);
+		int id = world.getBlockType(new TilePos(sourceX, sourceY, sourceZ)).id();
+		int meta = world.getBlockData(new TilePos(sourceX, sourceY, sourceZ));
 
-		TileEntity tileEntity = world.getTileEntity(sourceX, sourceY, sourceZ);
+		TileEntity tileEntity = world.getTileEntity(new TilePos(sourceX, sourceY, sourceZ));
 
-		world.removeBlockTileEntity(sourceX, sourceY, sourceZ);
-		world.setBlockWithNotify(sourceX, sourceY, sourceZ, 0);
+		world.removeTileEntity(new TilePos(sourceX, sourceY, sourceZ));
+		world.setBlockTypeNotify(new TilePos(sourceX, sourceY, sourceZ), Blocks.AIR);
 
 		if (tileEntity != null) {
 			tileEntity.validate();
@@ -408,49 +407,59 @@ public class StargateDematerializedManager {
 		while (iterator.hasNext()) {
 			StargateDematerializedBlock dematerializedBlock = iterator.next();
 
-			if (tile.x != dematerializedBlock.destinationX || tile.y != dematerializedBlock.destinationY || tile.z != dematerializedBlock.destinationZ || dim != dematerializedBlock.destinationDim) {
+			if (tile.tilePos.x != dematerializedBlock.destinationX() || tile.tilePos.y != dematerializedBlock.destinationY() || tile.tilePos.z != dematerializedBlock.destinationZ() || dim != dematerializedBlock.destinationDim()) {
 				continue;
 			}
 
-			int id = tile.worldObj.getBlockId(
-				dematerializedBlock.dematerializedX,
-				dematerializedBlock.dematerializedY,
-				dematerializedBlock.dematerializedZ
+			int id = tile.worldObj.getBlockType(
+				new TilePos(
+					dematerializedBlock.dematerializedX(),
+					dematerializedBlock.dematerializedY(),
+					dematerializedBlock.dematerializedZ()
+				)
+			).id();
+
+			int meta = tile.worldObj.getBlockData(
+				new TilePos(
+					dematerializedBlock.dematerializedX(),
+					dematerializedBlock.dematerializedY(),
+					dematerializedBlock.dematerializedZ()
+				)
 			);
 
-			int meta = tile.worldObj.getBlockMetadata(
-				dematerializedBlock.dematerializedX,
-				dematerializedBlock.dematerializedY,
-				dematerializedBlock.dematerializedZ
-			);
-
-			if (id == dematerializedBlock.dematerializedId && meta == dematerializedBlock.dematerializedId && dematerializedBlock.dematerializedTile == null) {
+			if (id == dematerializedBlock.dematerializedId() && meta == dematerializedBlock.dematerializedId() && dematerializedBlock.dematerializedTile() == null) {
 				iterator.remove();
 				continue;
 			}
 
-			tile.worldObj.setBlockAndMetadataRaw(
-				dematerializedBlock.dematerializedX,
-				dematerializedBlock.dematerializedY,
-				dematerializedBlock.dematerializedZ,
-				dematerializedBlock.dematerializedId,
-				dematerializedBlock.dematerializedMeta
+			tile.worldObj.setBlockTypeDataRaw(
+				new TilePos(
+					dematerializedBlock.dematerializedX(),
+					dematerializedBlock.dematerializedY(),
+					dematerializedBlock.dematerializedZ()
+				),
+				Blocks.getBlock(dematerializedBlock.dematerializedId()),
+				dematerializedBlock.dematerializedMeta()
 			);
 
-			if (dematerializedBlock.dematerializedTile != null) {
-				tile.worldObj.replaceBlockTileEntity(
-					dematerializedBlock.dematerializedX,
-					dematerializedBlock.dematerializedY,
-					dematerializedBlock.dematerializedZ,
-					dematerializedBlock.dematerializedTile
+			if (dematerializedBlock.dematerializedTile() != null) {
+				tile.worldObj.replaceTileEntity(
+					new TilePos(
+						dematerializedBlock.dematerializedX(),
+						dematerializedBlock.dematerializedY(),
+						dematerializedBlock.dematerializedZ()
+					),
+					dematerializedBlock.dematerializedTile()
 				);
 			}
 
 			tile.worldObj.notifyBlockChange(
-				dematerializedBlock.dematerializedX,
-				dematerializedBlock.dematerializedY,
-				dematerializedBlock.dematerializedZ,
-				dematerializedBlock.dematerializedId
+				new TilePos(
+					dematerializedBlock.dematerializedX(),
+					dematerializedBlock.dematerializedY(),
+					dematerializedBlock.dematerializedZ()
+				),
+				Blocks.getBlock(dematerializedBlock.dematerializedId())
 			);
 
 			iterator.remove();

@@ -10,7 +10,6 @@ import net.minecraft.core.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -25,16 +24,11 @@ public class AddressCardMedia implements IMedia {
 	}
 
 	@Override
-	public IMount createDataMount(@Nonnull ItemStack stack, @Nonnull World world) {
+	public IMount createDataMount(@NotNull ItemStack stack, @NotNull World world) {
 		return new AddressCardMount(stack);
 	}
 
-	private static class AddressCardMount implements IMount {
-		private final ItemStack stack;
-
-		public AddressCardMount(ItemStack stack) {
-			this.stack = stack;
-		}
+	private record AddressCardMount(ItemStack stack) implements IMount {
 
 		private byte[] getData() {
 			StringBuilder content = new StringBuilder();
@@ -61,33 +55,33 @@ public class AddressCardMedia implements IMedia {
 		}
 
 		@Override
-		public boolean exists(@Nonnull String path) {
+		public boolean exists(@NotNull String path) {
 			return path.isEmpty() || path.equals("data");
 		}
 
 		@Override
-		public boolean isDirectory(@Nonnull String path) {
+		public boolean isDirectory(@NotNull String path) {
 			return path.isEmpty();
 		}
 
 		@Override
-		public void list(@Nonnull String path, @Nonnull List<String> contents) {
+		public void list(@NotNull String path, @NotNull List<String> contents) {
 			if (path.isEmpty()) {
 				contents.add("data");
 			}
 		}
 
 		@Override
-		public long getSize(@Nonnull String path) {
+		public long getSize(@NotNull String path) {
 			if (path.equals("data")) {
 				return getData().length;
 			}
 			return 0;
 		}
 
-		@Nonnull
+		@NotNull
 		@Override
-		public ReadableByteChannel openForRead(@Nonnull String path) throws IOException {
+		public ReadableByteChannel openForRead(@NotNull String path) throws IOException {
 			if (path.equals("data")) {
 				return Channels.newChannel(new ByteArrayInputStream(getData()));
 			}

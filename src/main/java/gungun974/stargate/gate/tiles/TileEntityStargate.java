@@ -10,9 +10,10 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.net.packet.Packet;
 import net.minecraft.core.net.packet.PacketTileEntityData;
 import net.minecraft.core.world.chunk.Chunk;
-import net.minecraft.core.world.chunk.ChunkPosition;
+import net.minecraft.core.world.pos.ChunkPos;
+import net.minecraft.core.world.pos.ChunkTilePos;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 
 public abstract class TileEntityStargate extends TileEntity {
@@ -61,7 +62,7 @@ public abstract class TileEntityStargate extends TileEntity {
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag compoundTag) {
+	public void readAdditionalData(CompoundTag compoundTag) {
 		role = Role.values()[compoundTag.getIntegerOrDefault("Role", role.ordinal())];
 		hasDHD = compoundTag.getBooleanOrDefault("HasDHD", false);
 		dim = compoundTag.getIntegerOrDefault("Dim", 0);
@@ -76,11 +77,10 @@ public abstract class TileEntityStargate extends TileEntity {
 			stargateComponent.readFromNBT(compoundTag);
 		}
 		camouflageComponent.readFromNBT(compoundTag);
-		super.readFromNBT(compoundTag);
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag compoundTag) {
+	public void writeAdditionalData(CompoundTag compoundTag) {
 		compoundTag.putInt("Role", role.ordinal());
 		compoundTag.putBoolean("HasDHD", hasDHD);
 		compoundTag.putInt("Dim", dim);
@@ -93,7 +93,6 @@ public abstract class TileEntityStargate extends TileEntity {
 			stargateComponent.writeToNBT(compoundTag);
 		}
 		camouflageComponent.writeToNBT(compoundTag);
-		super.writeToNBT(compoundTag);
 	}
 
 	@Override
@@ -110,18 +109,18 @@ public abstract class TileEntityStargate extends TileEntity {
 			return;
 		}
 
-		int chunkX = Math.floorDiv(x, 16);
-		int chunkZ = Math.floorDiv(z, 16);
+		int chunkX = Math.floorDiv(tilePos.x, 16);
+		int chunkZ = Math.floorDiv(tilePos.z, 16);
 
 		for (int cx = chunkX - 1; cx <= chunkX + 1; cx++) {
 			for (int cz = chunkZ - 1; cz <= chunkZ + 1; cz++) {
-				Chunk chunk = worldObj.getChunkFromChunkCoords(cx, cz);
+				Chunk chunk = worldObj.getChunk(new ChunkPos(cx, cz));
 
 				if (chunk == null) {
 					continue;
 				}
 
-				for (Map.Entry<ChunkPosition, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
+				for (Map.Entry<ChunkTilePos, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
 					TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
 
 					if (tileEntity instanceof TileEntityDHD) {
@@ -148,12 +147,12 @@ public abstract class TileEntityStargate extends TileEntity {
 			return getStargateComponent();
 		}
 
-		BlockLogicStargate blockLogicStargate = worldObj.getBlockLogic(x, y, z, BlockLogicStargate.class);
+		BlockLogicStargate blockLogicStargate = worldObj.getBlockLogic(tilePos, BlockLogicStargate.class);
 		if (blockLogicStargate == null) {
 			return getStargateComponent();
 		}
 
-		TileEntityStargate stargate = blockLogicStargate.findMainTileEntityStargate(worldObj, x, y, z);
+		TileEntityStargate stargate = blockLogicStargate.findMainTileEntityStargate(worldObj, tilePos);
 		if (stargate == null) {
 			return getStargateComponent();
 		}

@@ -2,9 +2,10 @@ package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.gate.components.StargateComponent;
-import net.minecraft.client.render.LightmapHelper;
-import net.minecraft.client.render.tessellator.Tessellator;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.State;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
+import net.minecraft.core.util.helper.LightIndexHelper;
 
 public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 	static private final WavefrontLoader MilkywayRing = new WavefrontLoader("/assets/stargate/models/Milkyway/MilkywayRing.obj");
@@ -19,40 +20,31 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 	static private final boolean RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES = false;
 
 	@Override
-	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
+	protected void renderFrame(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
 		MilkywayRing.render(tessellator);
 	}
 
 	@Override
-	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
-		GL11.glPushMatrix();
+	protected void renderSymbolRing(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
+		GLRenderer.pushFrame();
 
-		GL11.glRotatef((float) (stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
+		GLRenderer.modelM4f().rotate((float) Math.toRadians(stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
 
 		MilkywayGlyphs.render(tessellator);
 
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 	}
 
-	protected void chevron(Tessellator tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
+	protected void chevron(TessellatorGeneral tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
 		double chevronDistance = stargateCore.interpolatedChevronDistance(chevron, partialTicks);
 
 		boolean chevronActive = stargateCore.interpolatedChevronActive(chevron, partialTicks);
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			int lightmap = stargateCore.getLightmap();
-			if (chevronActive) {
-				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.min(((lightmap >> 4) & 0xF) + 1, 15)));
-			} else {
-				LightmapHelper.setLightmapCoord(lightmap);
-			}
-		}
-
 		ChevronStatic.render(tessellator);
 
 		if (chevronDistance != 0) {
-			GL11.glPushMatrix();
-			GL11.glTranslated(0, chevronDistance, 0);
+			GLRenderer.pushFrame();
+			GLRenderer.modelM4f().translate(0, (float) chevronDistance, 0);
 		}
 		ChevronLower.render(tessellator);
 
@@ -61,9 +53,9 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 			ChevronLowerLightBack.render(tessellator);
 
 			if (chevronDistance != 0) {
-				GL11.glPopMatrix();
-				GL11.glPushMatrix();
-				GL11.glTranslated(0, -chevronDistance, 0);
+				GLRenderer.popFrame();
+				GLRenderer.pushFrame();
+				GLRenderer.modelM4f().translate(0, (float) -chevronDistance, 0);
 			}
 
 			ChevronUpperBack.mapMaterial("MilkywayChevronOff", "MilkywayChevronStatic");
@@ -71,16 +63,16 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 		}
 
 		if (chevronDistance != 0) {
-			GL11.glPopMatrix();
+			GLRenderer.popFrame();
 		}
 
-		GL11.glPushMatrix();
+		GLRenderer.pushFrame();
 
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_LIGHTING);
+		GLRenderer.enableState(State.BLEND);
+		GLRenderer.globalSetLightEnabled(false);
 
-		if (chevronActive && LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
+		if (chevronActive) {
+			GLRenderer.setLightmapCoord1i(LightIndexHelper.lightIndex2i(15, 15));
 		}
 
 		if (chevronActive) {
@@ -100,17 +92,17 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 		}
 
 		if (chevronDistance != 0) {
-			GL11.glPushMatrix();
-			GL11.glTranslated(0, chevronDistance, 0);
+			GLRenderer.pushFrame();
+			GLRenderer.modelM4f().translate(0, (float) chevronDistance, 0);
 		}
 		ChevronLowerLightFront.render(tessellator);
 		if (RENDER_CHEVRONS_LIGHTS_ON_BOTH_SIDES) {
 			ChevronLowerLightBack.render(tessellator);
 		}
 		if (chevronDistance != 0) {
-			GL11.glPopMatrix();
-			GL11.glPushMatrix();
-			GL11.glTranslated(0, -chevronDistance, 0);
+			GLRenderer.popFrame();
+			GLRenderer.pushFrame();
+			GLRenderer.modelM4f().translate(0, (float) -chevronDistance, 0);
 		}
 
 		ChevronUpperFront.render(tessellator);
@@ -118,19 +110,19 @@ public class TileEntityRenderStargateMilkyWay extends TileEntityRenderStargate {
 			ChevronUpperBack.render(tessellator);
 		}
 		if (chevronDistance != 0) {
-			GL11.glPopMatrix();
+			GLRenderer.popFrame();
 		}
 
-		GL11.glPushMatrix();
+		GLRenderer.pushFrame();
 
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glPopMatrix();
+		GLRenderer.globalSetLightEnabled(true);
+		GLRenderer.popFrame();
 	}
 
 	@Override
 	void loadEventHorizonTexture() {
-		this.loadTexture("/assets/stargate/textures/eventhorizon_milkyway.png");
+		this.bindTexture("/assets/stargate/textures/eventhorizon_milkyway.png");
 	}
 }

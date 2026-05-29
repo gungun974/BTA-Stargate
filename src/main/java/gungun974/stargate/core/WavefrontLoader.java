@@ -3,11 +3,11 @@ package gungun974.stargate.core;
 import gungun974.stargate.StargateMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.TextureManager;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.renderer.DrawMode;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.client.render.texturepack.TexturePack;
-import org.lwjgl.opengl.GL11;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -210,8 +210,8 @@ public class WavefrontLoader {
 		this.mappedMaterials.put(original, mapped);
 	}
 
-	public void render(Tessellator tessellator) {
-		tessellator.startDrawing(GL11.GL_TRIANGLES);
+	public void render(TessellatorGeneral tessellator) {
+		tessellator.startDrawing(DrawMode.TRIANGLES);
 
 		int c = 0;
 		while (c < elementsSize) {
@@ -238,11 +238,10 @@ public class WavefrontLoader {
 					}
 
 					tessellator.draw();
-					tessellator.startDrawing(GL11.GL_TRIANGLES);
+					tessellator.startDrawing(DrawMode.TRIANGLES);
 
 					if (currentMaterial.texture != null) {
 						Path texture = Paths.get(wavefrontPath).getParent().resolve(currentMaterial.texture);
-
 						TextureManager textureManager = Minecraft.getMinecraft().textureManager;
 						textureManager.bindTexture(textureManager.loadTexture(texture.toString().replace("\\", "/")));
 					}

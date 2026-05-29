@@ -5,12 +5,11 @@ import gungun974.stargate.core.StargateState;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.client.render.Lighting;
-import net.minecraft.client.render.LightmapHelper;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.renderer.*;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
 import net.minecraft.core.util.helper.Direction;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import net.minecraft.core.util.helper.LightIndexHelper;
 
 public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEntityStargate> {
 	public final static int eventHorizonGridRadialSize = 8;
@@ -33,7 +32,7 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 	}
 
 	@Override
-	public void doRender(Tessellator tessellator, TileEntityStargate tileEntity, double x, double y, double z, float partialTicks) {
+	public void doRender(TessellatorGeneral tessellator, TileEntityStargate tileEntity, double x, double y, double z, float partialTicks) {
 		StargateComponent gate = tileEntity.getStargateComponent();
 
 		if (gate == null) {
@@ -42,101 +41,94 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 
 		CustomLighting.enableLight();
 
-		GL11.glPushMatrix();
+		GLRenderer.pushFrame();
 
-		GL11.glTranslatef((float) x, (float) y, (float) z);
+		GLRenderer.modelM4f().translate((float) x, (float) y, (float) z);
 
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+		GLRenderer.setColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		if (gate.getOrientation() == Direction.NORTH) {
 			switch (gate.getDirection()) {
 				case NORTH:
-					GL11.glTranslated(0.5, 3.5, 0.5);
+					GLRenderer.modelM4f().translate(0.5f, 3.5f, 0.5f);
 					break;
 				case EAST:
-					GL11.glRotatef(-90, 0, 180, 0);
-					GL11.glTranslated(0.5, 3.5, -0.5);
+					GLRenderer.modelM4f().rotateY((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().translate(0.5f, 3.5f, -0.5f);
 					break;
 				case SOUTH:
-					GL11.glRotatef(180, 0, 180, 0);
-					GL11.glTranslated(-0.5, 3.5, -0.5);
+					GLRenderer.modelM4f().rotateY((float) Math.toRadians(180));
+					GLRenderer.modelM4f().translate(-0.5f, 3.5f, -0.5f);
 					break;
 				case WEST:
-					GL11.glRotatef(90, 0, 180, 0);
-					GL11.glTranslated(-0.5, 3.5, 0.5);
+					GLRenderer.modelM4f().rotateY((float) Math.toRadians(90));
+					GLRenderer.modelM4f().translate(-0.5f, 3.5f, 0.5f);
 					break;
 			}
 		} else if (gate.getOrientation() == Direction.UP) {
 			switch (gate.getDirection()) {
 				case NORTH:
-					GL11.glRotated(-90, 1, 0, 0);
-					GL11.glTranslated(0.5, 2.5, 0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().translate(0.5f, 2.5f, 0.5f);
 					break;
 				case EAST:
-					GL11.glRotated(-90, 1, 0, 0);
-					GL11.glRotatef(-90, 0, 0, 1);
-					GL11.glTranslated(0.5, 3.5, 0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().translate(0.5f, 3.5f, 0.5f);
 					break;
 				case SOUTH:
-					GL11.glRotated(-90, 1, 0, 0);
-					GL11.glRotatef(180, 0, 0, 1);
-					GL11.glTranslated(-0.5, 3.5, 0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(180));
+					GLRenderer.modelM4f().translate(-0.5f, 3.5f, 0.5f);
 					break;
 				case WEST:
-					GL11.glRotated(-90, 1, 0, 0);
-					GL11.glRotatef(90, 0, 0, 1);
-					GL11.glTranslated(-0.5, 2.5, 0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(90));
+					GLRenderer.modelM4f().translate(-0.5f, 2.5f, 0.5f);
 					break;
 			}
 		} else {
 			switch (gate.getDirection()) {
 				case NORTH:
-					GL11.glRotated(90, 1, 0, 0);
-					GL11.glRotatef(180, 0, 0, 1);
-					GL11.glTranslated(-0.5, 2.5, -0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(180));
+					GLRenderer.modelM4f().translate(-0.5f, 2.5f, -0.5f);
 					break;
 				case EAST:
-					GL11.glRotated(90, 1, 0, 0);
-					GL11.glRotatef(-90, 0, 0, 1);
-					GL11.glTranslated(-0.5, 3.5, -0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(-90));
+					GLRenderer.modelM4f().translate(-0.5f, 3.5f, -0.5f);
 					break;
 				case SOUTH:
-					GL11.glRotated(90, 1, 0, 0);
-					GL11.glTranslated(0.5, 3.5, -0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(90));
+					GLRenderer.modelM4f().translate(0.5f, 3.5f, -0.5f);
 					break;
 				case WEST:
-					GL11.glRotated(90, 1, 0, 0);
-					GL11.glRotatef(90, 0, 0, 1);
-					GL11.glTranslated(0.5, 2.5, -0.5);
+					GLRenderer.modelM4f().rotateX((float) Math.toRadians(90));
+					GLRenderer.modelM4f().rotateZ((float) Math.toRadians(90));
+					GLRenderer.modelM4f().translate(0.5f, 2.5f, -0.5f);
 					break;
 			}
 		}
 
-		GL11.glPushMatrix();
+		GLRenderer.pushFrame();
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(gate.getLightmap());
-		}
+		GLRenderer.setLightmapCoord1i(gate.getLightmap());
 
 		renderFrame(tessellator, gate, partialTicks);
 		renderSymbolRing(tessellator, gate, partialTicks);
 		renderChevrons(tessellator, gate, partialTicks);
 
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 
-		GL11.glScaled(1.4, 1.4, 1.4);
+		GLRenderer.modelM4f().scale(1.4f, 1.4f, 1.4f);
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(gate.getLightmap());
-		}
-
+		GLRenderer.setLightmapCoord1i(gate.getLightmap());
 
 		renderIris(tessellator, gate, partialTicks);
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
-		}
+		GLRenderer.setLightmapCoord1i(LightIndexHelper.lightIndex2i(15, 15));
+
 		switch (gate.getState()) {
 			case OPENING:
 			case CONNECTED:
@@ -146,74 +138,71 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 				float exposure = gate.interpolatedEventHorizonExposure(partialTicks);
 
 				if (exposure > 0f) {
-					GL11.glPushAttrib(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_ENABLE_BIT);
+					GLRenderer.pushFrame();
 
-					GL11.glEnable(GL11.GL_BLEND);
-					GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+					GLRenderer.enableState(State.BLEND);
+					GLRenderer.setBlendFunc(BlendFactor.ONE, BlendFactor.ONE);
 
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					GL11.glColor4f(exposure, exposure, exposure, 1f);
-					renderEventHorizon(tessellator, gate, partialTicks);
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					GLRenderer.setColor4f(exposure, exposure, exposure, 1f);
+					renderEventHorizon(tessellator, gate, partialTicks, false);
 
-					GL11.glPopAttrib();
+					GLRenderer.popFrame();
 				}
 
 				if (gate.getState() == StargateState.CONNECTED && gate.getOrientation() == Direction.NORTH) {
-					GL11.glPushMatrix();
+					GLRenderer.pushFrame();
 					switch (gate.getDirection()) {
 						case NORTH:
 							if (z < -0.4) {
-								GL11.glTranslated(0, 0, -0.16);
+								GLRenderer.modelM4f().translate(0f, 0f, -0.16f);
 								renderEventHorizon(tessellator, gate, partialTicks);
 							}
 							break;
 						case EAST:
 							if (x > -0.6) {
-								GL11.glTranslated(0, 0, -0.16);
+								GLRenderer.modelM4f().translate(0f, 0f, -0.16f);
 								renderEventHorizon(tessellator, gate, partialTicks);
 							}
 							break;
 						case SOUTH:
 							if (z > -0.6) {
-								GL11.glTranslated(0, 0, -0.16);
+								GLRenderer.modelM4f().translate(0f, 0f, -0.16f);
 								renderEventHorizon(tessellator, gate, partialTicks);
 							}
 							break;
 						case WEST:
 							if (x < -0.4) {
-								GL11.glTranslated(0, 0, -0.16);
+								GLRenderer.modelM4f().translate(0f, 0f, -0.16f);
 								renderEventHorizon(tessellator, gate, partialTicks);
 							}
 							break;
 					}
-					GL11.glPopMatrix();
+					GLRenderer.popFrame();
 				}
 				renderEventHorizonVortex(tessellator, gate, partialTicks);
 				break;
 		}
 
-		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 		Lighting.enableLight();
 	}
 
-	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
+	protected void renderFrame(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
 	}
 
-	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
+	protected void renderSymbolRing(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
 	}
 
-	private void renderChevrons(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
+	private void renderChevrons(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
 		for (int i = 0; i < 9; i++) {
 			renderChevronAtPosition(tessellator, i, stargateCore, partialTicks);
 		}
 	}
 
-	private void renderChevronAtPosition(Tessellator tessellator, int chevronNumber, StargateComponent stargateCore, float partialTicks) {
-		GL11.glPushMatrix();
+	private void renderChevronAtPosition(TessellatorGeneral tessellator, int chevronNumber, StargateComponent stargateCore, float partialTicks) {
+		GLRenderer.pushFrame();
 
-		GL11.glRotatef(-(chevronNumber + 1) * (float) 40.0, 0, 0, 1);
+		GLRenderer.modelM4f().rotateZ((float) Math.toRadians(-(chevronNumber + 1) * 40.0));
 
 		int chevron = chevronNumber;
 
@@ -228,15 +217,19 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		}
 
 		chevron(tessellator, stargateCore, chevron, partialTicks);
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 	}
 
-	protected void chevron(Tessellator tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
+	protected void chevron(TessellatorGeneral tessellator, StargateComponent stargateCore, int chevron, float partialTicks) {
 	}
 
 	abstract void loadEventHorizonTexture();
 
-	private void renderEventHorizon(Tessellator tessellator, StargateComponent tileEntity, float partialTicks) {
+	private void renderEventHorizon(TessellatorGeneral tessellator, StargateComponent tileEntity, float partialTicks) {
+		renderEventHorizon(tessellator, tileEntity, partialTicks, true);
+	}
+
+	private void renderEventHorizon(TessellatorGeneral tessellator, StargateComponent tileEntity, float partialTicks, boolean withTexture) {
 		if (!tileEntity.interpolatedShowEventHorizon()) {
 			return;
 		}
@@ -245,10 +238,14 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 
 		final int frame = (int) (time % 14);
 
-		loadEventHorizonTexture();
+		if (withTexture) {
+			loadEventHorizonTexture();
+		} else {
+			GLRenderer.setShader(Shaders.COLOR);
+		}
 
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glDisable(GL11.GL_CULL_FACE);
+		GLRenderer.globalSetLightEnabled(false);
+		GLRenderer.disableState(State.CULL_FACE);
 
 		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
 
@@ -261,7 +258,7 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 				continue;
 			}
 
-			tessellator.startDrawing(GL11.GL_QUAD_STRIP);
+			tessellator.startDrawing(DrawMode.TRIANGLE_STRIP);
 			tessellator.setNormal(0, 0, 1);
 			for (int j = 0; j <= eventHorizonGridPolarSize; j++) {
 				eventHorizonVertex(tessellator, eventHorizonGrid, i, j, notShieldedRadius, frame, showProgress);
@@ -271,8 +268,7 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		}
 
 		if (showProgress >= 1) {
-			tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
-
+			tessellator.startDrawing(DrawMode.TRIANGLE_FAN);
 			tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
 			tessellator.addVertex(0, 0, eventHorizonClip(eventHorizonGrid[1][0], 0, notShieldedRadius));
 
@@ -284,13 +280,13 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 
 		}
 
-		GL11.glDepthMask(true);
+		GLRenderer.setDepthMask(true);
 
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glEnable(GL11.GL_LIGHTING);
+		GLRenderer.globalSetLightEnabled(true);
+		GLRenderer.enableState(State.CULL_FACE);
 	}
 
-	private void renderEventHorizonVortex(Tessellator tessellator, StargateComponent tileEntity, float partialTicks) {
+	private void renderEventHorizonVortex(TessellatorGeneral tessellator, StargateComponent tileEntity, float partialTicks) {
 		final int split = 100;
 
 		final double rawDistance = tileEntity.interpolatedUnstableVortexDistance(partialTicks);
@@ -313,17 +309,17 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 
 		loadEventHorizonTexture();
 
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glEnable(GL11.GL_CULL_FACE);
+		GLRenderer.globalSetLightEnabled(false);
+		GLRenderer.enableState(State.CULL_FACE);
 
-		GL11.glColor4f(1, 1, 1, 1f);
+		GLRenderer.setColor4f(1, 1, 1, 1f);
 
 		double[][] eventHorizonGrid = tileEntity.eventHorizon.getEventHorizonGrid()[0];
 
-		GL11.glRotatef(90, 0, 0, 1);
+		GLRenderer.modelM4f().rotate((float) Math.toRadians(90), 0, 0, 1);
 
 		double notShieldedRadius = 2.5;
-		tessellator.startDrawing(GL11.GL_QUAD_STRIP);
+		tessellator.startDrawing(DrawMode.TRIANGLE_STRIP);
 
 		tessellator.setNormal(0, 0, 1);
 
@@ -363,7 +359,7 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		}
 		tessellator.draw();
 
-		tessellator.startDrawing(GL11.GL_TRIANGLE_FAN);
+		tessellator.startDrawing(DrawMode.TRIANGLE_FAN);
 
 		tessellator.setTextureUV(0.25 + (double) frame / 14, 0.5);
 		tessellator.addVertex(0, 0, eventHorizonClip(Math.max(depth - distance, 0), 0, notShieldedRadius));
@@ -386,11 +382,11 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 
 		tessellator.draw();
 
-		GL11.glDepthMask(true);
-		GL11.glEnable(GL11.GL_LIGHTING);
+		GLRenderer.setDepthMask(true);
+		GLRenderer.globalSetLightEnabled(true);
 	}
 
-	private void eventHorizonVortexVertex(Tessellator tessellator, double i, int j, double h, double notShieldedRadius, int frame) {
+	private void eventHorizonVortexVertex(TessellatorGeneral tessellator, double i, int j, double h, double notShieldedRadius, int frame) {
 		double r = i * eventHorizonVortexBaseWidth;
 		double x = r * ringCosValues[j];
 		double y = r * ringSinValues[j];
@@ -400,7 +396,7 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 	}
 
 
-	private void eventHorizonVertex(Tessellator tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame, double showProgress) {
+	private void eventHorizonVertex(TessellatorGeneral tessellator, double[][] grid, int i, int j, double notShieldedRadius, int frame, double showProgress) {
 		double r = i * eventHorizonBandWidth;
 		double R = eventHorizonGridRadialSize * eventHorizonBandWidth;
 		double min = R * (1.0 - showProgress);
@@ -423,6 +419,6 @@ public abstract class TileEntityRenderStargate extends TileEntityRenderer<TileEn
 		return z;
 	}
 
-	private void renderIris(Tessellator tessellator, StargateComponent tileEntity, float partialTicks) {
+	private void renderIris(TessellatorGeneral tessellator, StargateComponent tileEntity, float partialTicks) {
 	}
 }

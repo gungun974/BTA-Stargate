@@ -1,6 +1,6 @@
 package gungun974.stargate.dhd.cc;
 
-import dan200.computercraft.api.lua.*;
+import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.cc.BaseStargatePeripheral;

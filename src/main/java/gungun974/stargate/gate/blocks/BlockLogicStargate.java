@@ -21,13 +21,18 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.util.helper.Side;
-import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.WorldSource;
+import net.minecraft.core.world.pos.TilePos;
+import net.minecraft.core.world.pos.TilePosc;
 import net.minecraft.server.entity.player.PlayerServer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.joml.primitives.AABBd;
+import org.joml.primitives.AABBdc;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class BlockLogicStargate extends BlockLogic {
 	public BlockLogicStargate(Block<?> block, Material material) {
@@ -37,21 +42,21 @@ public class BlockLogicStargate extends BlockLogic {
 	@Environment(EnvType.SERVER)
 	private static void updateServerInventory(Player player) {
 		if (player instanceof PlayerServer) {
-			((PlayerServer) player).updateCraftingInventory(player.inventorySlots, player.inventorySlots.getSlotStackList());
+			((PlayerServer) player).updateCraftingInventory(player.inventoryMenu, player.inventoryMenu.getSlotStackList());
 		}
 	}
 
-	private int getIdForStargateBuildPartBlock() {
+	private Block getIdForStargateBuildPartBlock() {
 		int id = id();
 
 		if (id == StargateBlocks.STARGATE_PEGASUS.id()) {
-			return StargateBlocks.STARGATE_BUILD_PART_PEGASUS.id();
+			return StargateBlocks.STARGATE_BUILD_PART_PEGASUS;
 		}
 		if (id == StargateBlocks.STARGATE_UNIVERSE.id()) {
-			return StargateBlocks.STARGATE_BUILD_PART_UNIVERSE.id();
+			return StargateBlocks.STARGATE_BUILD_PART_UNIVERSE;
 		}
 
-		return StargateBlocks.STARGATE_BUILD_PART_MILKYWAY.id();
+		return StargateBlocks.STARGATE_BUILD_PART_MILKYWAY;
 	}
 
 	private int originalBlockMetadata(TileEntity tileEntity, int rawMetadata, boolean includeDirection) {
@@ -82,7 +87,7 @@ public class BlockLogicStargate extends BlockLogic {
 					StargateComponent gate = ((TileEntityStargate) tileEntity).getStargateComponent();
 
 					if (gate != null) {
-						metadata = BlockLogicStargateBuildPart.setDirection(metadata, gate.getDirection().getOpposite());
+						metadata = BlockLogicStargateBuildPart.setDirection(metadata, gate.getDirection().opposite());
 					}
 				}
 				break;
@@ -128,7 +133,7 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	@Override
-	public void harvestBlock(World world, Player player, int x, int y, int z, int meta, TileEntity entity) {
+	public void onHarvest(@NotNull World world, @NotNull Player player, @NotNull TilePosc tilePos, int meta, @Nullable TileEntity entity) {
 		if (entity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
 
@@ -136,40 +141,40 @@ public class BlockLogicStargate extends BlockLogic {
 				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
 
 				if (camoufledBlock != null) {
-					camoufledBlock.harvestBlock(world, player, x, y, z, meta, null);
+					camoufledBlock.onHarvest(world, player, tilePos, meta, null);
 				}
 
 				camouflageComponent.clearCamouflage();
-				world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
+				world.scheduleLightingUpdate(LightLayer.Block, new TilePos(tilePos), new TilePos(tilePos));
 				return;
 			}
 		}
-		super.harvestBlock(world, player, x, y, z, meta, entity);
+		super.onHarvest(world, player, tilePos, meta, entity);
 	}
 
 	@Override
-	public void onBlockDestroyedByPlayer(World world, int x, int y, int z, Side side, int meta, Player player, Item item) {
-		if (player.getGamemode().dropBlockOnBreak()) {
+	public void onDestroyedByPlayer(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Side side, int meta, @NotNull Player player, @Nullable Item item) {
+		if (player.getGamemode().hasItemDrops()) {
 			return;
 		}
 
-		TileEntity entity = world.getTileEntity(x, y, z);
+		TileEntity entity = world.getTileEntity(tilePos);
 
 		if (entity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
 
 			if (camouflageComponent.hasCamouflage()) {
 				camouflageComponent.clearCamouflage();
-				world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
+				world.scheduleLightingUpdate(LightLayer.Block, new TilePos(tilePos), new TilePos(tilePos));
 			}
 		}
 
-		super.onBlockDestroyedByPlayer(world, x, y, z, side, meta, player, item);
+		super.onDestroyedByPlayer(world, tilePos, side, meta, player, item);
 	}
 
 	@Override
-	public float blockStrength(World world, int x, int y, int z, Side side, Player player) {
-		TileEntity entity = world.getTileEntity(x, y, z);
+	public float getStrength(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Side side, @NotNull Player player) {
+		TileEntity entity = world.getTileEntity(tilePos);
 
 		if (entity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
@@ -178,29 +183,29 @@ public class BlockLogicStargate extends BlockLogic {
 				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
 
 				if (camoufledBlock != null) {
-					return camoufledBlock.blockStrength(world, x, y, z, side, player);
+					return camoufledBlock.getStrength(world, tilePos, side, player);
 				}
 
 			}
 		}
 
-		return super.blockStrength(world, x, y, z, side, player);
+		return super.getStrength(world, tilePos, side, player);
 	}
 
-	public void restoreOriginalBlock(World world, int x, int y, int z) {
+	public void restoreOriginalBlock(World world, TilePosc tilePos) {
 		if (world instanceof VirtualWorld) {
 			return;
 		}
 
-		if (world.isAirBlock(x, y, z)) {
+		if (world.isAirBlock(tilePos)) {
 			return;
 		}
 
-		if (world.getBlockId(x, y, z) != id()) {
+		if (world.getBlockType(tilePos).id() != id()) {
 			return;
 		}
 
-		TileEntity entity = world.getTileEntity(x, y, z);
+		TileEntity entity = world.getTileEntity(tilePos);
 
 		if (entity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
@@ -209,40 +214,40 @@ public class BlockLogicStargate extends BlockLogic {
 				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
 
 				if (camoufledBlock != null) {
-					camoufledBlock.dropBlockWithCause(world, EnumDropCause.SILK_TOUCH, x, y, z, camouflageComponent.getBlockMeta(), null, null);
+					camoufledBlock.dropWithCause(world, EnumDropCause.SILK_TOUCH, tilePos, camouflageComponent.getBlockMeta(), null, null);
 				}
 
 				camouflageComponent.clearCamouflage();
 			}
 		}
 
-		world.setBlockAndMetadataWithNotify(x, y, z, getIdForStargateBuildPartBlock(), originalBlockMetadata(world.getTileEntity(x, y, z), world.getBlockMetadata(x, y, z), true));
+		world.setBlockTypeDataNotify(tilePos, getIdForStargateBuildPartBlock(), originalBlockMetadata(world.getTileEntity(tilePos), world.getBlockData(tilePos), true));
 	}
 
 	@Override
-	public void onNeighborBlockChange(World world, int x, int y, int z, int blockId) {
+	public void onNeighborChanged(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Block block) {
 		if (world instanceof VirtualWorld) {
 			return;
 		}
-		checkIfStillValid(world, x, y, z);
+		checkIfStillValid(world, tilePos);
 	}
 
 	@Override
-	public void onBlockRemoved(World world, int x, int y, int z, int data) {
+	public void onRemoved(@NotNull World world, @NotNull TilePosc tilePos, int data) {
 		if (world instanceof VirtualWorld) {
 			return;
 		}
-		checkIfStillValid(world, x, y, z);
-		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z - 1, 0);
-		world.notifyBlocksOfNeighborChange(x - 1, y - 1, z + 1, 0);
-		world.notifyBlocksOfNeighborChange(x - 1, y + 1, z - 1, 0);
-		world.notifyBlocksOfNeighborChange(x - 1, y + 1, z + 1, 0);
-		world.notifyBlocksOfNeighborChange(x + 1, y - 1, z - 1, 0);
-		world.notifyBlocksOfNeighborChange(x + 1, y - 1, z + 1, 0);
-		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z - 1, 0);
-		world.notifyBlocksOfNeighborChange(x + 1, y + 1, z + 1, 0);
+		checkIfStillValid(world, tilePos);
+		world.notifyBlocksOfNeighborChange(tilePos.add(-1, -1, -1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(-1, -1, 1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(-1, 1, -1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(-1, 1, 1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(1, -1, -1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(1, -1, 1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(1, 1, -1, new TilePos()), Blocks.AIR);
+		world.notifyBlocksOfNeighborChange(tilePos.add(1, 1, 1, new TilePos()), Blocks.AIR);
 
-		TileEntity tileEntity = world.getTileEntity(x, y, z);
+		TileEntity tileEntity = world.getTileEntity(tilePos);
 
 		if (tileEntity instanceof TileEntityStargate) {
 			((TileEntityStargate) tileEntity).destroyed();
@@ -251,18 +256,17 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	@Override
-	public boolean onBlockRightClicked(World world, int x, int y, int z, Player player, Side side, double xHit, double yHit) {
+	public boolean onInteracted(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Player player, @Nullable Side side, double xHit, double yHit) {
 		if (EnvironmentHelper.isClientWorld()) {
 			return false;
 		}
 
-		checkIfStillValid(world, x, y, z);
+		checkIfStillValid(world, tilePos);
 
 		{
-			TileEntity tileEntity = world.getTileEntity(x, y, z);
+			TileEntity tileEntity = world.getTileEntity(tilePos);
 
-			if (tileEntity instanceof TileEntityStargate) {
-				TileEntityStargate stargate = (TileEntityStargate) tileEntity;
+			if (tileEntity instanceof TileEntityStargate stargate) {
 
 				ItemStack hand = player.getCurrentEquippedItem();
 
@@ -286,24 +290,23 @@ public class BlockLogicStargate extends BlockLogic {
 
 						Item item = heldItem.getItem();
 
-						if (item instanceof ItemBlock) {
-							ItemBlock<?> itemBlock = (ItemBlock<?>) item;
+						if (item instanceof ItemBlock<?> itemBlock) {
 
 							if (!itemBlock.getBlock().isEntityTile) {
 
 								VirtualWorld virtualWorld = new VirtualWorld(world);
 
-								virtualWorld.setBlockAndMetadataWithNotify(x, y, z, 0, 0);
+								virtualWorld.setBlockTypeDataNotify(tilePos, Blocks.AIR, 0);
 
-								itemBlock.onUseItemOnBlock(heldItem, player, virtualWorld, x, y, z, side, xHit, yHit);
+								itemBlock.onUseOnBlock(heldItem, virtualWorld, player, tilePos, side, xHit, yHit);
 
-								int newId = virtualWorld.getBlockId(x, y, z);
-								int newMeta = virtualWorld.getBlockMetadata(x, y, z);
+								int newId = virtualWorld.getBlockType(tilePos).id();
+								int newMeta = virtualWorld.getBlockData(tilePos);
 
 								stargate.getCamouflageComponent().setCamouflage(newId, newMeta);
 
-								world.notifyBlockChange(x, y, z, id());
-								world.scheduleLightingUpdate(LightLayer.Block, x, y, z, x, y, z);
+								world.notifyBlockChange(tilePos, block);
+								world.scheduleLightingUpdate(LightLayer.Block, new TilePos(tilePos), new TilePos(tilePos));
 
 								return true;
 							}
@@ -318,16 +321,14 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	private TileEntityStargate extractMainTileEntityStargate(World world, int x, int y, int z) {
-		TileEntity tileEntity = world.getTileEntity(x, y, z);
+		TileEntity tileEntity = world.getTileEntity(new TilePos(x, y, z));
 		if (tileEntity == null) {
 			return null;
 		}
 
-		if (!(tileEntity instanceof TileEntityStargate)) {
+		if (!(tileEntity instanceof TileEntityStargate stargate)) {
 			return null;
 		}
-
-		TileEntityStargate stargate = (TileEntityStargate) tileEntity;
 
 		if (stargate.getRole() != TileEntityStargate.Role.CORE) {
 			return null;
@@ -336,15 +337,15 @@ public class BlockLogicStargate extends BlockLogic {
 		return stargate;
 	}
 
-	public TileEntityStargate findMainTileEntityStargate(World world, int x, int y, int z) {
-		int rawMetadata = world.getBlockMetadata(x, y, z);
+	public TileEntityStargate findMainTileEntityStargate(World world, TilePosc tilePos) {
+		int rawMetadata = world.getBlockData(tilePos);
 
 		int ringMetadata = rawMetadata & 0b1111;
 		int directionMetadata = rawMetadata & 0b110000;
 
-		int cx = x;
-		int cy = y;
-		int cz = z;
+		int cx = tilePos.x();
+		int cy = tilePos.y();
+		int cz = tilePos.z();
 
 		if (directionMetadata == 0b100000) {
 			switch (ringMetadata) {
@@ -489,18 +490,18 @@ public class BlockLogicStargate extends BlockLogic {
 		return extractMainTileEntityStargate(world, cx, cy, cz);
 	}
 
-	void checkIfStillValid(World world, int x, int y, int z) {
-		TileEntityStargate stargate = findMainTileEntityStargate(world, x, y, z);
+	void checkIfStillValid(World world, TilePosc tilePos) {
+		TileEntityStargate stargate = findMainTileEntityStargate(world, tilePos);
 
 		if (stargate == null) {
-			restoreOriginalBlock(world, x, y, z);
+			restoreOriginalBlock(world, tilePos);
 			return;
 		}
 
 		StargateComponent gate = stargate.getStargateComponent();
 
 		if (gate == null) {
-			restoreOriginalBlock(world, x, y, z);
+			restoreOriginalBlock(world, tilePos);
 			return;
 		}
 
@@ -513,21 +514,21 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	@Override
-	public AABB getBlockBoundsFromState(WorldSource world, int x, int y, int z) {
-		TileEntity entity = world.getTileEntity(x, y, z);
+	public @NotNull AABBdc getBoundsFromState(@NotNull WorldSource world, @NotNull TilePosc tilePos) {
+		TileEntity entity = world.getTileEntity(tilePos);
 
-		AABB mainAABB;
+		AABBdc mainAABB;
 
-		int rawMetadata = world.getBlockMetadata(x, y, z);
+		int rawMetadata = world.getBlockData(tilePos);
 
 		int directionMetadata = rawMetadata & 0b110000;
 
 		if (directionMetadata == 0b000000) {
-			mainAABB = AABB.getPermanentBB(0, 0, 0.25, 1, 1, 0.75);
+			mainAABB = new AABBd(0, 0, 0.25, 1, 1, 0.75);
 		} else if (directionMetadata == 0b010000) {
-			mainAABB = AABB.getPermanentBB(0.25, 0, 0, 0.75, 1, 1);
+			mainAABB = new AABBd(0.25, 0, 0, 0.75, 1, 1);
 		} else {
-			mainAABB = AABB.getPermanentBB(0, 0.25, 0, 1, 0.75, 1);
+			mainAABB = new AABBd(0, 0.25, 0, 1, 0.75, 1);
 		}
 
 		if (entity instanceof TileEntityStargate) {
@@ -537,14 +538,14 @@ public class BlockLogicStargate extends BlockLogic {
 				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
 
 				if (camoufledBlock != null) {
-					AABB otherAABB = camoufledBlock.getBlockBoundsFromState(world, x, y, z);
-					return AABB.getPermanentBB(
-						Math.min(mainAABB.minX, otherAABB.minX),
-						Math.min(mainAABB.minY, otherAABB.minY),
-						Math.min(mainAABB.minZ, otherAABB.minZ),
-						Math.max(mainAABB.maxX, otherAABB.maxX),
-						Math.max(mainAABB.maxY, otherAABB.maxY),
-						Math.max(mainAABB.maxZ, otherAABB.maxZ)
+					AABBdc otherAABB = camoufledBlock.getBoundsFromState(world, tilePos);
+					return new AABBd(
+						Math.min(mainAABB.minX(), otherAABB.minX()),
+						Math.min(mainAABB.minY(), otherAABB.minY()),
+						Math.min(mainAABB.minZ(), otherAABB.minZ()),
+						Math.max(mainAABB.maxX(), otherAABB.maxX()),
+						Math.max(mainAABB.maxY(), otherAABB.maxY()),
+						Math.max(mainAABB.maxZ(), otherAABB.maxZ())
 					);
 				}
 			}
@@ -559,8 +560,8 @@ public class BlockLogicStargate extends BlockLogic {
 	}
 
 	@Override
-	public void getCollidingBoundingBoxes(World world, int x, int y, int z, AABB aabb, ArrayList<AABB> aabbList) {
-		TileEntity entity = world.getTileEntity(x, y, z);
+	public void getCollisionAABBs(@NotNull World world, @NotNull TilePosc tilePos, @NotNull AABBdc aabb, @NotNull List<AABBdc> aabbList) {
+		TileEntity entity = world.getTileEntity(tilePos);
 
 		if (entity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
@@ -571,14 +572,14 @@ public class BlockLogicStargate extends BlockLogic {
 				if (camoufledBlock != null) {
 					VirtualWorld virtualWorld = new VirtualWorld(world);
 
-					virtualWorld.setBlockAndMetadataRaw(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta());
+					virtualWorld.setBlockTypeDataRaw(tilePos, Blocks.getBlock(camouflageComponent.getBlockId()), camouflageComponent.getBlockMeta());
 
-					camoufledBlock.getCollidingBoundingBoxes(virtualWorld, x, y, z, aabb, aabbList);
+					camoufledBlock.getCollisionAABBs(virtualWorld, tilePos, aabb, aabbList);
 				}
 			}
 		}
 
-		int rawMetadata = world.getBlockMetadata(x, y, z);
+		int rawMetadata = world.getBlockData(tilePos);
 
 		int ringMetadata = rawMetadata & 0b1111;
 
@@ -586,75 +587,75 @@ public class BlockLogicStargate extends BlockLogic {
 
 		if (directionMetadata == 0b000000) {
 			if (ringMetadata == 2) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 0.5, 0.75).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 0.5, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0, 0.25, 1, 0.5, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0, 0.25, 0.5, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 6) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.5, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 0.5, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.5, 0.25, 1, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0, 0.25, 0.5, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 10) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.5, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.5, 0.25, 1, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.5, 0, 0.25, 1, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 14) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 0.5, 0.75).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0, 0.25, 1, 0.5, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.5, 0, 0.25, 1, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0, 0.25, 1, 1, 0.75).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0, 0.25, 1, 1, 0.75).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			}
 		} else if (directionMetadata == 0b010000) {
 			if (ringMetadata == 2) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 0.5, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 0.5).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0, 0.75, 0.5, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0, 0.75, 1, 0.5).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 6) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0.5, 0, 0.75, 1, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 0.5).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0.5, 0, 0.75, 1, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0, 0.75, 1, 0.5).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 10) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0.5, 0, 0.75, 1, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0.5, 0.75, 1, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0.5, 0, 0.75, 1, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0.5, 0.75, 1, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 14) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 0.5, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0.5, 0.75, 1, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0, 0.75, 0.5, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0.5, 0.75, 1, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.25, 0, 0, 0.75, 1, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.25, 0, 0, 0.75, 1, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			}
 		} else {
 			if (ringMetadata == 2) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 0.5, 0.75, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0.5, 1, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0, 0.5, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0.5, 1, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 6) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 0.5, 0.75, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 0.5).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0, 0.5, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0, 1, 0.75, 0.5).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 10) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 0.5).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.5, 0.25, 0, 1, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0, 1, 0.75, 0.5).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else if (ringMetadata == 14) {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0.5, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0.5, 1, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0.5, 0.25, 0, 1, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0.5, 1, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			} else {
-				this.addIntersectingBoundingBox(aabb, AABB.getTemporaryBB(0, 0.25, 0, 1, 0.75, 1).move(x, y, z), aabbList);
+				this.addIntersectingBoundingBox(aabb, new AABBd(0, 0.25, 0, 1, 0.75, 1).translate(tilePos.x(), tilePos.y(), tilePos.z()), aabbList);
 			}
 		}
 	}
 
-	@Override
-	public boolean canPlaceOnSurfaceOnCondition(World world, int x, int y, int z) {
-		TileEntity entity = world.getTileEntity(x, y, z);
-
-		if (entity instanceof TileEntityStargate) {
-			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
-
-			if (camouflageComponent.hasCamouflage()) {
-				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
-
-				if (camoufledBlock != null) {
-					VirtualWorld virtualWorld = new VirtualWorld(world);
-
-					virtualWorld.setBlockAndMetadataRaw(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta());
-
-					return camoufledBlock.canPlaceOnSurfaceOnCondition(virtualWorld, x, y, z);
-				}
-			}
-		}
-
-		return this.canPlaceOnSurfaceOnCondition(world, x, y, z);
-	}
+//TODO:	@Override
+//	public boolean canPlaceOnSurfaceOnCondition(World world, int x, int y, int z) {
+//		TileEntity entity = world.getTileEntity(x, y, z);
+//
+//		if (entity instanceof TileEntityStargate) {
+//			CamouflageComponent camouflageComponent = ((TileEntityStargate) entity).getCamouflageComponent();
+//
+//			if (camouflageComponent.hasCamouflage()) {
+//				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+//
+//				if (camoufledBlock != null) {
+//					VirtualWorld virtualWorld = new VirtualWorld(world);
+//
+//					virtualWorld.setBlockAndMetadataRaw(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta());
+//
+//					return camoufledBlock.canPlaceOnSurfaceOnCondition(virtualWorld, x, y, z);
+//				}
+//			}
+//		}
+//
+//		return this.canPlaceOnSurfaceOnCondition(world, x, y, z);
+//	}
 }

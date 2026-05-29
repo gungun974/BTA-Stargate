@@ -147,38 +147,13 @@ public class RaycastHelper {
 			}
 		}
 
-		if (closestKey != -1) {
-			return closestKey;
-		}
-
-		return -1;
+		return closestKey;
 	}
 
-	public static class Triangle {
-		public final float v0x, v0y, v0z;
-		public final float v1x, v1y, v1z;
-		public final float v2x, v2y, v2z;
-
-		public Triangle(float v0x, float v0y, float v0z, float v1x, float v1y, float v1z, float v2x, float v2y, float v2z) {
-			this.v0x = v0x;
-			this.v0y = v0y;
-			this.v0z = v0z;
-			this.v1x = v1x;
-			this.v1y = v1y;
-			this.v1z = v1z;
-			this.v2x = v2x;
-			this.v2y = v2y;
-			this.v2z = v2z;
-		}
+	public record Triangle(float v0x, float v0y, float v0z, float v1x, float v1y, float v1z, float v2x, float v2y,
+						   float v2z) {
 	}
 
-	public static class KeyTriangles {
-		public final int id;
-		public final Triangle[] triangles;
-
-		public KeyTriangles(int id, Triangle[] triangles) {
-			this.id = id;
-			this.triangles = triangles;
-		}
+	public record KeyTriangles(int id, Triangle[] triangles) {
 	}
 }

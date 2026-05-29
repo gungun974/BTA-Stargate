@@ -11,12 +11,18 @@ import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.tiles.TileEntityStargatePegasus;
 import gungun974.stargate.gate.tiles.TileEntityStargateUniverse;
 import net.minecraft.core.block.Block;
-import net.minecraft.core.block.material.Material;
+import net.minecraft.core.block.entity.TileEntityDispatcher;
+import net.minecraft.core.block.material.Materials;
 import net.minecraft.core.block.tag.BlockTags;
+import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.sound.BlockSounds;
 import net.minecraft.core.util.collection.NamespaceID;
 import turniplabs.halplibe.helper.BlockBuilder;
-import turniplabs.halplibe.helper.EntityHelper;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryCategory;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryPlacement;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static gungun974.stargate.StargateMod.MOD_ID;
 
@@ -42,9 +48,9 @@ public class StargateBlocks {
 	public static void RegisterBlocks() {
 		currentGeneratedId = StargateMod.startBlockID;
 
-		EntityHelper.createTileEntity(TileEntityStargateMilkyWay.class, NamespaceID.getPermanent(MOD_ID, "stargate_milkyway"));
-		EntityHelper.createTileEntity(TileEntityStargatePegasus.class, NamespaceID.getPermanent(MOD_ID, "stargate_pegasus"));
-		EntityHelper.createTileEntity(TileEntityStargateUniverse.class, NamespaceID.getPermanent(MOD_ID, "stargate_universe"));
+		TileEntityDispatcher.addMapping(TileEntityStargateMilkyWay.class, new NamespaceID(MOD_ID, "stargate_milkyway"));
+		TileEntityDispatcher.addMapping(TileEntityStargatePegasus.class, new NamespaceID(MOD_ID, "stargate_pegasus"));
+		TileEntityDispatcher.addMapping(TileEntityStargateUniverse.class, new NamespaceID(MOD_ID, "stargate_universe"));
 
 		BlockBuilder stargateBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(20f)
@@ -61,24 +67,51 @@ public class StargateBlocks {
 
 		STARGATE_MILKYWAY = stargateBuilder
 			.setTileEntity(TileEntityStargateMilkyWay::new)
-			.build("stargate_milkyway", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+			.build("stargate_milkyway", generateNexId(), b -> new BlockLogicStargate(b, Materials.WOOD));
 		STARGATE_BUILD_PART_MILKYWAY = stargateBuildPartBuilder
-			.build("stargate_build_part_milkyway", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS).setCustomSupplier(() -> {
+				List<ItemStack> creativeItems = new LinkedList<>();
+
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, 1, 0));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, 1, 1));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, 1, 2));
+
+				return creativeItems;
+			}))
+			.build("stargate_build_part_milkyway", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Materials.WOOD));
 
 		STARGATE_PEGASUS = stargateBuilder
 			.setTileEntity(TileEntityStargatePegasus::new)
-			.build("stargate_pegasus", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+			.build("stargate_pegasus", generateNexId(), b -> new BlockLogicStargate(b, Materials.WOOD));
 		STARGATE_BUILD_PART_PEGASUS = stargateBuildPartBuilder
-			.build("stargate_build_part_pegasus", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS).setCustomSupplier(() -> {
+				List<ItemStack> creativeItems = new LinkedList<>();
+
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, 1, 0));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, 1, 1));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, 1, 2));
+
+				return creativeItems;
+			}))
+			.build("stargate_build_part_pegasus", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Materials.WOOD));
 
 		STARGATE_UNIVERSE = stargateBuilder
 			.setTileEntity(TileEntityStargateUniverse::new)
-			.build("stargate_universe", generateNexId(), b -> new BlockLogicStargate(b, Material.wood));
+			.build("stargate_universe", generateNexId(), b -> new BlockLogicStargate(b, Materials.WOOD));
 		STARGATE_BUILD_PART_UNIVERSE = stargateBuildPartBuilder
-			.build("stargate_build_part_universe", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Material.wood));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS).setCustomSupplier(() -> {
+				List<ItemStack> creativeItems = new LinkedList<>();
 
-		EntityHelper.createTileEntity(TileEntityDHDMilkyWay.class, NamespaceID.getPermanent(MOD_ID, "dhd_milkyway"));
-		EntityHelper.createTileEntity(TileEntityDHDPegasus.class, NamespaceID.getPermanent(MOD_ID, "dhd_pegasus"));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, 1, 0));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, 1, 1));
+				creativeItems.add(new ItemStack(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, 1, 2));
+
+				return creativeItems;
+			}))
+			.build("stargate_build_part_universe", generateNexId(), b -> new BlockLogicStargateBuildPart(b, Materials.WOOD));
+
+		TileEntityDispatcher.addMapping(TileEntityDHDMilkyWay.class, new NamespaceID(MOD_ID, "dhd_milkyway"));
+		TileEntityDispatcher.addMapping(TileEntityDHDPegasus.class, new NamespaceID(MOD_ID, "dhd_pegasus"));
 
 		BlockBuilder dhdBuilder = new BlockBuilder(MOD_ID)
 			.setHardness(5f)
@@ -88,11 +121,13 @@ public class StargateBlocks {
 
 		DHD_MILKYWAY = dhdBuilder
 			.setTileEntity(TileEntityDHDMilkyWay::new)
-			.build("dhd_milkyway", generateNexId(), b -> new BlockLogicDHDMilkyWay(b, Material.wood));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build("dhd_milkyway", generateNexId(), b -> new BlockLogicDHDMilkyWay(b, Materials.WOOD));
 
 		DHD_PEGASUS = dhdBuilder
 			.setTileEntity(TileEntityDHDPegasus::new)
-			.build("dhd_pegasus", generateNexId(), b -> new BlockLogicDHDPegasus(b, Material.wood));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build("dhd_pegasus", generateNexId(), b -> new BlockLogicDHDPegasus(b, Materials.WOOD));
 	}
 
 }

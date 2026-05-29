@@ -3,46 +3,40 @@ package gungun974.stargate.gate.renders;
 import gungun974.stargate.core.StargateState;
 import gungun974.stargate.core.WavefrontLoader;
 import gungun974.stargate.gate.components.StargateComponent;
-import net.minecraft.client.render.LightmapHelper;
-import net.minecraft.client.render.tessellator.Tessellator;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
+import net.minecraft.core.util.helper.LightIndexHelper;
 
 public class TileEntityRenderStargateUniverse extends TileEntityRenderStargate {
 	static private final WavefrontLoader UniverseGate = new WavefrontLoader("/assets/stargate/models/Universe/UniverseGate.obj");
 
 	@Override
-	protected void renderFrame(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
+	protected void renderFrame(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
 		if (stargateCore.getState() == StargateState.IDLE && !stargateCore.isRingMove()) {
 			UniverseGate.mapMaterial("UniverseOff", "UniverseOff");
 		} else {
 			UniverseGate.mapMaterial("UniverseOff", "UniverseOn");
 		}
 
-		GL11.glPushMatrix();
+		GLRenderer.pushFrame();
 
-		GL11.glRotatef((float) (stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
+		GLRenderer.modelM4f().rotate((float) (stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
 
 		UniverseGate.render(tessellator);
 
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 	}
 
 	@Override
-	protected void renderSymbolRing(Tessellator tessellator, StargateComponent stargateCore, float partialTicks) {
-		GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_LIGHTING);
+	protected void renderSymbolRing(TessellatorGeneral tessellator, StargateComponent stargateCore, float partialTicks) {
+		GLRenderer.pushFrame();
+		GLRenderer.globalSetLightEnabled(false);
 
-		if (LightmapHelper.isLightmapEnabled()) {
-			int lightmap = stargateCore.getLightmap();
-			LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.min(((lightmap >> 4) & 0xF) + 1, 15)));
+		GLRenderer.setLightmapCoord1i(LightIndexHelper.lightIndex2i(15, 15));
 
-			LightmapHelper.setLightmapCoord(LightmapHelper.getLightmapCoord(15, 15));
-		}
+		this.bindTexture("/assets/stargate/models/Universe/universe_stargate_glyphs.png");
 
-
-		this.loadTexture("/assets/stargate/models/Universe/universe_stargate_glyphs.png");
-
-		GL11.glScaled(0.1, 0.1, 0.1);
+		GLRenderer.modelM4f().scale(0.1f, 0.1f, 0.1f);
 
 		float angleStep = 360f / 54f;
 
@@ -61,37 +55,37 @@ public class TileEntityRenderStargateUniverse extends TileEntityRenderStargate {
 				extraRotate += angleStep * 2;
 			}
 
-			GL11.glPushMatrix();
+			GLRenderer.pushFrame();
 
-			GL11.glRotatef((float) (stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
-			GL11.glRotatef(-segment * angleStep - extraRotate, 0, 0, 1);
+			GLRenderer.modelM4f().rotate((float) Math.toRadians(stargateCore.interpolatedRingAngle(partialTicks)), 0, 0, 1);
+			GLRenderer.modelM4f().rotate((float) Math.toRadians(-segment * angleStep - extraRotate), 0, 0, 1);
 
 			int i = segment % 6;
 			int j = segment / 6;
 
 			if (stargateCore.isReceiverGate()) {
-				GL11.glColor4f(0.15f, 0.15f, 0.15f, 1f);
+				GLRenderer.setColor4f(0.15f, 0.15f, 0.15f, 1f);
 			} else {
 				if (stargateCore.interpolatedChevronActive(0, partialTicks) && segment == stargateCore.getChevronActiveSymbol(0)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(1, partialTicks) && segment == stargateCore.getChevronActiveSymbol(1)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(2, partialTicks) && segment == stargateCore.getChevronActiveSymbol(2)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(3, partialTicks) && segment == stargateCore.getChevronActiveSymbol(3)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(4, partialTicks) && segment == stargateCore.getChevronActiveSymbol(4)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(5, partialTicks) && segment == stargateCore.getChevronActiveSymbol(5)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(6, partialTicks) && segment == stargateCore.getChevronActiveSymbol(6)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(7, partialTicks) && segment == stargateCore.getChevronActiveSymbol(7)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else if (stargateCore.interpolatedChevronActive(8, partialTicks) && segment == stargateCore.getChevronActiveSymbol(8)) {
-					GL11.glColor4f(1f, 1f, 1f, 1f);
+					GLRenderer.setColor4f(1f, 1f, 1f, 1f);
 				} else {
-					GL11.glColor4f(0.15f, 0.15f, 0.15f, 1f);
+					GLRenderer.setColor4f(0.15f, 0.15f, 0.15f, 1f);
 				}
 			}
 
@@ -111,16 +105,16 @@ public class TileEntityRenderStargateUniverse extends TileEntityRenderStargate {
 
 			tessellator.draw();
 
-			GL11.glPopMatrix();
+			GLRenderer.popFrame();
 		}
 
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glColor4f(1, 1, 1, 1f);
-		GL11.glPopMatrix();
+		GLRenderer.globalSetLightEnabled(true);
+		GLRenderer.setColor4f(1, 1, 1, 1f);
+		GLRenderer.popFrame();
 	}
 
 	@Override
 	void loadEventHorizonTexture() {
-		this.loadTexture("/assets/stargate/textures/eventhorizon_universe.png");
+		this.bindTexture("/assets/stargate/textures/eventhorizon_universe.png");
 	}
 }

@@ -3,37 +3,42 @@ package gungun974.stargate.core;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
-import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.core.world.chunk.provider.ChunkProvider;
+import net.minecraft.core.world.pos.TilePosc;
+import net.minecraft.core.world.save.LevelStorage;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class VirtualWorld extends World {
 
-	private final Map<ChunkCoordinates, BlockEntry> blockEntryMap = new HashMap();
+	private static final ThreadLocal<World> PARENT_REF = new ThreadLocal<>();
+	private final Map<ChunkCoordinates, BlockEntry> blockEntryMap = new HashMap<>();
 	private Entity lightRefEntity = null;
+	public VirtualWorld(World parent) {
+		super(captureParent(parent), parent.getDimension());
+		PARENT_REF.remove();
+		this.noNeighborUpdate = true;
+	}
 
-	public VirtualWorld(World world) {
-		super();
-		this.sleepPercent = 100;
-		//this.lockTimestamp = world.lockTimestamp;
-		this.saveHandler = world.saveHandler;
-		this.levelData = world.getLevelData();
-		this.dimensionData = world.dimensionData;
-		this.weatherManager = world.weatherManager;
+	private static World captureParent(World parent) {
+		PARENT_REF.set(parent);
+		return parent;
+	}
 
-		this.worldType = world.worldType;
-		this.savedDataStorage = world.savedDataStorage;
-		this.dimension = world.dimension;
-		this.chunkProvider = world.chunkProvider;
-		this.seasonManager = world.seasonManager;
-		this.biomeProvider = world.biomeProvider;
-		this.auroraProvider = world.auroraProvider;
+	@Override
+	protected @NotNull ChunkProvider createChunkProvider(@NotNull LevelStorage levelStorage) {
+		return PARENT_REF.get().getChunkProvider();
+	}
+
+	@Override
+	public void setLightningFlicker(int value) {
 	}
 
 	public void setLightReferenceEntity(Entity entity) {
@@ -48,7 +53,7 @@ public class VirtualWorld extends World {
 		return this.blockEntryMap.get(new ChunkCoordinates(x, y, z));
 	}
 
-	public Collection getEntries() {
+	public Collection<BlockEntry> getEntries() {
 		return this.blockEntryMap.values();
 	}
 
@@ -57,143 +62,73 @@ public class VirtualWorld extends World {
 	}
 
 	@Override
-	public boolean setBlockAndMetadata(int x, int y, int z, int id, int meta) {
-		if (x >= -32000000 && z >= -32000000 && x < 32000000 && z <= 32000000) {
-			if (y < 0) {
-				return false;
-			} else if (y >= this.getHeightBlocks()) {
-				return false;
-			} else {
-				setBlock(x, y, z, id, meta, null);
-				return true;
-			}
-		} else {
-			return false;
+	public boolean setBlockTypeData(@NotNull TilePosc tilePos, @NotNull Block block, int data) {
+		if (!tilePos.inBounds(this)) return false;
+		setBlock(tilePos.x(), tilePos.y(), tilePos.z(), block.id(), data, null);
+		return true;
+	}
+
+	@Override
+	public boolean setBlockTypeDataRaw(@NotNull TilePosc tilePos, @NotNull Block block, int data) {
+		if (!tilePos.inBounds(this)) return false;
+		setBlock(tilePos.x(), tilePos.y(), tilePos.z(), block.id(), data, null);
+		return true;
+	}
+
+	@Override
+	public boolean setBlockType(@NotNull TilePosc tilePos, @NotNull Block block) {
+		if (!tilePos.inBounds(this)) return false;
+		setBlock(tilePos.x(), tilePos.y(), tilePos.z(), block.id(), getBlockData(tilePos), null);
+		return true;
+	}
+
+	@Override
+	public boolean setBlockData(@NotNull TilePosc tilePos, int data) {
+		if (!tilePos.inBounds(this)) return false;
+		setBlock(tilePos.x(), tilePos.y(), tilePos.z(), getBlockType(tilePos).id(), data, null);
+		return true;
+	}
+
+	@Override
+	public void setTileEntity(@NotNull TilePosc tilePos, @NotNull TileEntity tileEntity) {
+	}
+
+	@Override
+	public void removeTileEntity(@NotNull TilePosc tilePos) {
+	}
+
+	@Override
+	public @NotNull Block getBlockType(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		if (this.blockEntryMap.containsKey(c)) {
+			Block<?> block = Blocks.getBlock(this.blockEntryMap.get(c).blockID);
+			return block != null ? block : Blocks.AIR;
 		}
+		return super.getBlockType(tilePos);
 	}
 
 	@Override
-	public boolean setBlockAndMetadataRaw(int x, int y, int z, int id, int meta) {
-		if (x >= -32000000 && z >= -32000000 && x < 32000000 && z <= 32000000) {
-			if (y < 0) {
-				return false;
-			} else if (y >= this.getHeightBlocks()) {
-				return false;
-			} else {
-				setBlock(x, y, z, id, meta, null);
-				return true;
-			}
-		} else {
-			return false;
-		}
+	public int getBlockData(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).blockMeta : super.getBlockData(tilePos);
 	}
 
 	@Override
-	public boolean setBlockMetadata(int x, int y, int z, int meta) {
-		if (x >= -32000000 && z >= -32000000 && x < 32000000 && z <= 32000000) {
-			if (y < 0) {
-				return false;
-			} else if (y >= this.getHeightBlocks()) {
-				return false;
-			} else {
-				setBlock(x, y, z, this.getBlockId(x, y, z), meta, null);
-				return true;
-			}
-		} else {
-			return false;
-		}
+	public @Nullable TileEntity getTileEntity(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).tileEntity : super.getTileEntity(tilePos);
 	}
 
 	@Override
-	public boolean setBlock(int x, int y, int z, int id) {
-		if (x >= -32000000 && z >= -32000000 && x < 32000000 && z <= 32000000) {
-			if (y < 0) {
-				return false;
-			} else if (y >= this.getHeightBlocks()) {
-				return false;
-			} else {
-				setBlock(x, y, z, id, getBlockMetadata(x, y, z), null);
-				return true;
-			}
-		} else {
-			return false;
-		}
+	public float getBrightness(@NotNull TilePosc tilePos, int lightEmission) {
+		return this.lightRefEntity != null ? this.lightRefEntity.getBrightness(1.0F) : super.getBrightness(tilePos, lightEmission);
 	}
 
 	@Override
-	public void setTileEntity(int x, int y, int z, TileEntity tileEntity) {
+	public byte getLightIndex(@NotNull TilePosc tilePos, int lightEmission) {
+		return this.lightRefEntity != null ? this.lightRefEntity.getLightIndex(1.0F) : super.getLightIndex(tilePos, lightEmission);
 	}
 
-	@Override
-	public void removeBlockTileEntity(int x, int y, int z) {
-	}
-
-	@Override
-	public int getBlockId(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).blockID : super.getBlockId(x, y, z);
-	}
-
-	@Override
-	public @Nullable Block getBlock(int x, int y, int z) {
-		return Blocks.getBlock(this.getBlockId(x, y, z));
-	}
-
-	@Override
-	public TileEntity getTileEntity(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).tileEntity : super.getTileEntity(x, y, z);
-	}
-
-	@Override
-	public float getBrightness(int x, int y, int z, int blockLightValue) {
-		return this.lightRefEntity != null ? this.lightRefEntity.getBrightness(1.0F) : super.getBrightness(x, y, z, blockLightValue);
-	}
-
-	@Override
-	public int getLightmapCoord(int x, int y, int z, int blockLightValue) {
-		return this.lightRefEntity != null ? this.lightRefEntity.getLightmapCoord(1.0F) : super.getLightmapCoord(x, y, z, blockLightValue);
-	}
-
-	@Override
-	public int getBlockMetadata(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).blockMeta : super.getBlockMetadata(x, y, z);
-	}
-
-	@Override
-	public Material getBlockMaterial(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b == null ? Material.air : b.getMaterial();
-	}
-
-	@Override
-	public boolean isBlockOpaqueCube(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b != null && b.isSolidRender();
-	}
-
-	@Override
-	public boolean isBlockNormalCube(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b != null && b.getMaterial().isSolidBlocking() && b.renderAsNormalBlockOnCondition(this, x, y, z);
-	}
-
-	public static class BlockEntry {
-		public final int blockID;
-		public final int blockMeta;
-		public final @Nullable TileEntity tileEntity;
-		public final int x;
-		public final int y;
-		public final int z;
-
-		public BlockEntry(int blockID, int blockMeta, @Nullable TileEntity tileEntity, int x, int y, int z) {
-			this.blockID = blockID;
-			this.blockMeta = blockMeta;
-			this.tileEntity = tileEntity;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
+	public record BlockEntry(int blockID, int blockMeta, @Nullable TileEntity tileEntity, int x, int y, int z) {
 	}
 }

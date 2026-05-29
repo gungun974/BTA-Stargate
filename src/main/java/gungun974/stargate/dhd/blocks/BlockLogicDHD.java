@@ -10,8 +10,11 @@ import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.helper.Side;
-import net.minecraft.core.util.phys.Vec3;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePosc;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3dc;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
 public abstract class BlockLogicDHD extends BlockLogicRotatable {
@@ -57,14 +60,14 @@ public abstract class BlockLogicDHD extends BlockLogicRotatable {
 
 			DHDGeometry.KeyPositions positions = DHDGeometry.calculateKeyPositions(i, segments, angle);
 
-			Vec3 a1 = positions.a1;
-			Vec3 a2 = positions.a2;
-			Vec3 a3 = positions.a3;
-			Vec3 a4 = positions.a4;
+			Vector3dc a1 = positions.a1();
+			Vector3dc a2 = positions.a2();
+			Vector3dc a3 = positions.a3();
+			Vector3dc a4 = positions.a4();
 
 			triangles[i + 1] = new RaycastHelper.KeyTriangles(keyId + 1, new RaycastHelper.Triangle[]{
-				new RaycastHelper.Triangle((float) a1.x, (float) a1.y, (float) a1.z, (float) a2.x, (float) a2.y, (float) a2.z, (float) a3.x, (float) a3.y, (float) a3.z),
-				new RaycastHelper.Triangle((float) a1.x, (float) a1.y, (float) a1.z, (float) a3.x, (float) a3.y, (float) a3.z, (float) a4.x, (float) a4.y, (float) a4.z)
+				new RaycastHelper.Triangle((float) a1.x(), (float) a1.y(), (float) a1.z(), (float) a2.x(), (float) a2.y(), (float) a2.z(), (float) a3.x(), (float) a3.y(), (float) a3.z()),
+				new RaycastHelper.Triangle((float) a1.x(), (float) a1.y(), (float) a1.z(), (float) a3.x(), (float) a3.y(), (float) a3.z(), (float) a4.x(), (float) a4.y(), (float) a4.z())
 			});
 		}
 
@@ -77,15 +80,15 @@ public abstract class BlockLogicDHD extends BlockLogicRotatable {
 	}
 
 	@Override
-	public boolean onBlockRightClicked(World world, int x, int y, int z, Player player, Side side, double xHit, double yHit) {
+	public boolean onInteracted(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Player player, @Nullable Side side, double xHit, double yHit) {
 		if (EnvironmentHelper.isClientWorld()) {
 			return false;
 		}
 
-		TileEntity tileEntity = world.getTileEntity(x, y, z);
+		TileEntity tileEntity = world.getTileEntity(tilePos);
 
-		Direction direction = getDirectionFromMeta(world.getBlockMetadata(x, y, z));
-		int keyId = RaycastHelper.detectPressedKey(getKeyTriangles(), x, y, z, direction, player);
+		Direction direction = getDirectionFromMeta(world.getBlockData(tilePos));
+		int keyId = RaycastHelper.detectPressedKey(getKeyTriangles(), tilePos.x(), tilePos.y(), tilePos.z(), direction, player);
 
 		if (keyId != -1) {
 			if (keyId == -0) {

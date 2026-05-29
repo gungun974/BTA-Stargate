@@ -74,11 +74,9 @@ public class StargateNetworkManager {
 		for (Map.Entry<String, Tag<?>> entry : networkTag.getValue().entrySet()) {
 			try {
 				final Tag<?> tag = entry.getValue();
-				if (!(tag instanceof CompoundTag)) {
+				if (!(tag instanceof CompoundTag gateTag)) {
 					continue;
 				}
-
-				final CompoundTag gateTag = (CompoundTag) tag;
 
 				int x = gateTag.getInteger("X");
 				int y = gateTag.getInteger("Y");
@@ -168,9 +166,9 @@ public class StargateNetworkManager {
 			return;
 		}
 
-		publicMilkyWayGates.put(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.MilkyWay)), tileEntity);
-		publicPegasusGates.put(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Pegasus)), tileEntity);
-		publicUniverseGates.put(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Universe)), tileEntity);
+		publicMilkyWayGates.put(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.MilkyWay)), tileEntity);
+		publicPegasusGates.put(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Pegasus)), tileEntity);
+		publicUniverseGates.put(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Universe)), tileEntity);
 	}
 
 	public void unregisterPublicStargate(TileEntityStargate tileEntity) {
@@ -180,9 +178,9 @@ public class StargateNetworkManager {
 			return;
 		}
 
-		publicMilkyWayGates.remove(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.MilkyWay)));
-		publicPegasusGates.remove(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Pegasus)));
-		publicUniverseGates.remove(new StargateNetworkGate(tileEntity.x, tileEntity.y, tileEntity.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Universe)));
+		publicMilkyWayGates.remove(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.MilkyWay)));
+		publicPegasusGates.remove(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Pegasus)));
+		publicUniverseGates.remove(new StargateNetworkGate(tileEntity.tilePos.x, tileEntity.tilePos.y, tileEntity.tilePos.z, tileEntity.dim, gate.getAddressWithFamily(StargateFamily.Universe)));
 	}
 
 	public List<TileEntityStargate> findStargates(StargateAddress targetAddress, boolean subGrid) {
@@ -208,21 +206,7 @@ public class StargateNetworkManager {
 		return tileEntityStargates;
 	}
 
-	private static class StargateNetworkGate {
-		final public int x;
-		final public int y;
-		final public int z;
-		final public int dim;
-
-		final public StargateAddress address;
-
-		private StargateNetworkGate(int x, int y, int z, int dim, StargateAddress address) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.dim = dim;
-			this.address = address;
-		}
+	private record StargateNetworkGate(int x, int y, int z, int dim, StargateAddress address) {
 
 		@Override
 		public boolean equals(Object obj) {

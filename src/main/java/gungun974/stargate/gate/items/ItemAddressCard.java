@@ -12,24 +12,25 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.lang.I18n;
-import net.minecraft.core.player.gamemode.Gamemode;
+import net.minecraft.core.player.gamemode.Gamemodes;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePosc;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import turniplabs.halplibe.helper.EnvironmentHelper;
-
-import javax.annotation.Nonnull;
 
 public class ItemAddressCard extends Item {
 	private static final String NBT_ADDRESS_MILKYWAY = "AddressMilkyWay";
 	private static final String NBT_ADDRESS_PEGASUS = "AddressPegasus";
 	private static final String NBT_ADDRESS_UNIVERSE = "AddressUniverse";
 
-	public ItemAddressCard(NamespaceID namespaceId, int id) {
-		super(namespaceId, id);
+	public ItemAddressCard(@NotNull NamespaceID namespaceId, @NotNull String translationKey, int id) {
+		super(namespaceId, translationKey, id);
 	}
 
-	@Nonnull
+	@NotNull
 	public static ItemStack createFromGate(StargateComponent gate) {
 		ItemStack stack = new ItemStack(StargateItems.ADDRESS_CARD);
 		updateAddresses(stack, gate);
@@ -121,7 +122,7 @@ public class ItemAddressCard extends Item {
 		}
 	}
 
-	public static int getSymbol(@Nonnull ItemStack stack, StargateFamily family, int symbolIndex) {
+	public static int getSymbol(@NotNull ItemStack stack, StargateFamily family, int symbolIndex) {
 		CompoundTag nbt = stack.getData();
 		String nbtKey;
 
@@ -152,7 +153,7 @@ public class ItemAddressCard extends Item {
 		return addressTag.getInteger("Address" + symbolIndex);
 	}
 
-	public static boolean hasAddress(@Nonnull ItemStack stack, StargateFamily family) {
+	public static boolean hasAddress(@NotNull ItemStack stack, StargateFamily family) {
 		CompoundTag nbt = stack.getData();
 		String nbtKey;
 
@@ -174,7 +175,7 @@ public class ItemAddressCard extends Item {
 	}
 
 	@Override
-	public boolean onUseItemOnBlock(ItemStack itemstack, Player player, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced) {
+	public boolean onUseOnBlock(@NotNull ItemStack selfStack, @NotNull World world, @Nullable Player player, @NotNull TilePosc blockPos, @NotNull Side side, double xHit, double yHit) {
 		if (EnvironmentHelper.isClientWorld()) {
 			return false;
 		}
@@ -183,17 +184,15 @@ public class ItemAddressCard extends Item {
 			return false;
 		}
 
-		if (player.getGamemode() != Gamemode.creative) {
+		if (player.getGamemode() != Gamemodes.CREATIVE) {
 			return false;
 		}
 
-		TileEntity tileEntity = world.getTileEntity(blockX, blockY, blockZ);
+		TileEntity tileEntity = world.getTileEntity(blockPos);
 
-		if (!(tileEntity instanceof TileEntityDHD)) {
+		if (!(tileEntity instanceof TileEntityDHD dhd)) {
 			return false;
 		}
-
-		TileEntityDHD dhd = ((TileEntityDHD) tileEntity);
 
 		TileEntityStargate tile = dhd.findLinkedGate();
 
@@ -212,17 +211,17 @@ public class ItemAddressCard extends Item {
 		switch (gate.getFamily()) {
 			case MilkyWay:
 				for (int i = 0; i < 9; i++) {
-					dhd.encode(getSymbol(itemstack, StargateFamily.MilkyWay, i));
+					dhd.encode(getSymbol(selfStack, StargateFamily.MilkyWay, i));
 				}
 				break;
 			case Pegasus:
 				for (int i = 0; i < 9; i++) {
-					dhd.encode(getSymbol(itemstack, StargateFamily.Pegasus, i));
+					dhd.encode(getSymbol(selfStack, StargateFamily.Pegasus, i));
 				}
 				break;
 			case Universe:
 				for (int i = 0; i < 9; i++) {
-					dhd.encode(getSymbol(itemstack, StargateFamily.Universe, i));
+					dhd.encode(getSymbol(selfStack, StargateFamily.Universe, i));
 				}
 				break;
 		}

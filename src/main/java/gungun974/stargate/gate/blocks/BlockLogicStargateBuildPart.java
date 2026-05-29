@@ -14,6 +14,8 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePos;
+import net.minecraft.core.world.pos.TilePosc;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,11 +87,11 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = x + direction.getOffsetZ() * i;
+			int px = x + direction.offsetZ() * i;
 			int py = y + j;
-			int pz = z + direction.getOffsetX() * i;
+			int pz = z + direction.offsetX() * i;
 
-			if (!world.canPlaceInsideBlock(px, py, pz)) {
+			if (!world.canPlaceInsideBlock(new TilePos(px, py, pz))) {
 				return false;
 			}
 		}
@@ -119,19 +121,11 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 
 		boolean invertOrder = (direction == Direction.WEST || direction == Direction.NORTH);
 
-		int stargateBlockId = 0;
-
-		switch (family) {
-			case MilkyWay:
-				stargateBlockId = StargateBlocks.STARGATE_MILKYWAY.id();
-				break;
-			case Pegasus:
-				stargateBlockId = StargateBlocks.STARGATE_PEGASUS.id();
-				break;
-			case Universe:
-				stargateBlockId = StargateBlocks.STARGATE_UNIVERSE.id();
-				break;
-		}
+		Block<BlockLogicStargate> stargateBlock = switch (family) {
+			case MilkyWay -> StargateBlocks.STARGATE_MILKYWAY;
+			case Pegasus -> StargateBlocks.STARGATE_PEGASUS;
+			case Universe -> StargateBlocks.STARGATE_UNIVERSE;
+		};
 
 		for (int idx = 0; idx < ringOrder.length; idx++) {
 			int i = ringOrder[idx][0];
@@ -150,12 +144,12 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 				blockMeta += 0b010000;
 			}
 
-			int px = x + direction.getOffsetZ() * i;
+			int px = x + direction.offsetZ() * i;
 			int py = y + j;
-			int pz = z + direction.getOffsetX() * i;
+			int pz = z + direction.offsetX() * i;
 
-			world.setBlockAndMetadataRaw(px, py, pz, stargateBlockId, blockMeta);
-			TileEntity tileEntity = world.getTileEntity(px, py, pz);
+			world.setBlockTypeDataRaw(new TilePos(px, py, pz), stargateBlock, blockMeta);
+			TileEntity tileEntity = world.getTileEntity(new TilePos(px, py, pz));
 			if (tileEntity == null) {
 				continue;
 			}
@@ -166,7 +160,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 
 			if (idx == 0) {
 				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
-				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
+				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.opposite());
 				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(Direction.NORTH);
 			} else {
 				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
@@ -177,11 +171,11 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = x + direction.getOffsetZ() * i;
+			int px = x + direction.offsetZ() * i;
 			int py = y + j;
-			int pz = z + direction.getOffsetX() * i;
+			int pz = z + direction.offsetX() * i;
 
-			world.notifyBlockChange(px, py, pz, stargateBlockId);
+			world.notifyBlockChange(new TilePos(px, py, pz), stargateBlock);
 		}
 	}
 
@@ -205,19 +199,11 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			{1, 0},
 		};
 
-		int stargateBlockId = 0;
-
-		switch (family) {
-			case MilkyWay:
-				stargateBlockId = StargateBlocks.STARGATE_MILKYWAY.id();
-				break;
-			case Pegasus:
-				stargateBlockId = StargateBlocks.STARGATE_PEGASUS.id();
-				break;
-			case Universe:
-				stargateBlockId = StargateBlocks.STARGATE_UNIVERSE.id();
-				break;
-		}
+		Block<BlockLogicStargate> stargateBlock = switch (family) {
+			case MilkyWay -> StargateBlocks.STARGATE_MILKYWAY;
+			case Pegasus -> StargateBlocks.STARGATE_PEGASUS;
+			case Universe -> StargateBlocks.STARGATE_UNIVERSE;
+		};
 
 		for (int idx = 0; idx < ringOrder.length; idx++) {
 			int i = ringOrder[idx][0];
@@ -248,12 +234,12 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 				blockMeta += 0b10000000;
 			}
 
-			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+			int px = x + direction.offsetZ() * i - direction.offsetX() * j;
+			int pz = z + direction.offsetX() * i - direction.offsetZ() * j;
 
-			world.setBlockAndMetadataRaw(px, y, pz, stargateBlockId, blockMeta);
+			world.setBlockTypeDataRaw(new TilePos(px, y, pz), stargateBlock, blockMeta);
 
-			TileEntity tileEntity = world.getTileEntity(px, y, pz);
+			TileEntity tileEntity = world.getTileEntity(new TilePos(px, y, pz));
 			if (tileEntity == null) {
 				continue;
 			}
@@ -264,7 +250,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 
 			if (idx == 0) {
 				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.CORE);
-				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.getOpposite());
+				((TileEntityStargate) tileEntity).getStargateComponent().setDirection(direction.opposite());
 				((TileEntityStargate) tileEntity).getStargateComponent().setOrientation(orientation);
 			} else {
 				((TileEntityStargate) tileEntity).setRole(TileEntityStargate.Role.RING);
@@ -275,10 +261,10 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+			int px = x + direction.offsetZ() * i - direction.offsetX() * j;
+			int pz = z + direction.offsetX() * i - direction.offsetZ() * j;
 
-			world.notifyBlockChange(px, y, pz, stargateBlockId);
+			world.notifyBlockChange(new TilePos(px, y, pz), stargateBlock);
 		}
 	}
 
@@ -306,10 +292,10 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-			int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+			int px = x + direction.offsetZ() * i - direction.offsetX() * j;
+			int pz = z + direction.offsetX() * i - direction.offsetZ() * j;
 
-			if (!world.canPlaceInsideBlock(px, y, pz)) {
+			if (!world.canPlaceInsideBlock(new TilePos(px, y, pz))) {
 				return false;
 			}
 		}
@@ -345,7 +331,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 	}
 
 	@Override
-	public int getPlacedBlockMetadata(@Nullable Player player, ItemStack stack, World world, int x, int y, int z, Side side, double xPlaced, double yPlaced) {
+	public int getPlacedData(@Nullable Player player, @NotNull ItemStack stack, @NotNull World world, @NotNull TilePosc tilePos, @NotNull Side side, double xPlaced, double yPlaced) {
 		if (stack.getMetadata() == CHEVRON_META) {
 			return CHEVRON_META;
 		}
@@ -356,17 +342,22 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 	}
 
 	@Override
-	public void onBlockPlacedByMob(World world, int x, int y, int z, @NotNull Side side, Mob mob, double xPlaced, double yPlaced) {
-		world.setBlockMetadataWithNotify(x, y, z, setDirection(world.getBlockMetadata(x, y, z), mob.getHorizontalPlacementDirection(side).getOpposite()));
-		findStargateCoreForCheckAndAssemble(world, x, y, z);
+	public void onPlacedByMob(@NotNull World world, @NotNull TilePosc tilePos, @NotNull Side side, @NotNull Mob mob, double xPlaced, double yPlaced) {
+		world.setBlockDataNotify(tilePos, setDirection(world.getBlockData(tilePos), mob.getHorizontalPlacementDirection(side).opposite()));
+	}
+
+	@Override
+	public void onPlacedByWorld(@NotNull World world, @NotNull TilePosc tilePos) {
+		super.onPlacedByWorld(world, tilePos);
+		findStargateCoreForCheckAndAssemble(world, tilePos.x(), tilePos.y(), tilePos.z());
 	}
 
 	private boolean isSameBlockWithMeta(World worldSource, int x, int y, int z, int metaId) {
-		if (worldSource.getBlockId(x, y, z) != this.id()) {
+		if (worldSource.getBlockType(new TilePos(x, y, z)).id() != this.id()) {
 			return false;
 		}
 
-		return getRawMeta(worldSource.getBlockMetadata(x, y, z)) == metaId;
+		return getRawMeta(worldSource.getBlockData(new TilePos(x, y, z))) == metaId;
 	}
 
 	private void findStargateCoreForCheckAndAssemble(World worldSource, int x, int y, int z) {
@@ -375,7 +366,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 			return;
 		}
 
-		for (Direction direction : Direction.directions) {
+		for (Direction direction : Direction.ID_MAP) {
 			if (direction == Direction.DOWN) {
 				continue;
 			}
@@ -397,8 +388,8 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 						break;
 					case 6:
 						i = 1;
-						if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j, CORE_META)) {
-							checkAndAssemble(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
+						if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j, CORE_META)) {
+							checkAndAssemble(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j);
 							return;
 						}
 						break;
@@ -407,32 +398,32 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 				}
 
 				if (direction == Direction.UP) {
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j + i, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j + i);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j + i, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j + i);
 						return;
 					}
 
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j - i, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j - i);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j - i, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j, y - direction.offsetY() * j, z - direction.offsetZ() * j - i);
 						return;
 					}
 
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j + i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j + i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j + i, y - direction.offsetY() * j, z - direction.offsetZ() * j, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j + i, y - direction.offsetY() * j, z - direction.offsetZ() * j);
 						return;
 					}
 
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j - i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j - i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j - i, y - direction.offsetY() * j, z - direction.offsetZ() * j, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j - i, y - direction.offsetY() * j, z - direction.offsetZ() * j);
 						return;
 					}
 				} else {
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j + direction.getOffsetZ() * i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j + direction.getOffsetX() * i, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j + direction.getOffsetZ() * i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j + direction.getOffsetX() * i);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j + direction.offsetZ() * i, y - direction.offsetY() * j, z - direction.offsetZ() * j + direction.offsetX() * i, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j + direction.offsetZ() * i, y - direction.offsetY() * j, z - direction.offsetZ() * j + direction.offsetX() * i);
 						return;
 					}
-					if (isSameBlockWithMeta(worldSource, x - direction.getOffsetX() * j - direction.getOffsetZ() * i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j - direction.getOffsetX() * i, CORE_META)) {
-						checkAndAssemble(worldSource, x - direction.getOffsetX() * j - direction.getOffsetZ() * i, y - direction.getOffsetY() * j, z - direction.getOffsetZ() * j - direction.getOffsetX() * i);
+					if (isSameBlockWithMeta(worldSource, x - direction.offsetX() * j - direction.offsetZ() * i, y - direction.offsetY() * j, z - direction.offsetZ() * j - direction.offsetX() * i, CORE_META)) {
+						checkAndAssemble(worldSource, x - direction.offsetX() * j - direction.offsetZ() * i, y - direction.offsetY() * j, z - direction.offsetZ() * j - direction.offsetX() * i);
 						return;
 					}
 				}
@@ -446,7 +437,7 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 		if (world == null) {
 			direction = Direction.NORTH;
 		} else {
-			direction = getDirectionFromMeta(world.getBlockMetadata(x, y, z));
+			direction = getDirectionFromMeta(world.getBlockData(new TilePos(x, y, z)));
 		}
 
 		if (isValidStructureVertical(world, x, y, z, direction)) {
@@ -485,9 +476,9 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 						continue;
 				}
 
-				int px = x + direction.getOffsetZ() * i;
+				int px = x + direction.offsetZ() * i;
 				int py = y + j;
-				int pz = z + direction.getOffsetX() * i;
+				int pz = z + direction.offsetX() * i;
 
 				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
 					if (!isSameBlockWithMeta(world, px, py, pz, CHEVRON_META)) {
@@ -528,8 +519,8 @@ public class BlockLogicStargateBuildPart extends BlockLogic {
 						continue;
 				}
 
-				int px = x + direction.getOffsetZ() * i - direction.getOffsetX() * j;
-				int pz = z + direction.getOffsetX() * i - direction.getOffsetZ() * j;
+				int px = x + direction.offsetZ() * i - direction.offsetX() * j;
+				int pz = z + direction.offsetX() * i - direction.offsetZ() * j;
 
 				if (j == 0 || j == 1 || j == 3 || j == 5 || (j == 6 && i == 0)) {
 					if (!isSameBlockWithMeta(world, px, y, pz, CHEVRON_META)) {

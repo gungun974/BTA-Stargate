@@ -1,6 +1,6 @@
 package gungun974.stargate.core;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class StargateUniverseAddress extends StargateAddress {
 	private static final long[] A = {2749L, 4391L, 5843L, 7219L, 9437L};

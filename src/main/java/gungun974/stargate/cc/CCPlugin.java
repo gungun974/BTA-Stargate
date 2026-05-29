@@ -12,7 +12,7 @@ import net.minecraft.core.block.entity.TileEntity;
 public class CCPlugin {
 	public static void register() {
 		ComputerCraftAPI.registerPeripheralProvider((world, pos, side) -> {
-			TileEntity tile = world.getTileEntity(pos.x, pos.y, pos.z);
+			TileEntity tile = world.getTileEntity(pos);
 			if (tile instanceof TileEntityStargate) {
 				return new StargatePeripheral((TileEntityStargate) tile);
 			}

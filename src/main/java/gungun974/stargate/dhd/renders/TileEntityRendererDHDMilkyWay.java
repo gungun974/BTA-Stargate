@@ -7,7 +7,7 @@ import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHDMilkyWay;
 import gungun974.stargate.gate.items.ItemAddressCard;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.item.ItemStack;
 
 public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
@@ -68,7 +68,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderDHD(Tessellator tessellator, WavefrontLoader dhd) {
+	protected void renderDHD(TessellatorGeneral tessellator, WavefrontLoader dhd) {
 		dhd.mapMaterial("foot", "foot");
 		dhd.mapMaterial("plate", "plate");
 
@@ -82,7 +82,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active) {
+	protected void renderDial(TessellatorGeneral tessellator, WavefrontLoader button, boolean active) {
 		if (active) {
 			button.mapMaterial("button", "button_active");
 		} else {
@@ -93,7 +93,7 @@ public class TileEntityRendererDHDMilkyWay extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
+	protected void renderKey(TessellatorGeneral tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
 		WavefrontLoader key = KEYS[i];
 
 		int keyId = BlockLogicDHDMilkyWay.KEY_IDS[i];

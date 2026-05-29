@@ -1,6 +1,7 @@
 package gungun974.stargate.core;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.LinkedList;
 import java.util.List;
 

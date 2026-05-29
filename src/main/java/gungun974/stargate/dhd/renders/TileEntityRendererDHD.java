@@ -7,12 +7,12 @@ import gungun974.stargate.dhd.blocks.BlockLogicDHD;
 import gungun974.stargate.dhd.tiles.TileEntityDHD;
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
-import net.minecraft.client.render.LightmapHelper;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.client.render.tileentity.TileEntityRenderer;
 import net.minecraft.core.util.helper.Direction;
-import net.minecraft.core.util.phys.Vec3;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.core.util.helper.LightIndexHelper;
+import org.joml.Vector3d;
 
 public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntityDHD> {
 	private static final WavefrontLoader DHD = new WavefrontLoader("/assets/stargate/models/DHD/DHD.obj");
@@ -36,15 +36,20 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 		return positions;
 	}
 
+	public static int setBlocklightValue(int lightmapCoord, int blocklight) {
+		int skyLight = LightIndexHelper.skyLightFromIndex((byte) lightmapCoord);
+		return LightIndexHelper.lightIndex2i(skyLight, blocklight);
+	}
+
 	protected abstract DHDGeometry.KeyPositions[] getKeyPositions();
 
 	protected abstract int[] getKeyIds();
 
 	@Override
-	public void doRender(Tessellator tessellator, TileEntityDHD tileEntity, double x, double y, double z, float partialTicks) {
-		GL11.glPushMatrix();
+	public void doRender(TessellatorGeneral tessellator, TileEntityDHD tileEntity, double x, double y, double z, float partialTicks) {
+		GLRenderer.pushFrame();
 
-		GL11.glTranslatef((float) x + 0.5f, (float) y, (float) z + 0.5f);
+		GLRenderer.modelM4f().translate((float) x + 0.5f, (float) y, (float) z + 0.5f);
 
 		StargateComponent stargateComponent = null;
 		TileEntityStargate gate = tileEntity.findLinkedGate();
@@ -52,24 +57,21 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 			stargateComponent = gate.getStargateComponent();
 		}
 
-		int lightmap = 0;
-		if (LightmapHelper.isLightmapEnabled()) {
-			lightmap = tileEntity.getLightmap();
-		}
+		int lightmap = tileEntity.getLightmap();
 
 		Direction direction = BlockLogicDHD.getDirectionFromMeta(tileEntity.getBlockMeta());
 
 		switch (direction) {
 			case EAST:
-				GL11.glRotatef(90, 0, 1, 0);
+				GLRenderer.modelM4f().rotate((float) Math.toRadians(90), 0, 1, 0);
 				break;
 			case NORTH:
-				GL11.glRotatef(180, 0, 1, 0);
+				GLRenderer.modelM4f().rotate((float) Math.toRadians(180), 0, 1, 0);
 				break;
 			case SOUTH:
 				break;
 			case WEST:
-				GL11.glRotatef(-90, 0, 1, 0);
+				GLRenderer.modelM4f().rotate((float) Math.toRadians(-90), 0, 1, 0);
 				break;
 			default:
 		}
@@ -91,14 +93,14 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 			}
 		}
 
-		if (active && LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
+		if (active) {
+			GLRenderer.setLightmapCoord1i(setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 		}
 
 		renderDial(tessellator, Button, active);
 
-		if (active && LightmapHelper.isLightmapEnabled()) {
-			LightmapHelper.setLightmapCoord(lightmap);
+		if (active) {
+			GLRenderer.setLightmapCoord1i(lightmap);
 		}
 
 		int[] keyIds = getKeyIds();
@@ -118,81 +120,79 @@ public abstract class TileEntityRendererDHD extends TileEntityRenderer<TileEntit
 
 			boolean isActiveKey = isKeyActive(stargateComponent, keyId);
 
-			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
-				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
+			if (isActiveKey) {
+				GLRenderer.setLightmapCoord1i(setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 14)));
 			}
 
 			renderKey(tessellator, i, isActiveKey, addressSize, family, active || gate == null);
 
-			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
-				LightmapHelper.setLightmapCoord(LightmapHelper.setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
+			if (isActiveKey) {
+				GLRenderer.setLightmapCoord1i(setBlocklightValue(lightmap, Math.max(((lightmap >> 4) & 0xF), 10)));
 			}
 
 			DHDGeometry.KeyPositions positions = getKeyPositions()[i];
 
 			tessellator.startDrawingQuads();
 
-			Vec3 v1 = Vec3.getTempVec3(positions.a3.x - positions.a4.x, positions.a3.y - positions.a4.y, positions.a3.z - positions.a4.z);
-			Vec3 v2 = Vec3.getTempVec3(positions.a1.x - positions.a4.x, positions.a1.y - positions.a4.y, positions.a1.z - positions.a4.z);
-			Vec3 normal = v1.crossProduct(v2).normalize();
-			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0.1, 0);
-			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0.1);
-			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0, 0.1);
-			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+			Vector3d v1 = new Vector3d(positions.a3().x() - positions.a4().x(), positions.a3().y() - positions.a4().y(), positions.a3().z() - positions.a4().z());
+			Vector3d v2 = new Vector3d(positions.a1().x() - positions.a4().x(), positions.a1().y() - positions.a4().y(), positions.a1().z() - positions.a4().z());
+			Vector3d normal = v1.cross(v2, new Vector3d()).normalize();
+			tessellator.setNormal((float) normal.x(), (float) normal.y(), (float) normal.z());
+			tessellator.addVertexWithUV(positions.a4().x(), positions.a4().y(), positions.a4().z(), 0.1, 0);
+			tessellator.addVertexWithUV(positions.a3().x(), positions.a3().y(), positions.a3().z(), 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a2().x(), positions.a2().y(), positions.a2().z(), 0, 0.1);
+			tessellator.addVertexWithUV(positions.a1().x(), positions.a1().y(), positions.a1().z(), 0, 0);
 
 
-			v1 = Vec3.getTempVec3(positions.b4.x - positions.b1.x, positions.b4.y - positions.b1.y, positions.b4.z - positions.b1.z);
-			v2 = Vec3.getTempVec3(positions.a1.x - positions.b1.x, positions.a1.y - positions.b1.y, positions.a1.z - positions.b1.z);
-			normal = v1.crossProduct(v2).normalize();
-			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-			tessellator.addVertexWithUV(positions.b1.x, positions.b1.y, positions.b1.z, 0, 0.1);
-			tessellator.addVertexWithUV(positions.b4.x, positions.b4.y, positions.b4.z, 0.1, 0.1);
-			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0.1, 0);
-			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+			v1 = new Vector3d(positions.b4().x() - positions.b1().x(), positions.b4().y() - positions.b1().y(), positions.b4().z() - positions.b1().z());
+			v2 = new Vector3d(positions.a1().x() - positions.b1().x(), positions.a1().y() - positions.b1().y(), positions.a1().z() - positions.b1().z());
+			normal = v1.cross(v2, new Vector3d()).normalize();
+			tessellator.setNormal((float) normal.x(), (float) normal.y(), (float) normal.z());
+			tessellator.addVertexWithUV(positions.b1().x(), positions.b1().y(), positions.b1().z(), 0, 0.1);
+			tessellator.addVertexWithUV(positions.b4().x(), positions.b4().y(), positions.b4().z(), 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a4().x(), positions.a4().y(), positions.a4().z(), 0.1, 0);
+			tessellator.addVertexWithUV(positions.a1().x(), positions.a1().y(), positions.a1().z(), 0, 0);
 
-			v1 = Vec3.getTempVec3(positions.b3.x - positions.a3.x, positions.b3.y - positions.a3.y, positions.b3.z - positions.a3.z);
-			v2 = Vec3.getTempVec3(positions.a2.x - positions.a3.x, positions.a2.y - positions.a3.y, positions.a2.z - positions.a3.z);
-			normal = v1.crossProduct(v2).normalize();
-			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0);
-			tessellator.addVertexWithUV(positions.b3.x, positions.b3.y, positions.b3.z, 0.1, 0.1);
-			tessellator.addVertexWithUV(positions.b2.x, positions.b2.y, positions.b2.z, 0, 0.1);
-			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0, 0);
+			v1 = new Vector3d(positions.b3().x() - positions.a3().x(), positions.b3().y() - positions.a3().y(), positions.b3().z() - positions.a3().z());
+			v2 = new Vector3d(positions.a2().x() - positions.a3().x(), positions.a2().y() - positions.a3().y(), positions.a2().z() - positions.a3().z());
+			normal = v1.cross(v2, new Vector3d()).normalize();
+			tessellator.setNormal((float) normal.x(), (float) normal.y(), (float) normal.z());
+			tessellator.addVertexWithUV(positions.a3().x(), positions.a3().y(), positions.a3().z(), 0.1, 0);
+			tessellator.addVertexWithUV(positions.b3().x(), positions.b3().y(), positions.b3().z(), 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.b2().x(), positions.b2().y(), positions.b2().z(), 0, 0.1);
+			tessellator.addVertexWithUV(positions.a2().x(), positions.a2().y(), positions.a2().z(), 0, 0);
 
-			v1 = Vec3.getTempVec3(positions.b2.x - positions.a2.x, positions.b2.y - positions.a2.y, positions.b2.z - positions.a2.z);
-			v2 = Vec3.getTempVec3(positions.a1.x - positions.a2.x, positions.a1.y - positions.a2.y, positions.a1.z - positions.a2.z);
-			normal = v1.crossProduct(v2).normalize();
-			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-			tessellator.addVertexWithUV(positions.a2.x, positions.a2.y, positions.a2.z, 0.1, 0);
-			tessellator.addVertexWithUV(positions.b2.x, positions.b2.y, positions.b2.z, 0.1, 0.1);
-			tessellator.addVertexWithUV(positions.b1.x, positions.b1.y, positions.b1.z, 0, 0.1);
-			tessellator.addVertexWithUV(positions.a1.x, positions.a1.y, positions.a1.z, 0, 0);
+			v1 = new Vector3d(positions.b2().x() - positions.a2().x(), positions.b2().y() - positions.a2().y(), positions.b2().z() - positions.a2().z());
+			v2 = new Vector3d(positions.a1().x() - positions.a2().x(), positions.a1().y() - positions.a2().y(), positions.a1().z() - positions.a2().z());
+			normal = v1.cross(v2, new Vector3d()).normalize();
+			tessellator.setNormal((float) normal.x(), (float) normal.y(), (float) normal.z());
+			tessellator.addVertexWithUV(positions.a2().x(), positions.a2().y(), positions.a2().z(), 0.1, 0);
+			tessellator.addVertexWithUV(positions.b2().x(), positions.b2().y(), positions.b2().z(), 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.b1().x(), positions.b1().y(), positions.b1().z(), 0, 0.1);
+			tessellator.addVertexWithUV(positions.a1().x(), positions.a1().y(), positions.a1().z(), 0, 0);
 
-			v1 = Vec3.getTempVec3(positions.b3.x - positions.b4.x, positions.b3.y - positions.b4.y, positions.b3.z - positions.b4.z);
-			v2 = Vec3.getTempVec3(positions.a4.x - positions.b4.x, positions.a4.y - positions.b4.y, positions.a4.z - positions.b4.z);
-			normal = v1.crossProduct(v2).normalize();
-			tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
-			tessellator.addVertexWithUV(positions.b4.x, positions.b4.y, positions.b4.z, 0, 0.1);
-			tessellator.addVertexWithUV(positions.b3.x, positions.b3.y, positions.b3.z, 0.1, 0.1);
-			tessellator.addVertexWithUV(positions.a3.x, positions.a3.y, positions.a3.z, 0.1, 0);
-			tessellator.addVertexWithUV(positions.a4.x, positions.a4.y, positions.a4.z, 0, 0);
+			v1 = new Vector3d(positions.b3().x() - positions.b4().x(), positions.b3().y() - positions.b4().y(), positions.b3().z() - positions.b4().z());
+			v2 = new Vector3d(positions.a4().x() - positions.b4().x(), positions.a4().y() - positions.b4().y(), positions.a4().z() - positions.b4().z());
+			normal = v1.cross(v2, new Vector3d()).normalize();
+			tessellator.setNormal((float) normal.x(), (float) normal.y(), (float) normal.z());
+			tessellator.addVertexWithUV(positions.b4().x(), positions.b4().y(), positions.b4().z(), 0, 0.1);
+			tessellator.addVertexWithUV(positions.b3().x(), positions.b3().y(), positions.b3().z(), 0.1, 0.1);
+			tessellator.addVertexWithUV(positions.a3().x(), positions.a3().y(), positions.a3().z(), 0.1, 0);
+			tessellator.addVertexWithUV(positions.a4().x(), positions.a4().y(), positions.a4().z(), 0, 0);
 
 			tessellator.draw();
 
-			if (isActiveKey && LightmapHelper.isLightmapEnabled()) {
-				LightmapHelper.setLightmapCoord(lightmap);
-			}
+			GLRenderer.setLightmapCoord1i(lightmap);
 		}
 
-		GL11.glPopMatrix();
+		GLRenderer.popFrame();
 	}
 
-	protected abstract void renderDHD(Tessellator tessellator, WavefrontLoader dhd);
+	protected abstract void renderDHD(TessellatorGeneral tessellator, WavefrontLoader dhd);
 
-	protected abstract void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active);
+	protected abstract void renderDial(TessellatorGeneral tessellator, WavefrontLoader button, boolean active);
 
-	protected abstract void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive);
+	protected abstract void renderKey(TessellatorGeneral tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive);
 
 	protected boolean isKeyActive(StargateComponent stargateComponent, int keyId) {
 		if (stargateComponent == null) {

@@ -6,11 +6,15 @@ import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.enums.LightLayer;
-import net.minecraft.core.world.BlocksContainer;
+import net.minecraft.core.world.Dimension;
 import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.biome.Biome;
 import net.minecraft.core.world.chunk.ChunkCoordinates;
+import net.minecraft.core.world.pos.TilePosc;
 import net.minecraft.core.world.season.SeasonManager;
+import net.minecraft.core.world.type.WorldType;
+import net.minecraft.core.world.weather.WeatherManager;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -19,7 +23,7 @@ import java.util.Map;
 
 public class ProxyWorld implements WorldSource {
 	public final WorldSource world;
-	private final Map blockEntryMap = new HashMap();
+	private final Map<ChunkCoordinates, BlockEntry> blockEntryMap = new HashMap<>();
 	private Entity lightRefEntity = null;
 
 	public ProxyWorld(WorldSource world) {
@@ -31,14 +35,14 @@ public class ProxyWorld implements WorldSource {
 	}
 
 	public void setBlock(int x, int y, int z, int blockID, int blockMeta, TileEntity entity) {
-		this.blockEntryMap.put(new ChunkCoordinates(x, y, z), new BlocksContainer.BlockEntry(blockID, blockMeta, entity, x, y, z));
+		this.blockEntryMap.put(new ChunkCoordinates(x, y, z), new BlockEntry(blockID, blockMeta, entity, x, y, z));
 	}
 
-	public BlocksContainer.BlockEntry getEntry(int x, int y, int z) {
-		return (BlocksContainer.BlockEntry) this.blockEntryMap.get(new ChunkCoordinates(x, y, z));
+	public BlockEntry getEntry(int x, int y, int z) {
+		return this.blockEntryMap.get(new ChunkCoordinates(x, y, z));
 	}
 
-	public Collection getEntries() {
+	public Collection<BlockEntry> getEntries() {
 		return this.blockEntryMap.values();
 	}
 
@@ -46,95 +50,114 @@ public class ProxyWorld implements WorldSource {
 		this.blockEntryMap.clear();
 	}
 
-	public int getBlockId(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? ((BlocksContainer.BlockEntry) this.blockEntryMap.get(c)).blockID : this.world.getBlockId(x, y, z);
+	@Override
+	public int getHeightBlocks() {
+		return this.world.getHeightBlocks();
 	}
 
-	public @Nullable Block getBlock(int x, int y, int z) {
-		return Blocks.getBlock(this.getBlockId(x, y, z));
+	@Override
+	public @NotNull Block getBlockType(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		if (this.blockEntryMap.containsKey(c)) {
+			Block<?> block = Blocks.getBlock(this.blockEntryMap.get(c).blockID);
+			return block != null ? block : Blocks.AIR;
+		}
+		return this.world.getBlockType(tilePos);
 	}
 
-	public TileEntity getTileEntity(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? ((BlocksContainer.BlockEntry) this.blockEntryMap.get(c)).tileEntity : this.world.getTileEntity(x, y, z);
+	@Override
+	public @Nullable TileEntity getTileEntity(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).tileEntity : this.world.getTileEntity(tilePos);
 	}
 
-	public float getBrightness(int x, int y, int z, int blockLightValue) {
-		return this.lightRefEntity != null ? this.lightRefEntity.getBrightness(1.0F) : this.world.getBrightness(x, y, z, blockLightValue);
+	@Override
+	public int getBlockData(@NotNull TilePosc tilePos) {
+		ChunkCoordinates c = new ChunkCoordinates(tilePos.x(), tilePos.y(), tilePos.z());
+		return this.blockEntryMap.containsKey(c) ? this.blockEntryMap.get(c).blockMeta : this.world.getBlockData(tilePos);
 	}
 
-	public int getLightmapCoord(int x, int y, int z, int blockLightValue) {
-		return this.lightRefEntity != null ? this.lightRefEntity.getLightmapCoord(1.0F) : this.world.getLightmapCoord(x, y, z, blockLightValue);
+	@Override
+	public float getBrightness(@NotNull TilePosc tilePos, int lightEmission) {
+		return this.lightRefEntity != null ? this.lightRefEntity.getBrightness(1.0F) : this.world.getBrightness(tilePos, lightEmission);
 	}
 
-	public int getLightmapCoord(int skylight, int blocklight) {
-		return this.world.getLightmapCoord(skylight, blocklight);
+	@Override
+	public byte getLightIndex(@NotNull TilePosc tilePos, int lightEmission) {
+		return this.lightRefEntity != null ? this.lightRefEntity.getLightIndex(1.0F) : this.world.getLightIndex(tilePos, lightEmission);
 	}
 
-	public float getLightBrightness(int x, int y, int z) {
-		return this.world.getLightBrightness(x, y, z);
+	@Override
+	public float getLightBrightness(@NotNull TilePosc tilePos) {
+		return this.world.getLightBrightness(tilePos);
 	}
 
-	public int getBlockMetadata(int x, int y, int z) {
-		ChunkCoordinates c = new ChunkCoordinates(x, y, z);
-		return this.blockEntryMap.containsKey(c) ? ((BlocksContainer.BlockEntry) this.blockEntryMap.get(c)).blockMeta : this.world.getBlockMetadata(x, y, z);
+	@Override
+	public @NotNull Material getBlockMaterial(@NotNull TilePosc tilePos) {
+		return this.getBlockType(tilePos).getMaterial();
 	}
 
-	public Material getBlockMaterial(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b == null ? Material.air : b.getMaterial();
+	@Override
+	public boolean isBlockOpaqueCube(@NotNull TilePosc tilePos) {
+		return this.getBlockType(tilePos).isSolidRender();
 	}
 
-	public boolean isBlockOpaqueCube(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b != null && b.isSolidRender();
+	@Override
+	public boolean isBlockNormalCube(@NotNull TilePosc tilePos) {
+		Block<?> block = this.getBlockType(tilePos);
+		return block.getMaterial().isSolidBlocking() && block.renderAsNormalBlockOnCondition(this, tilePos);
 	}
 
-	public boolean isBlockNormalCube(int x, int y, int z) {
-		Block<?> b = this.getBlock(x, y, z);
-		return b != null && b.getMaterial().isSolidBlocking() && b.renderAsNormalBlockOnCondition(this, x, y, z);
+	@Override
+	public double getBlockTemperature(@NotNull TilePosc tilePos) {
+		return this.world.getBlockTemperature(tilePos);
 	}
 
-	public double getBlockTemperature(int x, int z) {
-		return this.world.getBlockTemperature(x, z);
+	@Override
+	public double getBlockHumidity(@NotNull TilePosc tilePos) {
+		return this.world.getBlockHumidity(tilePos);
 	}
 
-	public double getBlockHumidity(int x, int z) {
-		return this.world.getBlockHumidity(x, z);
+	@Override
+	public double getBlockVariety(@NotNull TilePosc tilePos) {
+		return this.world.getBlockVariety(tilePos);
 	}
 
-	public SeasonManager getSeasonManager() {
+	@Override
+	public @NotNull SeasonManager getSeasonManager() {
 		return this.world.getSeasonManager();
 	}
 
-	public Biome getBlockBiome(int x, int y, int z) {
-		return this.world.getBlockBiome(x, y, z);
+	@Override
+	public @NotNull WeatherManager getWeatherManager() {
+		return this.world.getWeatherManager();
 	}
 
-	public int getSavedLightValue(LightLayer layer, int x, int y, int z) {
-		return this.world.getSavedLightValue(layer, x, y, z);
+	@Override
+	public @NotNull Biome getBlockBiome(@NotNull TilePosc tilePos) {
+		return this.world.getBlockBiome(tilePos);
 	}
 
-	public boolean isRetro() {
-		return this.world.isRetro();
+	@Override
+	public int getSavedLightValue(@NotNull LightLayer layer, @NotNull TilePosc tilePos) {
+		return this.world.getSavedLightValue(layer, tilePos);
 	}
 
-	public static class BlockEntry {
-		public final int blockID;
-		public final int blockMeta;
-		public final @Nullable TileEntity tileEntity;
-		public final int x;
-		public final int y;
-		public final int z;
+	@Override
+	public byte getSavedLightIndex(@NotNull TilePosc tilePos) {
+		return this.world.getSavedLightIndex(tilePos);
+	}
 
-		public BlockEntry(int blockID, int blockMeta, @Nullable TileEntity tileEntity, int x, int y, int z) {
-			this.blockID = blockID;
-			this.blockMeta = blockMeta;
-			this.tileEntity = tileEntity;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
+	@Override
+	public @NotNull Dimension getDimension() {
+		return this.world.getDimension();
+	}
+
+	@Override
+	public @NotNull WorldType getWorldType() {
+		return this.world.getWorldType();
+	}
+
+	public record BlockEntry(int blockID, int blockMeta, @Nullable TileEntity tileEntity, int x, int y, int z) {
 	}
 }

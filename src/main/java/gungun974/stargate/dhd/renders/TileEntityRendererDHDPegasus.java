@@ -7,10 +7,10 @@ import gungun974.stargate.dhd.DHDGeometry;
 import gungun974.stargate.dhd.blocks.BlockLogicDHDPegasus;
 import gungun974.stargate.gate.items.ItemAddressCard;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.item.ItemStack;
-import net.minecraft.core.util.phys.Vec3;
-import org.lwjgl.opengl.GL11;
+import org.joml.Vector3d;
 
 public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	private static final WavefrontLoader ButtonFrame = new WavefrontLoader("/assets/stargate/models/DHD/PegasusButtonFrame.obj");
@@ -28,7 +28,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderDHD(Tessellator tessellator, WavefrontLoader dhd) {
+	protected void renderDHD(TessellatorGeneral tessellator, WavefrontLoader dhd) {
 		dhd.mapMaterial("foot", "foot_pegasus");
 		dhd.mapMaterial("plate", "plate_pegasus");
 
@@ -42,7 +42,7 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderDial(Tessellator tessellator, WavefrontLoader button, boolean active) {
+	protected void renderDial(TessellatorGeneral tessellator, WavefrontLoader button, boolean active) {
 		if (active) {
 			button.mapMaterial("button", "button_active_pegasus");
 		} else {
@@ -53,8 +53,8 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 	}
 
 	@Override
-	protected void renderKey(Tessellator tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
-		this.loadTexture("/assets/stargate/models/Pegasus/pegasus_stargate_glyphs.png");
+	protected void renderKey(TessellatorGeneral tessellator, int i, boolean isActive, int addressSize, StargateFamily family, boolean isGateActive) {
+		this.bindTexture("/assets/stargate/models/Pegasus/pegasus_stargate_glyphs.png");
 
 		int keyId = BlockLogicDHDPegasus.KEY_IDS[i];
 
@@ -78,32 +78,32 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 		DHDGeometry.KeyPositions positions = getKeyPositions()[i];
 
 		if (!isActive) {
-			GL11.glColor4f(0.55f, 0.55f, 0.55f, 1);
+			GLRenderer.setColor4f(0.55f, 0.55f, 0.55f, 1);
 		}
 
 		tessellator.startDrawingQuads();
 
-		Vec3 vm1 = Vec3.getTempVec3(positions.c3.x - positions.c4.x, positions.c3.y - positions.c4.y, positions.c3.z - positions.c4.z);
-		Vec3 vm2 = Vec3.getTempVec3(positions.c1.x - positions.c4.x, positions.c1.y - positions.c4.y, positions.c1.z - positions.c4.z);
-		Vec3 normal = vm1.crossProduct(vm2).normalize();
+		Vector3d vm1 = new Vector3d(positions.c3().x() - positions.c4().x(), positions.c3().y() - positions.c4().y(), positions.c3().z() - positions.c4().z());
+		Vector3d vm2 = new Vector3d(positions.c1().x() - positions.c4().x(), positions.c1().y() - positions.c4().y(), positions.c1().z() - positions.c4().z());
+		Vector3d normal = vm1.cross(vm2, new Vector3d()).normalize();
 		tessellator.setNormal((float) normal.x, (float) normal.y, (float) normal.z);
 
 		if (i >= BlockLogicDHDPegasus.KEY_IDS.length / 2) {
-			tessellator.addVertexWithUV(positions.c4.x, positions.c4.y + 0.0001, positions.c4.z, u1, v1);
-			tessellator.addVertexWithUV(positions.c3.x, positions.c3.y + 0.0001, positions.c3.z, u1, v0);
-			tessellator.addVertexWithUV(positions.c2.x, positions.c2.y + 0.0001, positions.c2.z, u0, v0);
-			tessellator.addVertexWithUV(positions.c1.x, positions.c1.y + 0.0001, positions.c1.z, u0, v1);
+			tessellator.addVertexWithUV(positions.c4().x(), positions.c4().y() + 0.0001, positions.c4().z(), u1, v1);
+			tessellator.addVertexWithUV(positions.c3().x(), positions.c3().y() + 0.0001, positions.c3().z(), u1, v0);
+			tessellator.addVertexWithUV(positions.c2().x(), positions.c2().y() + 0.0001, positions.c2().z(), u0, v0);
+			tessellator.addVertexWithUV(positions.c1().x(), positions.c1().y() + 0.0001, positions.c1().z(), u0, v1);
 		} else {
-			tessellator.addVertexWithUV(positions.c4.x, positions.c4.y + 0.0001, positions.c4.z, u0, v1);
-			tessellator.addVertexWithUV(positions.c3.x, positions.c3.y + 0.0001, positions.c3.z, u1, v1);
-			tessellator.addVertexWithUV(positions.c2.x, positions.c2.y + 0.0001, positions.c2.z, u1, v0);
-			tessellator.addVertexWithUV(positions.c1.x, positions.c1.y + 0.0001, positions.c1.z, u0, v0);
+			tessellator.addVertexWithUV(positions.c4().x(), positions.c4().y() + 0.0001, positions.c4().z(), u0, v1);
+			tessellator.addVertexWithUV(positions.c3().x(), positions.c3().y() + 0.0001, positions.c3().z(), u1, v1);
+			tessellator.addVertexWithUV(positions.c2().x(), positions.c2().y() + 0.0001, positions.c2().z(), u1, v0);
+			tessellator.addVertexWithUV(positions.c1().x(), positions.c1().y() + 0.0001, positions.c1().z(), u0, v0);
 		}
 
 		tessellator.draw();
 
 		if (!isActive) {
-			GL11.glColor4f(1, 1, 1, 1);
+			GLRenderer.setColor4f(1, 1, 1, 1);
 		}
 
 		boolean isHover = false;
@@ -115,11 +115,11 @@ public class TileEntityRendererDHDPegasus extends TileEntityRendererDHD {
 		}
 
 		if (isActive) {
-			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_active.png");
+			this.bindTexture("/assets/stargate/models/DHD/pegasus_key_active.png");
 		} else if (isHover && !isGateActive) {
-			this.loadTexture("/assets/stargate/models/DHD/pegasus_key_hint.png");
+			this.bindTexture("/assets/stargate/models/DHD/pegasus_key_hint.png");
 		} else {
-			this.loadTexture("/assets/stargate/models/DHD/pegasus_key.png");
+			this.bindTexture("/assets/stargate/models/DHD/pegasus_key.png");
 		}
 	}
 }

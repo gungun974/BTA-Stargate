@@ -131,7 +131,7 @@ public class StargatePegasusComponent extends StargateComponent {
 			targetAngle = targetChevron * 4 * symbolAngle;
 
 			if (stargateTile.worldObj != null) {
-				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 			}
 		});
 	}

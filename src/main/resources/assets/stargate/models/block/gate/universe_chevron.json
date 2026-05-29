@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "stargate:block/gate/universe_ring",
+    "bottom": "stargate:block/gate/universe_ring",
+    "north": "stargate:block/gate/universe_chevron",
+    "south": "stargate:block/gate/universe_chevron",
+    "west": "stargate:block/gate/universe_chevron",
+    "east": "stargate:block/gate/universe_chevron"
+  }
+}

@@ -1,33 +1,31 @@
 package gungun974.stargate.dhd;
 
-import net.minecraft.core.util.phys.Vec3;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 public class DHDGeometry {
 	public static final double OFFSET = 0.0059345;
 
-	public static final Vec3 AXIS_A = Vec3.getPermanentVec3(0.0, 1.01898, 0.010445);
-	public static final Vec3 AXIS_B = Vec3.getPermanentVec3(0.0, 0.954843, -0.026586);
+	public static final Vector3dc AXIS_A = new Vector3d(0.0, 1.01898, 0.010445);
+	public static final Vector3dc AXIS_B = new Vector3d(0.0, 0.954843, -0.026586);
 
-	public static Vec3 rotateAroundAxis(Vec3 p, Vec3 axisA, Vec3 axisB, double angleDeg) {
+	public static Vector3dc rotateAroundAxis(Vector3dc p, Vector3dc axisA, Vector3dc axisB, double angleDeg) {
 		double theta = Math.toRadians(angleDeg);
 		double cos = Math.cos(theta);
 		double sin = Math.sin(theta);
 
-		Vec3 k = axisA.vectorTo(axisB).normalize();
-		Vec3 v = axisA.vectorTo(p);
+		Vector3d k = new Vector3d(axisB).sub(axisA).normalize();
+		Vector3d v = new Vector3d(p).sub(axisA);
 
-		Vec3 part1 = v.scale(cos);
-		Vec3 part2 = k.crossProduct(v).scale(sin);
-		Vec3 part3 = k.scale(k.dotProduct(v) * (1.0 - cos));
+		Vector3d part1 = new Vector3d(v).mul(cos);
+		Vector3d part2 = new Vector3d(k).cross(v).mul(sin);
+		Vector3d part3 = new Vector3d(k).mul(k.dot(v) * (1.0 - cos));
 
-		return part1
-			.add(part2.x, part2.y, part2.z)
-			.add(part3.x, part3.y, part3.z)
-			.add(axisA.x, axisA.y, axisA.z);
+		return part1.add(part2).add(part3).add(axisA);
 	}
 
 	public static KeyPositions calculateKeyPositions(int i, int segments, double angle) {
-		Vec3 a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4;
+		Vector3dc a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4;
 
 		if (i >= segments) {
 			double outer_width = 1.0 / segments * 1.6 - OFFSET;
@@ -43,15 +41,15 @@ public class DHDGeometry {
 			double m2y = 1.00585;
 			double m2z = -0.158142;
 
-			a1 = rotateAroundAxis(Vec3.getTempVec3(-outer, m1y, m1z), AXIS_A, AXIS_B, angle);
-			a2 = rotateAroundAxis(Vec3.getTempVec3(outer, m1y, m1z), AXIS_A, AXIS_B, angle);
-			a3 = rotateAroundAxis(Vec3.getTempVec3(inner, m2y, m2z), AXIS_A, AXIS_B, angle);
-			a4 = rotateAroundAxis(Vec3.getTempVec3(-inner, m2y, m2z), AXIS_A, AXIS_B, angle);
+			a1 = rotateAroundAxis(new Vector3d(-outer, m1y, m1z), AXIS_A, AXIS_B, angle);
+			a2 = rotateAroundAxis(new Vector3d(outer, m1y, m1z), AXIS_A, AXIS_B, angle);
+			a3 = rotateAroundAxis(new Vector3d(inner, m2y, m2z), AXIS_A, AXIS_B, angle);
+			a4 = rotateAroundAxis(new Vector3d(-inner, m2y, m2z), AXIS_A, AXIS_B, angle);
 
-			b1 = rotateAroundAxis(Vec3.getTempVec3(-outer, 1.02661, -0.273251), AXIS_A, AXIS_B, angle);
-			b2 = rotateAroundAxis(Vec3.getTempVec3(outer, 1.02661, -0.273251), AXIS_A, AXIS_B, angle);
-			b3 = rotateAroundAxis(Vec3.getTempVec3(inner, 1, -0.159509), AXIS_A, AXIS_B, angle);
-			b4 = rotateAroundAxis(Vec3.getTempVec3(-inner, 1, -0.159509), AXIS_A, AXIS_B, angle);
+			b1 = rotateAroundAxis(new Vector3d(-outer, 1.02661, -0.273251), AXIS_A, AXIS_B, angle);
+			b2 = rotateAroundAxis(new Vector3d(outer, 1.02661, -0.273251), AXIS_A, AXIS_B, angle);
+			b3 = rotateAroundAxis(new Vector3d(inner, 1, -0.159509), AXIS_A, AXIS_B, angle);
+			b4 = rotateAroundAxis(new Vector3d(-inner, 1, -0.159509), AXIS_A, AXIS_B, angle);
 
 			double m3y = m2y + (m1y - m2y) * 0.88;
 			double m3z = m2z + (m1z - m2z) * 0.88;
@@ -59,10 +57,10 @@ public class DHDGeometry {
 			double m4y = m1y + (m2y - m1y) * 0.88;
 			double m4z = m1z + (m2z - m1z) * 0.88;
 
-			c1 = rotateAroundAxis(Vec3.getTempVec3(-mid, m3y, m3z), AXIS_A, AXIS_B, angle);
-			c2 = rotateAroundAxis(Vec3.getTempVec3(mid, m3y, m3z), AXIS_A, AXIS_B, angle);
-			c3 = rotateAroundAxis(Vec3.getTempVec3(mid, m4y, m4z), AXIS_A, AXIS_B, angle);
-			c4 = rotateAroundAxis(Vec3.getTempVec3(-mid, m4y, m4z), AXIS_A, AXIS_B, angle);
+			c1 = rotateAroundAxis(new Vector3d(-mid, m3y, m3z), AXIS_A, AXIS_B, angle);
+			c2 = rotateAroundAxis(new Vector3d(mid, m3y, m3z), AXIS_A, AXIS_B, angle);
+			c3 = rotateAroundAxis(new Vector3d(mid, m4y, m4z), AXIS_A, AXIS_B, angle);
+			c4 = rotateAroundAxis(new Vector3d(-mid, m4y, m4z), AXIS_A, AXIS_B, angle);
 		} else {
 			double outer_width = 1.0 / segments * 2.35 - OFFSET;
 			double inner_width = 1.0 / segments * 1.68 - OFFSET;
@@ -77,15 +75,15 @@ public class DHDGeometry {
 			double m2y = 1.0265;
 			double m2z = -0.290294;
 
-			a1 = rotateAroundAxis(Vec3.getTempVec3(-outer, m1y, m1z), AXIS_A, AXIS_B, angle);
-			a2 = rotateAroundAxis(Vec3.getTempVec3(outer, m1y, m1z), AXIS_A, AXIS_B, angle);
-			a3 = rotateAroundAxis(Vec3.getTempVec3(inner, m2y, m2z), AXIS_A, AXIS_B, angle);
-			a4 = rotateAroundAxis(Vec3.getTempVec3(-inner, m2y, m2z), AXIS_A, AXIS_B, angle);
+			a1 = rotateAroundAxis(new Vector3d(-outer, m1y, m1z), AXIS_A, AXIS_B, angle);
+			a2 = rotateAroundAxis(new Vector3d(outer, m1y, m1z), AXIS_A, AXIS_B, angle);
+			a3 = rotateAroundAxis(new Vector3d(inner, m2y, m2z), AXIS_A, AXIS_B, angle);
+			a4 = rotateAroundAxis(new Vector3d(-inner, m2y, m2z), AXIS_A, AXIS_B, angle);
 
-			b1 = rotateAroundAxis(Vec3.getTempVec3(-outer, 1.03732, -0.406076), AXIS_A, AXIS_B, angle);
-			b2 = rotateAroundAxis(Vec3.getTempVec3(outer, 1.03732, -0.406076), AXIS_A, AXIS_B, angle);
-			b3 = rotateAroundAxis(Vec3.getTempVec3(inner, 1.02056, -0.29116), AXIS_A, AXIS_B, angle);
-			b4 = rotateAroundAxis(Vec3.getTempVec3(-inner, 1.02056, -0.29116), AXIS_A, AXIS_B, angle);
+			b1 = rotateAroundAxis(new Vector3d(-outer, 1.03732, -0.406076), AXIS_A, AXIS_B, angle);
+			b2 = rotateAroundAxis(new Vector3d(outer, 1.03732, -0.406076), AXIS_A, AXIS_B, angle);
+			b3 = rotateAroundAxis(new Vector3d(inner, 1.02056, -0.29116), AXIS_A, AXIS_B, angle);
+			b4 = rotateAroundAxis(new Vector3d(-inner, 1.02056, -0.29116), AXIS_A, AXIS_B, angle);
 
 			double m3y = m2y + (m1y - m2y) * 0.88;
 			double m3z = m2z + (m1z - m2z) * 0.88;
@@ -95,33 +93,16 @@ public class DHDGeometry {
 
 			mid *= 0.85;
 
-			c1 = rotateAroundAxis(Vec3.getTempVec3(-mid, m3y, m3z), AXIS_A, AXIS_B, angle);
-			c2 = rotateAroundAxis(Vec3.getTempVec3(mid, m3y, m3z), AXIS_A, AXIS_B, angle);
-			c3 = rotateAroundAxis(Vec3.getTempVec3(mid, m4y, m4z), AXIS_A, AXIS_B, angle);
-			c4 = rotateAroundAxis(Vec3.getTempVec3(-mid, m4y, m4z), AXIS_A, AXIS_B, angle);
+			c1 = rotateAroundAxis(new Vector3d(-mid, m3y, m3z), AXIS_A, AXIS_B, angle);
+			c2 = rotateAroundAxis(new Vector3d(mid, m3y, m3z), AXIS_A, AXIS_B, angle);
+			c3 = rotateAroundAxis(new Vector3d(mid, m4y, m4z), AXIS_A, AXIS_B, angle);
+			c4 = rotateAroundAxis(new Vector3d(-mid, m4y, m4z), AXIS_A, AXIS_B, angle);
 		}
 
-		return new KeyPositions(a1.makePermanent(), a2.makePermanent(), a3.makePermanent(), a4.makePermanent(), b1.makePermanent(), b2.makePermanent(), b3.makePermanent(), b4.makePermanent(), c1.makePermanent(), c2.makePermanent(), c3.makePermanent(), c4.makePermanent());
+		return new KeyPositions(a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4);
 	}
 
-	public static class KeyPositions {
-		public final Vec3 a1, a2, a3, a4;
-		public final Vec3 b1, b2, b3, b4;
-		public final Vec3 c1, c2, c3, c4;
-
-		public KeyPositions(Vec3 a1, Vec3 a2, Vec3 a3, Vec3 a4, Vec3 b1, Vec3 b2, Vec3 b3, Vec3 b4, Vec3 c1, Vec3 c2, Vec3 c3, Vec3 c4) {
-			this.a1 = a1;
-			this.a2 = a2;
-			this.a3 = a3;
-			this.a4 = a4;
-			this.b1 = b1;
-			this.b2 = b2;
-			this.b3 = b3;
-			this.b4 = b4;
-			this.c1 = c1;
-			this.c2 = c2;
-			this.c3 = c3;
-			this.c4 = c4;
-		}
+	public record KeyPositions(Vector3dc a1, Vector3dc a2, Vector3dc a3, Vector3dc a4, Vector3dc b1, Vector3dc b2,
+							   Vector3dc b3, Vector3dc b4, Vector3dc c1, Vector3dc c2, Vector3dc c3, Vector3dc c4) {
 	}
 }

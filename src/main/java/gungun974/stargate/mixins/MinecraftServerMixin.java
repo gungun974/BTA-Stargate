@@ -1,6 +1,5 @@
 package gungun974.stargate.mixins;
 
-import gungun974.stargate.IWorldDirNameAccess;
 import gungun974.stargate.core.StargateSessionManager;
 import net.minecraft.core.world.save.ISaveFormat;
 import net.minecraft.server.MinecraftServer;
@@ -11,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = MinecraftServer.class, remap = false)
-public abstract class MinecraftServerMixin implements IWorldDirNameAccess {
+public abstract class MinecraftServerMixin {
 	@Unique
 	public String worldDirName;
 
@@ -27,11 +26,6 @@ public abstract class MinecraftServerMixin implements IWorldDirNameAccess {
 	)
 	private void rememberWorldDirName(ISaveFormat saveFormat, String worldDirName, long l, CallbackInfo ci) {
 		this.worldDirName = worldDirName;
-	}
-
-	@Override
-	public String bta_stargate$getWorldDirName() {
-		return worldDirName;
 	}
 }
 

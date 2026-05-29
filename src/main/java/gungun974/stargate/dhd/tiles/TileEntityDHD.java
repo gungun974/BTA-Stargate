@@ -2,13 +2,15 @@ package gungun974.stargate.dhd.tiles;
 
 import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
-import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.util.helper.LightIndexHelper;
 import net.minecraft.core.world.chunk.Chunk;
-import net.minecraft.core.world.chunk.ChunkPosition;
+import net.minecraft.core.world.pos.ChunkPos;
+import net.minecraft.core.world.pos.ChunkTilePos;
+import net.minecraft.core.world.pos.TilePos;
+import org.jetbrains.annotations.Nullable;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +30,14 @@ public abstract class TileEntityDHD extends TileEntity {
 
 		List<TileEntityStargate> gates = new ArrayList<>();
 
-		int chunkX = Math.floorDiv(x, 16);
-		int chunkZ = Math.floorDiv(z, 16);
+		int chunkX = Math.floorDiv(tilePos.x, 16);
+		int chunkZ = Math.floorDiv(tilePos.z, 16);
 
 		for (int cx = chunkX - 1; cx <= chunkX + 1; cx++) {
 			for (int cz = chunkZ - 1; cz <= chunkZ + 1; cz++) {
-				Chunk chunk = worldObj.getChunkFromChunkCoords(cx, cz);
+				Chunk chunk = worldObj.getChunk(new ChunkPos(cx, cz));
 
-				if (chunk == null) {
-					continue;
-				}
-
-				for (Map.Entry<ChunkPosition, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
+				for (Map.Entry<ChunkTilePos, TileEntity> chunkPositionTileEntityEntry : chunk.tileEntityMap.entrySet()) {
 					TileEntity tileEntity = chunkPositionTileEntityEntry.getValue();
 
 					if (tileEntity instanceof TileEntityStargate) {
@@ -61,9 +59,9 @@ public abstract class TileEntityDHD extends TileEntity {
 		int closestDistance = Integer.MAX_VALUE;
 
 		for (TileEntityStargate gate : gates) {
-			int diffX = gate.x - x;
-			int diffY = gate.y - y;
-			int diffZ = gate.z - z;
+			int diffX = gate.tilePos.x - tilePos.x;
+			int diffY = gate.tilePos.y - tilePos.y;
+			int diffZ = gate.tilePos.z - tilePos.z;
 			int distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
 
 			if (distance < closestDistance) {
@@ -92,11 +90,9 @@ public abstract class TileEntityDHD extends TileEntity {
 		}
 
 		if (linked) {
-			TileEntity tile = worldObj.getTileEntity(linkedGateX, linkedGateY, linkedGateZ);
+			TileEntity tile = worldObj.getTileEntity(new TilePos(linkedGateX, linkedGateY, linkedGateZ));
 
-			if (tile != null && !tile.isInvalid() && tile instanceof TileEntityStargate) {
-				TileEntityStargate gate = (TileEntityStargate) tile;
-
+			if (tile != null && !tile.isInvalid() && tile instanceof TileEntityStargate gate) {
 				if (gate.getStargateComponent() != null) {
 					linkedGate = gate;
 					return gate;
@@ -113,9 +109,9 @@ public abstract class TileEntityDHD extends TileEntity {
 		}
 
 		linked = true;
-		linkedGateX = gate.x;
-		linkedGateY = gate.y;
-		linkedGateZ = gate.z;
+		linkedGateX = gate.tilePos.x;
+		linkedGateY = gate.tilePos.y;
+		linkedGateZ = gate.tilePos.z;
 		linkedGate = gate;
 
 		return gate;
@@ -179,9 +175,9 @@ public abstract class TileEntityDHD extends TileEntity {
 
 	public int getLightmap() {
 		if (worldObj == null) {
-			return LightmapHelper.getLightmapCoord(15, 15);
+			return LightIndexHelper.lightIndex2i(15, 15);
 		}
 
-		return worldObj.getLightmapCoord(x, y, z, worldObj.getBlockLightValue(x, y, z));
+		return worldObj.getLightIndex(tilePos, worldObj.getBlockLightValue(tilePos));
 	}
 }

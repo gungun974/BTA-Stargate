@@ -2,7 +2,7 @@
   {
     "name": "stargate:blast_furnace/naquadah_alloy",
     "type": "minecraft:smelting/blast",
-    "input": {
+    "a": {
       "stack": {
         "key": "item.stargate.naquadah_crude_alloy",
         "amount": 1,

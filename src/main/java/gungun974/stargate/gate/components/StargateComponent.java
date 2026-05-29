@@ -7,7 +7,6 @@ import gungun974.stargate.gate.blocks.BlockLogicStargate;
 import gungun974.stargate.gate.renders.StargateEventHorizon;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import gungun974.stargate.network.server.PlayerEnterStargateMessage;
-import net.minecraft.client.render.LightmapHelper;
 import net.minecraft.core.block.*;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.piston.BlockLogicPistonHead;
@@ -17,12 +16,16 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.sound.SoundCategory;
 import net.minecraft.core.util.helper.Axis;
 import net.minecraft.core.util.helper.Direction;
-import net.minecraft.core.util.phys.AABB;
+import net.minecraft.core.util.helper.LightIndexHelper;
 import net.minecraft.core.world.chunk.Chunk;
+import net.minecraft.core.world.pos.ChunkPos;
+import net.minecraft.core.world.pos.TilePos;
+import org.jetbrains.annotations.Nullable;
+import org.joml.primitives.AABBd;
+import org.joml.primitives.AABBdc;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 import turniplabs.halplibe.helper.network.NetworkHandler;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public abstract class StargateComponent {
@@ -60,6 +63,16 @@ public abstract class StargateComponent {
 	public static double angularDistance(double angle1, double angle2) {
 		double diff = Math.abs(angle1 - angle2) % 360.0;
 		return diff > 180.0 ? 360.0 - diff : diff;
+	}
+
+	public static int getHorizontalIndex(Direction direction) {
+		return switch (direction) {
+			case NORTH -> 0;
+			case EAST -> 1;
+			case SOUTH -> 2;
+			case WEST -> 3;
+			default -> -1;
+		};
 	}
 
 	public short getCurrentDialingAddressSize() {
@@ -109,6 +122,7 @@ public abstract class StargateComponent {
 	public void destroyGate() {
 		if (orientation == Direction.NORTH) {
 			destroyVertical();
+			invalidate();
 			return;
 		}
 		destroyHorizontal();
@@ -169,16 +183,16 @@ public abstract class StargateComponent {
 				meta = idx;
 			}
 
-			int px = stargateTile.x + direction.getOffsetZ() * i;
-			int py = stargateTile.y + j;
-			int pz = stargateTile.z + direction.getOffsetX() * i;
+			int px = stargateTile.tilePos.x + direction.offsetZ() * i;
+			int py = stargateTile.tilePos.y + j;
+			int pz = stargateTile.tilePos.z + direction.offsetX() * i;
 
-			if (stargateTile.worldObj.getBlockId(px, py, pz) != stargateBlockId) {
+			if (stargateTile.worldObj.getBlockType(new TilePos(px, py, pz)).id() != stargateBlockId) {
 				isValidStructure = false;
 				break;
 			}
 
-			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, py, pz);
+			int rawMetadata = stargateTile.worldObj.getBlockData(new TilePos(px, py, pz));
 
 			int ringMetadata = rawMetadata & 0b1111;
 			int directionMetadata = rawMetadata & 0b110000;
@@ -209,17 +223,17 @@ public abstract class StargateComponent {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = stargateTile.x + direction.getOffsetZ() * i;
-			int py = stargateTile.y + j;
-			int pz = stargateTile.z + direction.getOffsetX() * i;
+			int px = stargateTile.tilePos.x + direction.offsetZ() * i;
+			int py = stargateTile.tilePos.y + j;
+			int pz = stargateTile.tilePos.z + direction.offsetX() * i;
 
-			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(px, py, pz, BlockLogicStargate.class);
+			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(new TilePos(px, py, pz), BlockLogicStargate.class);
 
 			if (blockLogicStargate == null) {
 				continue;
 			}
 
-			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, px, py, pz);
+			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, new TilePos(px, py, pz));
 		}
 	}
 
@@ -262,15 +276,15 @@ public abstract class StargateComponent {
 				meta = idx;
 			}
 
-			int px = stargateTile.x + direction.getOffsetZ() * i;
-			int py = stargateTile.y + j;
-			int pz = stargateTile.z + direction.getOffsetX() * i;
+			int px = stargateTile.tilePos.x + direction.offsetZ() * i;
+			int py = stargateTile.tilePos.y + j;
+			int pz = stargateTile.tilePos.z + direction.offsetX() * i;
 
-			if (stargateTile.worldObj.getBlockId(px, py, pz) != stargateBlockId) {
+			if (stargateTile.worldObj.getBlockType(new TilePos(px, py, pz)).id() != stargateBlockId) {
 				continue;
 			}
 
-			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, py, pz);
+			int rawMetadata = stargateTile.worldObj.getBlockData(new TilePos(px, py, pz));
 
 			int ringMetadata = rawMetadata & 0b1111;
 			int directionMetadata = rawMetadata & 0b110000;
@@ -289,25 +303,25 @@ public abstract class StargateComponent {
 				}
 			}
 
-			stargateTile.worldObj.setBlockRaw(px, py, pz, 0);
+			stargateTile.worldObj.setBlockTypeRaw(new TilePos(px, py, pz), Blocks.AIR);
 		}
 
 		for (int[] ints : ringOrder) {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = stargateTile.x + direction.getOffsetZ() * i;
-			int py = stargateTile.y + j;
-			int pz = stargateTile.z + direction.getOffsetX() * i;
+			int px = stargateTile.tilePos.x + direction.offsetZ() * i;
+			int py = stargateTile.tilePos.y + j;
+			int pz = stargateTile.tilePos.z + direction.offsetX() * i;
 
-			stargateTile.worldObj.notifyBlockChange(px, py, pz, 0);
+			stargateTile.worldObj.notifyBlockChange(new TilePos(px, py, pz), Blocks.AIR);
 
-			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(px, py, pz);
+			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(new TilePos(px, py, pz));
 
 			if (tileEntity instanceof TileEntityStargate) {
 				((TileEntityStargate) tileEntity).destroyed();
 
-				stargateTile.worldObj.removeBlockTileEntity(px, py, pz);
+				stargateTile.worldObj.removeTileEntity(new TilePos(px, py, pz));
 			}
 		}
 	}
@@ -340,7 +354,7 @@ public abstract class StargateComponent {
 
 		boolean isValidStructure = true;
 
-		Direction dira = direction.getOpposite();
+		Direction dira = direction.opposite();
 
 		for (int idx = 0; idx < ringOrder.length; idx++) {
 			int i = ringOrder[idx][0];
@@ -359,15 +373,15 @@ public abstract class StargateComponent {
 
 			meta = Math.floorMod(meta, 16);
 
-			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
-			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+			int px = stargateTile.tilePos.x + dira.offsetZ() * i - dira.offsetX() * j;
+			int pz = stargateTile.tilePos.z + dira.offsetX() * i - dira.offsetZ() * j;
 
-			if (stargateTile.worldObj.getBlockId(px, stargateTile.y, pz) != stargateBlockId) {
+			if (stargateTile.worldObj.getBlockType(new TilePos(px, stargateTile.tilePos.y, pz)).id() != stargateBlockId) {
 				isValidStructure = false;
 				break;
 			}
 
-			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, stargateTile.y, pz);
+			int rawMetadata = stargateTile.worldObj.getBlockData(new TilePos(px, stargateTile.tilePos.y, pz));
 
 			int ringMetadata = rawMetadata & 0b1111;
 			int directionMetadata = rawMetadata & 0b110000;
@@ -391,16 +405,16 @@ public abstract class StargateComponent {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
-			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+			int px = stargateTile.tilePos.x + dira.offsetZ() * i - dira.offsetX() * j;
+			int pz = stargateTile.tilePos.z + dira.offsetX() * i - dira.offsetZ() * j;
 
-			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(px, stargateTile.y, pz, BlockLogicStargate.class);
+			BlockLogicStargate blockLogicStargate = stargateTile.worldObj.getBlockLogic(new TilePos(px, stargateTile.tilePos.y, pz), BlockLogicStargate.class);
 
 			if (blockLogicStargate == null) {
 				continue;
 			}
 
-			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, px, stargateTile.y, pz);
+			blockLogicStargate.restoreOriginalBlock(stargateTile.worldObj, new TilePos(px, stargateTile.tilePos.y, pz));
 		}
 	}
 
@@ -430,7 +444,7 @@ public abstract class StargateComponent {
 
 		int stargateBlockId = getIdForStargateBlock();
 
-		Direction dira = direction.getOpposite();
+		Direction dira = direction.opposite();
 
 		for (int idx = 0; idx < ringOrder.length; idx++) {
 			int i = ringOrder[idx][0];
@@ -449,14 +463,14 @@ public abstract class StargateComponent {
 
 			meta = Math.floorMod(meta, 16);
 
-			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
-			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+			int px = stargateTile.tilePos.x + dira.offsetZ() * i - dira.offsetX() * j;
+			int pz = stargateTile.tilePos.z + dira.offsetX() * i - dira.offsetZ() * j;
 
-			if (stargateTile.worldObj.getBlockId(px, stargateTile.y, pz) != stargateBlockId) {
+			if (stargateTile.worldObj.getBlockType(new TilePos(px, stargateTile.tilePos.y, pz)).id() != stargateBlockId) {
 				continue;
 			}
 
-			int rawMetadata = stargateTile.worldObj.getBlockMetadata(px, stargateTile.y, pz);
+			int rawMetadata = stargateTile.worldObj.getBlockData(new TilePos(px, stargateTile.tilePos.y, pz));
 
 			int ringMetadata = rawMetadata & 0b1111;
 			int directionMetadata = rawMetadata & 0b110000;
@@ -469,24 +483,24 @@ public abstract class StargateComponent {
 				continue;
 			}
 
-			stargateTile.worldObj.setBlockRaw(px, stargateTile.y, pz, 0);
+			stargateTile.worldObj.setBlockTypeRaw(new TilePos(px, stargateTile.tilePos.y, pz), Blocks.AIR);
 		}
 
 		for (int[] ints : ringOrder) {
 			int i = ints[0];
 			int j = ints[1];
 
-			int px = stargateTile.x + dira.getOffsetZ() * i - dira.getOffsetX() * j;
-			int pz = stargateTile.z + dira.getOffsetX() * i - dira.getOffsetZ() * j;
+			int px = stargateTile.tilePos.x + dira.offsetZ() * i - dira.offsetX() * j;
+			int pz = stargateTile.tilePos.z + dira.offsetX() * i - dira.offsetZ() * j;
 
-			stargateTile.worldObj.notifyBlockChange(px, stargateTile.y, pz, 0);
+			stargateTile.worldObj.notifyBlockChange(new TilePos(px, stargateTile.tilePos.y, pz), Blocks.AIR);
 
-			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(px, stargateTile.y, pz);
+			TileEntity tileEntity = stargateTile.worldObj.getTileEntity(new TilePos(px, stargateTile.tilePos.y, pz));
 
 			if (tileEntity instanceof TileEntityStargate) {
 				((TileEntityStargate) tileEntity).destroyed();
 
-				stargateTile.worldObj.removeBlockTileEntity(px, stargateTile.y, pz);
+				stargateTile.worldObj.removeTileEntity(new TilePos(px, stargateTile.tilePos.y, pz));
 			}
 		}
 	}
@@ -505,7 +519,7 @@ public abstract class StargateComponent {
 		stopSoundAtCenter("stargate:stargate.universe.roll");
 		stopSoundAtCenter("stargate:stargate.eventHorizon");
 
-		if (this.stargateTile.worldObj != null && getIdForStargateBlock() != this.stargateTile.worldObj.getBlockId(this.stargateTile.x, this.stargateTile.y, this.stargateTile.z)) {
+		if (this.stargateTile.worldObj != null && getIdForStargateBlock() != this.stargateTile.worldObj.getBlockType(this.stargateTile.tilePos).id()) {
 			StargateSessionManager.getInstance().removeSession(this);
 		}
 	}
@@ -785,27 +799,27 @@ public abstract class StargateComponent {
 		return Math.floorMod((int) Math.round((((currentAngle % 360) + 360) % 360) / symbolAngle), StargateMilkyWayAddress.NUMBER_OF_SYMBOL);
 	}
 
-	public AABB getDetectionBox() {
+	public AABBdc getDetectionBox() {
 		Direction orientation = getOrientation();
 
 		double offset = 3.0;
 
 		Direction direction = getDirection();
-		double x1 = stargateTile.x + direction.getOffsetZ() * -3 + direction.getOffsetX() * offset;
-		double y1 = stargateTile.y;
-		double z1 = stargateTile.z + direction.getOffsetX() * -3 + direction.getOffsetZ() * offset;
-		double x2 = stargateTile.x + direction.getOffsetZ() * 3 - direction.getOffsetX() * offset;
-		double y2 = stargateTile.y + 5;
-		double z2 = stargateTile.z + direction.getOffsetX() * 3 - direction.getOffsetZ() * offset;
+		double x1 = stargateTile.tilePos.x + direction.offsetZ() * -3 + direction.offsetX() * offset;
+		double y1 = stargateTile.tilePos.y;
+		double z1 = stargateTile.tilePos.z + direction.offsetX() * -3 + direction.offsetZ() * offset;
+		double x2 = stargateTile.tilePos.x + direction.offsetZ() * 3 - direction.offsetX() * offset;
+		double y2 = stargateTile.tilePos.y + 5;
+		double z2 = stargateTile.tilePos.z + direction.offsetX() * 3 - direction.offsetZ() * offset;
 
 		if (orientation != Direction.NORTH) {
-			x1 = stargateTile.x - direction.getOffsetZ() * 3;
-			y1 = stargateTile.y - offset;
-			z1 = stargateTile.z - direction.getOffsetX() * 3;
+			x1 = stargateTile.tilePos.x - direction.offsetZ() * 3;
+			y1 = stargateTile.tilePos.y - offset;
+			z1 = stargateTile.tilePos.z - direction.offsetX() * 3;
 
-			x2 = stargateTile.x + direction.getOffsetX() * 6 + direction.getOffsetZ() * 3;
-			y2 = stargateTile.y + offset;
-			z2 = stargateTile.z + direction.getOffsetX() * 3 + direction.getOffsetZ() * 6;
+			x2 = stargateTile.tilePos.x + direction.offsetX() * 6 + direction.offsetZ() * 3;
+			y2 = stargateTile.tilePos.y + offset;
+			z2 = stargateTile.tilePos.z + direction.offsetX() * 3 + direction.offsetZ() * 6;
 		}
 
 		double minX = Math.min(x1, x2);
@@ -814,7 +828,7 @@ public abstract class StargateComponent {
 		double maxX = Math.max(x1, x2) + (double) 1.0F;
 		double maxY = Math.max(y1, y2) + (double) 1.0F;
 		double maxZ = Math.max(z1, z2) + (double) 1.0F;
-		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
+		return new AABBd(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	public void kawooshDestroyInnerBlocks() {
@@ -830,20 +844,20 @@ public abstract class StargateComponent {
 		double centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = stargateTile.x + 0.5;
-			centerY = stargateTile.y + 3.5;
-			centerZ = stargateTile.z + 0.5;
+			centerX = stargateTile.tilePos.x + 0.5;
+			centerY = stargateTile.tilePos.y + 3.5;
+			centerZ = stargateTile.tilePos.z + 0.5;
 		} else {
-			centerX = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
-			centerY = stargateTile.y + orientation.getOffsetY() * 0.5;
-			centerZ = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+			centerX = stargateTile.tilePos.x + direction.offsetZ() * 0.5 + direction.offsetX() * 3.5;
+			centerY = stargateTile.tilePos.y + orientation.offsetY() * 0.5;
+			centerZ = stargateTile.tilePos.z + direction.offsetX() * 0.5 + direction.offsetZ() * 3.5;
 
-			if (direction.getOffsetX() < 0) {
+			if (direction.offsetX() < 0) {
 				centerX += 1;
 				centerZ += 1;
 			}
 
-			if (direction.getOffsetZ() < 0) {
+			if (direction.offsetZ() < 0) {
 				centerZ += 1;
 				centerX += 1;
 			}
@@ -852,8 +866,8 @@ public abstract class StargateComponent {
 		double x1, y1, z1, x2, y2, z2;
 
 		if (orientation == Direction.NORTH) {
-			double x = radius * Math.abs(direction.getOffsetZ());
-			double z = radius * Math.abs(direction.getOffsetX());
+			double x = radius * Math.abs(direction.offsetZ());
+			double z = radius * Math.abs(direction.offsetX());
 
 			x1 = centerX - x;
 			y1 = centerY - radius;
@@ -899,49 +913,47 @@ public abstract class StargateComponent {
 						continue;
 					}
 
-					if (stargateTile.worldObj.getBlockLogic(x, y, z, BlockLogicStargate.class) != null) {
+					if (stargateTile.worldObj.getBlockLogic(new TilePos(x, y, z), BlockLogicStargate.class) != null) {
 						continue;
 					}
 
-					if (stargateTile.worldObj.isAirBlock(x, y, z)) {
+					if (stargateTile.worldObj.isAirBlock(new TilePos(x, y, z))) {
 						continue;
 					}
 
-					AABB boundingBox = AABB.getTemporaryBB(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
+					AABBdc boundingBox = new AABBd(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
 
-					Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
-					if (block != null) {
-						stargateTile.worldObj.collidingBoundingBoxes.clear();
-						block.getCollidingBoundingBoxes(stargateTile.worldObj, x, y, z, boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
+					Block<?> block = stargateTile.worldObj.getBlockType(new TilePos(x, y, z));
+					stargateTile.worldObj.collidingBoundingBoxes.clear();
+					block.getCollisionAABBs(stargateTile.worldObj, new TilePos(x, y, z), boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
 
-						boolean shouldBreak = false;
+					boolean shouldBreak = false;
 
-						for (AABB aabb : stargateTile.worldObj.collidingBoundingBoxes) {
-							double closestX = Math.max(aabb.minX, Math.min(centerX, aabb.maxX));
-							double closestY = Math.max(aabb.minY, Math.min(centerY, aabb.maxY));
-							double closestZ = Math.max(aabb.minZ, Math.min(centerZ, aabb.maxZ));
+					for (AABBdc aabb : stargateTile.worldObj.collidingBoundingBoxes) {
+						double closestX = Math.max(aabb.minX(), Math.min(centerX, aabb.maxX()));
+						double closestY = Math.max(aabb.minY(), Math.min(centerY, aabb.maxY()));
+						double closestZ = Math.max(aabb.minZ(), Math.min(centerZ, aabb.maxZ()));
 
-							double dx = centerX - closestX;
-							double dy = centerY - closestY;
-							double dz = centerZ - closestZ;
-							double distanceSquared = dx * dx + dy * dy + dz * dz;
+						double dx = centerX - closestX;
+						double dy = centerY - closestY;
+						double dz = centerZ - closestZ;
+						double distanceSquared = dx * dx + dy * dy + dz * dz;
 
-							if (distanceSquared < 4) {
-								shouldBreak = true;
-								break;
-							}
+						if (distanceSquared < 4) {
+							shouldBreak = true;
+							break;
 						}
+					}
 
-						if (shouldBreak) {
-							stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
-						}
+					if (shouldBreak) {
+						stargateTile.worldObj.setBlockTypeNotify(new TilePos(x, y, z), Blocks.AIR);
 					}
 				}
 			}
 		}
 	}
 
-	public AABB getKawooshDetectionBox() {
+	public AABBdc getKawooshDetectionBox() {
 		Direction direction = getDirection();
 		Direction orientation = getOrientation();
 
@@ -951,20 +963,20 @@ public abstract class StargateComponent {
 		double centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = stargateTile.x + 0.5;
-			centerY = stargateTile.y + 3.5;
-			centerZ = stargateTile.z + 0.5;
+			centerX = stargateTile.tilePos.x + 0.5;
+			centerY = stargateTile.tilePos.y + 3.5;
+			centerZ = stargateTile.tilePos.z + 0.5;
 		} else {
-			centerX = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
-			centerY = stargateTile.y + orientation.getOffsetY() * 0.5;
-			centerZ = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+			centerX = stargateTile.tilePos.x + direction.offsetZ() * 0.5 + direction.offsetX() * 3.5;
+			centerY = stargateTile.tilePos.y + orientation.offsetY() * 0.5;
+			centerZ = stargateTile.tilePos.z + direction.offsetX() * 0.5 + direction.offsetZ() * 3.5;
 
-			if (direction.getOffsetX() < 0) {
+			if (direction.offsetX() < 0) {
 				centerX += 1;
 				centerZ += 1;
 			}
 
-			if (direction.getOffsetZ() < 0) {
+			if (direction.offsetZ() < 0) {
 				centerZ += 1;
 				centerX += 1;
 			}
@@ -973,23 +985,23 @@ public abstract class StargateComponent {
 		double x1, y1, z1, x2, y2, z2;
 
 		if (orientation == Direction.NORTH) {
-			double x = radius * Math.abs(direction.getOffsetZ());
-			double z = radius * Math.abs(direction.getOffsetX());
+			double x = radius * Math.abs(direction.offsetZ());
+			double z = radius * Math.abs(direction.offsetX());
 
 			x1 = centerX - x;
 			y1 = centerY - radius;
 			z1 = centerZ - z;
 
-			x2 = centerX + x - direction.getOffsetX() * depth;
+			x2 = centerX + x - direction.offsetX() * depth;
 			y2 = centerY + radius;
-			z2 = centerZ + z - direction.getOffsetZ() * depth;
+			z2 = centerZ + z - direction.offsetZ() * depth;
 		} else {
 			x1 = centerX - radius;
 			y1 = centerY;
 			z1 = centerZ - radius;
 
 			x2 = centerX + radius;
-			y2 = centerY + orientation.getOffsetY() * depth;
+			y2 = centerY + orientation.offsetY() * depth;
 			z2 = centerZ + radius;
 		}
 
@@ -1000,7 +1012,7 @@ public abstract class StargateComponent {
 		double maxY = Math.max(y1, y2);
 		double maxZ = Math.max(z1, z2);
 
-		return AABB.getTemporaryBB(minX, minY, minZ, maxX, maxY, maxZ);
+		return new AABBd(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	protected void resetGateDirection() {
@@ -1009,15 +1021,13 @@ public abstract class StargateComponent {
 
 	public void tick() {
 		if ((state != lastState || animation != lastAnimation) && stargateTile.worldObj != null) {
-			Chunk chunk = stargateTile.worldObj.getChunkFromBlockCoords(this.stargateTile.x, this.stargateTile.z);
-			if (chunk != null) {
-				chunk.setChunkModified();
-			}
+			Chunk chunk = stargateTile.worldObj.getChunk(this.stargateTile.tilePos);
+			chunk.setChunkModified();
 		}
 
 		if (animation == StargateAnimation.KAWOOSH && stargateTile.worldObj != null) {
 			kawooshDestroyInnerBlocks();
-			AABB detectionBox = this.getKawooshDetectionBox();
+			AABBdc detectionBox = this.getKawooshDetectionBox();
 			List<Entity> list = this.stargateTile.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
 			for (Entity entity : list) {
@@ -1031,12 +1041,12 @@ public abstract class StargateComponent {
 			Direction direction = getDirection();
 			Direction orientation = getOrientation();
 
-			int startX = (int) Math.floor(detectionBox.minX);
-			int startY = (int) Math.floor(detectionBox.minY);
-			int startZ = (int) Math.floor(detectionBox.minZ);
-			int endX = (int) Math.ceil(detectionBox.maxX) - 1;
-			int endY = (int) Math.ceil(detectionBox.maxY) - 1;
-			int endZ = (int) Math.ceil(detectionBox.maxZ) - 1;
+			int startX = (int) Math.floor(detectionBox.minX());
+			int startY = (int) Math.floor(detectionBox.minY());
+			int startZ = (int) Math.floor(detectionBox.minZ());
+			int endX = (int) Math.ceil(detectionBox.maxX()) - 1;
+			int endY = (int) Math.ceil(detectionBox.maxY()) - 1;
+			int endZ = (int) Math.ceil(detectionBox.maxZ()) - 1;
 
 			for (int x = startX; x <= endX; x++) {
 				for (int y = startY; y <= endY; y++) {
@@ -1066,11 +1076,11 @@ public abstract class StargateComponent {
 							continue;
 						}
 
-						if (stargateTile.worldObj.isAirBlock(x, y, z)) {
+						if (stargateTile.worldObj.isAirBlock(new TilePos(x, y, z))) {
 							continue;
 						}
 
-						stargateTile.worldObj.setBlockWithNotify(x, y, z, 0);
+						stargateTile.worldObj.setBlockTypeNotify(new TilePos(x, y, z), Blocks.AIR);
 					}
 				}
 			}
@@ -1084,16 +1094,16 @@ public abstract class StargateComponent {
 
 			Direction direction = getDirection();
 
-			AABB detectionBox = this.getDetectionBox();
+			AABBdc detectionBox = this.getDetectionBox();
 			List<Entity> list = this.stargateTile.worldObj.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
 			for (Entity entity : list) {
-				double dx = direction.getOffsetX();
-				double dz = direction.getOffsetZ();
+				double dx = direction.offsetX();
+				double dz = direction.offsetZ();
 
-				double cx = stargateTile.x + 0.5;
-				double cy = stargateTile.y + 3.5;
-				double cz = stargateTile.z + 0.5;
+				double cx = stargateTile.tilePos.x + 0.5;
+				double cy = stargateTile.tilePos.y + 3.5;
+				double cz = stargateTile.tilePos.z + 0.5;
 
 				double x0 = entity.xo;
 				double y0 = entity.yo;
@@ -1108,22 +1118,22 @@ public abstract class StargateComponent {
 				double nz = dz;
 
 				if (orientation != Direction.NORTH) {
-					cx = stargateTile.x + direction.getOffsetZ() * 0.5 + direction.getOffsetX() * 3.5;
-					cy = stargateTile.y + orientation.getOffsetY() * 0.5;
-					cz = stargateTile.z + direction.getOffsetX() * 0.5 + direction.getOffsetZ() * 3.5;
+					cx = stargateTile.tilePos.x + direction.offsetZ() * 0.5 + direction.offsetX() * 3.5;
+					cy = stargateTile.tilePos.y + orientation.offsetY() * 0.5;
+					cz = stargateTile.tilePos.z + direction.offsetX() * 0.5 + direction.offsetZ() * 3.5;
 
-					if (direction.getOffsetX() < 0) {
+					if (direction.offsetX() < 0) {
 						cx += 1;
 						cz += 1;
 					}
 
-					if (direction.getOffsetZ() < 0) {
+					if (direction.offsetZ() < 0) {
 						cz += 1;
 						cx += 1;
 					}
 
 					nx = 0;
-					ny = -orientation.getOffsetY();
+					ny = -orientation.offsetY();
 					nz = 0;
 				}
 
@@ -1143,13 +1153,13 @@ public abstract class StargateComponent {
 
 					if (distanceSq < 7.5) {
 						if (entity instanceof Player && EnvironmentHelper.isClientWorld()) {
-							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(stargateTile.x, stargateTile.y, stargateTile.z, stargateTile.dim, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
+							NetworkHandler.sendToServer(new PlayerEnterStargateMessage(stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, stargateTile.dim, entity.xd, entity.yd, entity.zd, d0 < 0 && d1 > 0));
 						} else {
 							StargateSession session = StargateSessionManager.getInstance().getSession(this);
 
 							if (session != null) {
 								if (
-									(session.destinationX == stargateTile.x && session.destinationY == stargateTile.y && session.destinationZ == stargateTile.z) ||
+									(session.destinationX == stargateTile.tilePos.x && session.destinationY == stargateTile.tilePos.y && session.destinationZ == stargateTile.tilePos.z) ||
 										d0 > 0 && d1 < 0
 								) {
 									SoundHelper.playShortSoundAt("stargate:stargate.eventHorizon.enter", SoundCategory.WORLD_SOUNDS, (float) entity.x, (float) entity.y, (float) entity.z, 1.0f, 1.0f);
@@ -1210,7 +1220,7 @@ public abstract class StargateComponent {
 					this.resetGateDirection();
 
 					if (stargateTile.worldObj != null) {
-						stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+						stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 					}
 				}
 			}
@@ -1219,7 +1229,7 @@ public abstract class StargateComponent {
 				state = StargateState.CONNECTED;
 
 				if (stargateTile.worldObj != null) {
-					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 				}
 			}
 
@@ -1232,7 +1242,7 @@ public abstract class StargateComponent {
 				currentDialingAddressSize = session.dialingAddressSize;
 
 				if (needUpdate && stargateTile.worldObj != null) {
-					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 				}
 			}
 
@@ -1242,7 +1252,7 @@ public abstract class StargateComponent {
 				lastAnimationTick = 0;
 
 				if (stargateTile.worldObj != null) {
-					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+					stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 				}
 			}
 		}
@@ -1285,20 +1295,20 @@ public abstract class StargateComponent {
 		float centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = stargateTile.x + 0.5f;
-			centerY = stargateTile.y + 3.5f;
-			centerZ = stargateTile.z + 0.5f;
+			centerX = stargateTile.tilePos.x + 0.5f;
+			centerY = stargateTile.tilePos.y + 3.5f;
+			centerZ = stargateTile.tilePos.z + 0.5f;
 		} else {
-			centerX = stargateTile.x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
-			centerY = stargateTile.y + orientation.getOffsetY() * 0.5f;
-			centerZ = stargateTile.z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+			centerX = stargateTile.tilePos.x + direction.offsetZ() * 0.5f + direction.offsetX() * 3.5f;
+			centerY = stargateTile.tilePos.y + orientation.offsetY() * 0.5f;
+			centerZ = stargateTile.tilePos.z + direction.offsetX() * 0.5f + direction.offsetZ() * 3.5f;
 
-			if (direction.getOffsetX() < 0) {
+			if (direction.offsetX() < 0) {
 				centerX += 1;
 				centerZ += 1;
 			}
 
-			if (direction.getOffsetZ() < 0) {
+			if (direction.offsetZ() < 0) {
 				centerZ += 1;
 				centerX += 1;
 			}
@@ -1318,20 +1328,20 @@ public abstract class StargateComponent {
 		float centerX, centerY, centerZ;
 
 		if (orientation == Direction.NORTH) {
-			centerX = stargateTile.x + 0.5f;
-			centerY = stargateTile.y + 3.5f;
-			centerZ = stargateTile.z + 0.5f;
+			centerX = stargateTile.tilePos.x + 0.5f;
+			centerY = stargateTile.tilePos.y + 3.5f;
+			centerZ = stargateTile.tilePos.z + 0.5f;
 		} else {
-			centerX = stargateTile.x + direction.getOffsetZ() * 0.5f + direction.getOffsetX() * 3.5f;
-			centerY = stargateTile.y + orientation.getOffsetY() * 0.5f;
-			centerZ = stargateTile.z + direction.getOffsetX() * 0.5f + direction.getOffsetZ() * 3.5f;
+			centerX = stargateTile.tilePos.x + direction.offsetZ() * 0.5f + direction.offsetX() * 3.5f;
+			centerY = stargateTile.tilePos.y + orientation.offsetY() * 0.5f;
+			centerZ = stargateTile.tilePos.z + direction.offsetX() * 0.5f + direction.offsetZ() * 3.5f;
 
-			if (direction.getOffsetX() < 0) {
+			if (direction.offsetX() < 0) {
 				centerX += 1;
 				centerZ += 1;
 			}
 
-			if (direction.getOffsetZ() < 0) {
+			if (direction.offsetZ() < 0) {
 				centerZ += 1;
 				centerX += 1;
 			}
@@ -1351,20 +1361,20 @@ public abstract class StargateComponent {
 		double destinationX, destinationY, destinationZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = stargateTile.x + 0.5;
-			originY = stargateTile.y + 3.5;
-			originZ = stargateTile.z + 0.5;
+			originX = stargateTile.tilePos.x + 0.5;
+			originY = stargateTile.tilePos.y + 3.5;
+			originZ = stargateTile.tilePos.z + 0.5;
 		} else {
-			originX = stargateTile.x + originDirection.getOffsetZ() * 0.5 + originDirection.getOffsetX() * 3.5;
-			originY = stargateTile.y + originOrientation.getOffsetY() * 0.5;
-			originZ = stargateTile.z + originDirection.getOffsetX() * 0.5 + originDirection.getOffsetZ() * 3.5;
+			originX = stargateTile.tilePos.x + originDirection.offsetZ() * 0.5 + originDirection.offsetX() * 3.5;
+			originY = stargateTile.tilePos.y + originOrientation.offsetY() * 0.5;
+			originZ = stargateTile.tilePos.z + originDirection.offsetX() * 0.5 + originDirection.offsetZ() * 3.5;
 
-			if (originDirection.getOffsetX() < 0) {
+			if (originDirection.offsetX() < 0) {
 				originX += 1;
 				originZ += 1;
 			}
 
-			if (originDirection.getOffsetZ() < 0) {
+			if (originDirection.offsetZ() < 0) {
 				originZ += 1;
 				originX += 1;
 			}
@@ -1375,16 +1385,16 @@ public abstract class StargateComponent {
 			destinationY = session.destinationY + 3.5;
 			destinationZ = session.destinationZ + 0.5;
 		} else {
-			destinationX = session.destinationX + destinationDirection.getOffsetZ() * 0.5 + destinationDirection.getOffsetX() * 3.5;
-			destinationY = session.destinationY + destinationOrientation.getOffsetY() * 0.5;
-			destinationZ = session.destinationZ + destinationDirection.getOffsetX() * 0.5 + destinationDirection.getOffsetZ() * 3.5;
+			destinationX = session.destinationX + destinationDirection.offsetZ() * 0.5 + destinationDirection.offsetX() * 3.5;
+			destinationY = session.destinationY + destinationOrientation.offsetY() * 0.5;
+			destinationZ = session.destinationZ + destinationDirection.offsetX() * 0.5 + destinationDirection.offsetZ() * 3.5;
 
-			if (destinationDirection.getOffsetX() < 0) {
+			if (destinationDirection.offsetX() < 0) {
 				destinationX += 1;
 				destinationZ += 1;
 			}
 
-			if (destinationDirection.getOffsetZ() < 0) {
+			if (destinationDirection.offsetZ() < 0) {
 				destinationZ += 1;
 				destinationX += 1;
 			}
@@ -1392,20 +1402,20 @@ public abstract class StargateComponent {
 
 		int onx, ony, onz;
 		if (originOrientation == Direction.NORTH) {
-			onx = originDirection.getOffsetX();
+			onx = originDirection.offsetX();
 			ony = 0;
-			onz = originDirection.getOffsetZ();
+			onz = originDirection.offsetZ();
 		} else {
 			onx = 0;
-			ony = -originOrientation.getOffsetY();
+			ony = -originOrientation.offsetY();
 			onz = 0;
 		}
 
 		int oux, ouy, ouz;
 		if (ony != 0) {
-			oux = originDirection.getOffsetX();
+			oux = originDirection.offsetX();
 			ouy = 0;
-			ouz = originDirection.getOffsetZ();
+			ouz = originDirection.offsetZ();
 		} else {
 			oux = 0;
 			ouy = 1;
@@ -1419,19 +1429,19 @@ public abstract class StargateComponent {
 		int ddx, ddy, ddz;
 		if (destinationOrientation != Direction.NORTH) {
 			ddx = 0;
-			ddy = destinationOrientation.getOffsetY();
+			ddy = destinationOrientation.offsetY();
 			ddz = 0;
 		} else {
-			ddx = -destinationDirection.getOffsetX();
+			ddx = -destinationDirection.offsetX();
 			ddy = 0;
-			ddz = -destinationDirection.getOffsetZ();
+			ddz = -destinationDirection.offsetZ();
 		}
 
 		int dux, duy, duz;
 		if (Math.abs(ddy) == 1) {
-			dux = destinationDirection.getOffsetX();
+			dux = destinationDirection.offsetX();
 			duy = 0;
-			duz = destinationDirection.getOffsetZ();
+			duz = destinationDirection.offsetZ();
 		} else {
 			dux = 0;
 			duy = 1;
@@ -1466,7 +1476,7 @@ public abstract class StargateComponent {
 
 		if (originOrientation == Direction.NORTH && destinationOrientation == Direction.NORTH) {
 			int rot = Math.floorMod(
-				originDirection.getHorizontalIndex() - destinationDirection.getOpposite().getHorizontalIndex(), 4
+				getHorizontalIndex(originDirection) - getHorizontalIndex(destinationDirection.opposite()), 4
 			);
 			newYaw = entity.yRot + rot * -90;
 		} else {
@@ -1513,7 +1523,7 @@ public abstract class StargateComponent {
 			return;
 		}
 
-		if (session.destinationX == stargateTile.x && session.destinationY == stargateTile.y && session.destinationZ == stargateTile.z) {
+		if (session.destinationX == stargateTile.tilePos.x && session.destinationY == stargateTile.tilePos.y && session.destinationZ == stargateTile.tilePos.z) {
 			return;
 		}
 
@@ -1528,20 +1538,20 @@ public abstract class StargateComponent {
 		int destinationX, destinationY, destinationZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = stargateTile.x;
-			originY = stargateTile.y + 3;
-			originZ = stargateTile.z;
+			originX = stargateTile.tilePos.x;
+			originY = stargateTile.tilePos.y + 3;
+			originZ = stargateTile.tilePos.z;
 		} else {
-			originX = stargateTile.x + originDirection.getOffsetX() * 3;
-			originY = stargateTile.y;
-			originZ = stargateTile.z + originDirection.getOffsetZ() * 3;
+			originX = stargateTile.tilePos.x + originDirection.offsetX() * 3;
+			originY = stargateTile.tilePos.y;
+			originZ = stargateTile.tilePos.z + originDirection.offsetZ() * 3;
 
-			if (originDirection.getOffsetX() < 0) {
+			if (originDirection.offsetX() < 0) {
 				originX += 1;
 				originZ += 1;
 			}
 
-			if (originDirection.getOffsetZ() < 0) {
+			if (originDirection.offsetZ() < 0) {
 				originZ += 1;
 				originX += 1;
 			}
@@ -1552,16 +1562,16 @@ public abstract class StargateComponent {
 			destinationY = session.destinationY + 3;
 			destinationZ = session.destinationZ;
 		} else {
-			destinationX = session.destinationX + destinationDirection.getOffsetX() * 3;
+			destinationX = session.destinationX + destinationDirection.offsetX() * 3;
 			destinationY = session.destinationY;
-			destinationZ = session.destinationZ + destinationDirection.getOffsetZ() * 3;
+			destinationZ = session.destinationZ + destinationDirection.offsetZ() * 3;
 
-			if (destinationDirection.getOffsetX() < 0) {
+			if (destinationDirection.offsetX() < 0) {
 				destinationX += 1;
 				destinationZ += 1;
 			}
 
-			if (destinationDirection.getOffsetZ() < 0) {
+			if (destinationDirection.offsetZ() < 0) {
 				destinationZ += 1;
 				destinationX += 1;
 			}
@@ -1569,20 +1579,20 @@ public abstract class StargateComponent {
 
 		int onx, ony, onz;
 		if (originOrientation == Direction.NORTH) {
-			onx = originDirection.getOffsetX();
+			onx = originDirection.offsetX();
 			ony = 0;
-			onz = originDirection.getOffsetZ();
+			onz = originDirection.offsetZ();
 		} else {
 			onx = 0;
-			ony = -originOrientation.getOffsetY();
+			ony = -originOrientation.offsetY();
 			onz = 0;
 		}
 
 		int oux, ouy, ouz;
 		if (ony != 0) {
-			oux = originDirection.getOffsetX();
+			oux = originDirection.offsetX();
 			ouy = 0;
-			ouz = originDirection.getOffsetZ();
+			ouz = originDirection.offsetZ();
 		} else {
 			oux = 0;
 			ouy = 1;
@@ -1596,19 +1606,19 @@ public abstract class StargateComponent {
 		int ddx, ddy, ddz;
 		if (destinationOrientation != Direction.NORTH) {
 			ddx = 0;
-			ddy = destinationOrientation.getOffsetY();
+			ddy = destinationOrientation.offsetY();
 			ddz = 0;
 		} else {
-			ddx = -destinationDirection.getOffsetX();
+			ddx = -destinationDirection.offsetX();
 			ddy = 0;
-			ddz = -destinationDirection.getOffsetZ();
+			ddz = -destinationDirection.offsetZ();
 		}
 
 		int dux, duy, duz;
 		if (Math.abs(ddy) == 1) {
-			dux = destinationDirection.getOffsetX();
+			dux = destinationDirection.offsetX();
 			duy = 0;
-			duz = destinationDirection.getOffsetZ();
+			duz = destinationDirection.offsetZ();
 		} else {
 			dux = 0;
 			duy = 1;
@@ -1624,70 +1634,66 @@ public abstract class StargateComponent {
 					continue;
 				}
 
-				int x = originX + i * originDirection.getOffsetZ();
+				int x = originX + i * originDirection.offsetZ();
 				int y = originY + j;
-				int z = originZ + i * originDirection.getOffsetX();
+				int z = originZ + i * originDirection.offsetX();
 
 				if (originOrientation != Direction.NORTH) {
-					x = originX + i * originDirection.getOffsetZ() + j * originDirection.getOffsetX();
+					x = originX + i * originDirection.offsetZ() + j * originDirection.offsetX();
 					y = originY;
-					z = originZ + i * originDirection.getOffsetX() + j * originDirection.getOffsetZ();
+					z = originZ + i * originDirection.offsetX() + j * originDirection.offsetZ();
 				}
 
-				if (stargateTile.worldObj.isAirBlock(x, y, z)) {
+				if (stargateTile.worldObj.isAirBlock(new TilePos(x, y, z))) {
 					continue;
 				}
 
-				int id = stargateTile.worldObj.getBlockId(x, y, z);
+				Block<?> block = stargateTile.worldObj.getBlockType(new TilePos(x, y, z));
 
-				int meta = stargateTile.worldObj.getBlockMetadata(x, y, z);
+				int meta = stargateTile.worldObj.getBlockData(new TilePos(x, y, z));
 
-				if (id == StargateBlocks.STARGATE_MILKYWAY.id()) {
+				if (block.id() == StargateBlocks.STARGATE_MILKYWAY.id()) {
 					continue;
 				}
 
-				if (id == StargateBlocks.STARGATE_PEGASUS.id()) {
+				if (block.id() == StargateBlocks.STARGATE_PEGASUS.id()) {
 					continue;
 				}
 
-				if (id == StargateBlocks.STARGATE_UNIVERSE.id()) {
+				if (block.id() == StargateBlocks.STARGATE_UNIVERSE.id()) {
 					continue;
 				}
 
-				if (id == Blocks.PISTON_MOVING.id()) {
+				if (block.id() == Blocks.PISTON_MOVING.id()) {
 					continue;
 				}
 
-				AABB boundingBox = AABB.getTemporaryBB(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
+				AABBdc boundingBox = new AABBd(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
 
 				boolean shouldTeleport = false;
 
-				@Nullable Block<?> block = stargateTile.worldObj.getBlock(x, y, z);
-
-				if (block != null && (block.getLogic() instanceof BlockLogicPistonHead || block.getLogic() instanceof BlockLogicPistonMoving)) {
+				if (block.getLogic() instanceof BlockLogicPistonHead || block.getLogic() instanceof BlockLogicPistonMoving) {
 					StargateSessionManager.getInstance().resetEndSession(this);
 					continue;
 				}
 
-				if (block != null) {
-					stargateTile.worldObj.collidingBoundingBoxes.clear();
-					block.getCollidingBoundingBoxes(stargateTile.worldObj, x, y, z, boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
+				stargateTile.worldObj.collidingBoundingBoxes.clear();
+				block.getCollisionAABBs(stargateTile.worldObj, new TilePos(x, y, z), boundingBox, stargateTile.worldObj.collidingBoundingBoxes);
 
 
-					for (AABB aabb : stargateTile.worldObj.collidingBoundingBoxes) {
-						double closestX = Math.max(aabb.minX, Math.min(originX, aabb.maxX));
-						double closestY = Math.max(aabb.minY, Math.min(originY, aabb.maxY));
-						double closestZ = Math.max(aabb.minZ, Math.min(originZ, aabb.maxZ));
+				for (AABBdc aabb : stargateTile.worldObj.collidingBoundingBoxes) {
+					double closestX = Math.max(aabb.minX(), Math.min(originX, aabb.maxX()));
+					double closestY = Math.max(aabb.minY(), Math.min(originY, aabb.maxY()));
+					double closestZ = Math.max(aabb.minZ(), Math.min(originZ, aabb.maxZ()));
 
-						double dx = originX - closestX;
-						double dy = originY - closestY;
-						double dz = originZ - closestZ;
-						double distanceSquared = dx * dx + dy * dy + dz * dz;
+					double dx = originX - closestX;
+					double dy = originY - closestY;
+					double dz = originZ - closestZ;
+					double distanceSquared = dx * dx + dy * dy + dz * dz;
 
-						if (distanceSquared < 2.25) {
-							shouldTeleport = true;
-							break;
-						}
+					if (distanceSquared < 2.25) {
+						shouldTeleport = true;
+						break;
 					}
 				}
 
@@ -1710,59 +1716,59 @@ public abstract class StargateComponent {
 					Direction blockDirection = BlockLogicRotatable.getDirectionFromMeta(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
-						blockDirection = destinationDirection.getOpposite();
+						blockDirection = destinationDirection.opposite();
 					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
 						blockDirection = originDirection;
 					} else {
-						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+						blockDirection = blockDirection.rotate(Axis.Y, getHorizontalIndex(destinationDirection) - getHorizontalIndex(originDirection.opposite()));
 					}
 
 					int newMeta = BlockLogicRotatable.setDirection(meta, blockDirection);
 
-					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockTypeDataRaw(new TilePos(x, y, z), block, newMeta);
 				}
 
 				if (block.getLogic() instanceof BlockLogicVeryRotatable) {
 					Direction blockDirection = BlockLogicVeryRotatable.metaToDirection(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
-						blockDirection = destinationDirection.getOpposite();
+						blockDirection = destinationDirection.opposite();
 					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
 						blockDirection = originDirection;
 					} else {
-						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+						blockDirection = blockDirection.rotate(Axis.Y, getHorizontalIndex(destinationDirection) - getHorizontalIndex(originDirection.opposite()));
 					}
 
 					int newMeta = BlockLogicVeryRotatable.setDirection(meta, blockDirection);
 
-					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockTypeDataRaw(new TilePos(x, y, z), block, newMeta);
 				}
 
 				if (block.getLogic() instanceof BlockLogicFullyRotatable) {
 					Direction blockDirection = BlockLogicFullyRotatable.metaToDirection(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
-						blockDirection = destinationDirection.getOpposite();
+						blockDirection = destinationDirection.opposite();
 					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
 						blockDirection = originDirection;
 					} else {
-						blockDirection = blockDirection.rotate(destinationDirection.getHorizontalIndex() - originDirection.getOpposite().getHorizontalIndex());
+						blockDirection = blockDirection.rotate(Axis.Y, getHorizontalIndex(destinationDirection) - getHorizontalIndex(originDirection.opposite()));
 					}
 
 					int newMeta = meta & -8 | BlockLogicFullyRotatable.directionToMeta(blockDirection);
 
-					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockTypeDataRaw(new TilePos(x, y, z), block, newMeta);
 				}
 
 				if (block.getLogic() instanceof BlockLogicAxisAligned) {
 					Axis blockAxis = BlockLogicAxisAligned.metaToAxis(meta);
 
 					if (originOrientation != Direction.NORTH && destinationOrientation == Direction.NORTH) {
-						blockAxis = destinationDirection.getAxis();
+						blockAxis = destinationDirection.axis();
 					} else if (originOrientation == Direction.NORTH && destinationOrientation != Direction.NORTH) {
 						blockAxis = Axis.Y;
 					} else {
-						if (destinationDirection.getAxis() != originDirection.getAxis()) {
+						if (destinationDirection.axis() != originDirection.axis()) {
 							if (blockAxis == Axis.X) {
 								blockAxis = Axis.Z;
 							} else if (blockAxis == Axis.Z) {
@@ -1773,7 +1779,7 @@ public abstract class StargateComponent {
 
 					int newMeta = BlockLogicAxisAligned.axisToMeta(blockAxis);
 
-					stargateTile.worldObj.setBlockAndMetadataRaw(x, y, z, id, newMeta);
+					stargateTile.worldObj.setBlockTypeDataRaw(new TilePos(x, y, z), block, newMeta);
 				}
 
 				StargateDematerializedManager.getInstance().dematerializeBlock(session.destinationX, session.destinationY, session.destinationZ, session.destinationDim, stargateTile.worldObj, x, y, z, newX, newY, newZ);
@@ -1834,23 +1840,23 @@ public abstract class StargateComponent {
 		if (lastAnimation != animation) {
 			if (animation == StargateAnimation.KAWOOSH) {
 				if (getFamily() == StargateFamily.Pegasus) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				} else if (getFamily() == StargateFamily.Universe) {
-					SoundHelper.playShortSoundAt("stargate:stargate.universe.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				} else {
-					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.evenHorizon.open", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				}
 			}
 			if (animation == StargateAnimation.CLOSING) {
-				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.evenHorizon.close", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 			if (animation == StargateAnimation.CANCEL) {
 				if (getFamily() == StargateFamily.Pegasus) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				} else if (getFamily() == StargateFamily.Universe) {
-					SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				} else {
-					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.milkyway.dial.fail", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				}
 			}
 		}
@@ -1866,32 +1872,32 @@ public abstract class StargateComponent {
 			boolean isLastChevronActive = !(state == StargateState.IDLE || state == StargateState.DIALLING);
 
 			if (animationTick == 4) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.lock", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 			if (animationTick == 26 && !isLastChevronActive) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.slow", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.FAST_ENCODE_CHEVRON) {
 			if (getFamily() == StargateFamily.Pegasus) {
 				if (animationTick == 0) {
-					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+					SoundHelper.playShortSoundAt("stargate:stargate.pegasus.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 				}
 			} else if (animationTick == 4) {
-				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.milkyway.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.UNIVERSE_START) {
 			if (animationTick == 0) {
-				SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.start", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.dial.start", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 		}
 
 		if (animation == StargateAnimation.UNIVERSE_ENCODE_CHEVRON || animation == StargateAnimation.UNIVERSE_FAST_ENCODE_CHEVRON) {
 			if (animationTick == 0) {
-				SoundHelper.playShortSoundAt("stargate:stargate.universe.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.x, stargateTile.y, stargateTile.z, 1.0f, 1.0f);
+				SoundHelper.playShortSoundAt("stargate:stargate.universe.encode.fast", SoundCategory.WORLD_SOUNDS, stargateTile.tilePos.x, stargateTile.tilePos.y, stargateTile.tilePos.z, 1.0f, 1.0f);
 			}
 		}
 
@@ -1914,7 +1920,7 @@ public abstract class StargateComponent {
 		lastAnimationTick = 0;
 
 		if (stargateTile.worldObj != null) {
-			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 		}
 	}
 
@@ -1967,7 +1973,7 @@ public abstract class StargateComponent {
 			targetAngle = computeTargetAngle(symbol);
 
 			if (stargateTile.worldObj != null) {
-				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 			}
 		});
 	}
@@ -2169,9 +2175,9 @@ public abstract class StargateComponent {
 						}
 
 						locations.add(new StargateLocation(
-							tileEntity.x,
-							tileEntity.y,
-							tileEntity.z,
+							tileEntity.tilePos.x,
+							tileEntity.tilePos.y,
+							tileEntity.tilePos.z,
 							destinationAddress.getDim(),
 							destinationAddress,
 							tileEntity.hasDHD(),
@@ -2190,18 +2196,18 @@ public abstract class StargateComponent {
 			int closestDistance = Integer.MAX_VALUE;
 
 			for (StargateLocation location : locations) {
-				int diffX = destinationAddress.getBlockX() - location.x;
-				int diffY = 255 - location.y;
-				int diffZ = destinationAddress.getBlockZ() - location.z;
+				int diffX = destinationAddress.getBlockX() - location.x();
+				int diffY = 255 - location.y();
+				int diffZ = destinationAddress.getBlockZ() - location.z();
 				int distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
 
 				boolean shouldUpdate = false;
 
-				if (location.hasDHD && !target.hasDHD) {
+				if (location.hasDHD() && !target.hasDHD()) {
 					shouldUpdate = true;
-				} else if (location.hasDHD == target.hasDHD) {
-					int candidateFamilyPriority = location.family == StargateFamily.Pegasus ? 2 : (location.family == StargateFamily.MilkyWay ? 1 : 0);
-					int targetFamilyPriority = target.family == StargateFamily.Pegasus ? 2 : (target.family == StargateFamily.MilkyWay ? 1 : 0);
+				} else if (location.hasDHD() == target.hasDHD()) {
+					int candidateFamilyPriority = location.family() == StargateFamily.Pegasus ? 2 : (location.family() == StargateFamily.MilkyWay ? 1 : 0);
+					int targetFamilyPriority = target.family() == StargateFamily.Pegasus ? 2 : (target.family() == StargateFamily.MilkyWay ? 1 : 0);
 
 					if (candidateFamilyPriority > targetFamilyPriority) {
 						shouldUpdate = true;
@@ -2216,7 +2222,7 @@ public abstract class StargateComponent {
 				}
 			}
 
-			StargateComponent destinationGate = target.gate.getStargateComponent();
+			StargateComponent destinationGate = target.gate().getStargateComponent();
 
 			if (destinationGate == null) {
 				cancelDial();
@@ -2246,7 +2252,7 @@ public abstract class StargateComponent {
 		currentDialingAddressSize = 0;
 
 		if (stargateTile.worldObj != null) {
-			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 		}
 
 		playAnimation(StargateAnimation.CANCEL);
@@ -2260,7 +2266,7 @@ public abstract class StargateComponent {
 			return;
 		}
 
-		if (!stargateTile.worldObj.isChunkLoaded(Math.floorDiv(stargateTile.x, 16), Math.floorDiv(stargateTile.z, 16))) {
+		if (!stargateTile.worldObj.isChunkLoaded(new ChunkPos(Math.floorDiv(stargateTile.tilePos.x, 16), Math.floorDiv(stargateTile.tilePos.z, 16)))) {
 			state = StargateState.CONNECTED;
 			return;
 		}
@@ -2311,9 +2317,9 @@ public abstract class StargateComponent {
 			return wasRecieverGate;
 		}
 
-		wasRecieverGate = session.destinationX == stargateTile.x &&
-			session.destinationY == stargateTile.y &&
-			session.destinationZ == stargateTile.z &&
+		wasRecieverGate = session.destinationX == stargateTile.tilePos.x &&
+			session.destinationY == stargateTile.tilePos.y &&
+			session.destinationZ == stargateTile.tilePos.z &&
 			session.destinationDim == stargateTile.dim;
 
 		return wasRecieverGate;
@@ -2336,12 +2342,12 @@ public abstract class StargateComponent {
 
 	@Nullable
 	public StargateAddress getAddressWithFamily(StargateFamily family) {
-		return StargateAddress.createAddressFromBlock(stargateTile.x, stargateTile.z, stargateTile.dim, family);
+		return StargateAddress.createAddressFromBlock(stargateTile.tilePos.x, stargateTile.tilePos.z, stargateTile.dim, family);
 	}
 
-	public int getLightmap() {
+	public byte getLightmap() {
 		if (stargateTile.worldObj == null) {
-			return LightmapHelper.getLightmapCoord(15, 15);
+			return LightIndexHelper.lightIndex2i(15, 15);
 		}
 
 		Direction originDirection = getDirection();
@@ -2350,26 +2356,26 @@ public abstract class StargateComponent {
 		int originX, originY, originZ;
 
 		if (originOrientation == Direction.NORTH) {
-			originX = stargateTile.x;
-			originY = stargateTile.y + 3;
-			originZ = stargateTile.z;
+			originX = stargateTile.tilePos.x;
+			originY = stargateTile.tilePos.y + 3;
+			originZ = stargateTile.tilePos.z;
 		} else {
-			originX = stargateTile.x + originDirection.getOffsetX() * 3;
-			originY = stargateTile.y;
-			originZ = stargateTile.z + originDirection.getOffsetZ() * 3;
+			originX = stargateTile.tilePos.x + originDirection.offsetX() * 3;
+			originY = stargateTile.tilePos.y;
+			originZ = stargateTile.tilePos.z + originDirection.offsetZ() * 3;
 
-			if (originDirection.getOffsetX() < 0) {
+			if (originDirection.offsetX() < 0) {
 				originX += 1;
 				originZ += 1;
 			}
 
-			if (originDirection.getOffsetZ() < 0) {
+			if (originDirection.offsetZ() < 0) {
 				originZ += 1;
 				originX += 1;
 			}
 		}
 
-		return stargateTile.worldObj.getLightmapCoord(originX, originY, originZ, stargateTile.worldObj.getBlockLightValue(originX, originY, originZ));
+		return stargateTile.worldObj.getLightIndex(new TilePos(originX, originY, originZ), stargateTile.worldObj.getBlockLightValue(new TilePos(originX, originY, originZ)));
 	}
 
 	public void waitCommandQueue(Runnable action) {

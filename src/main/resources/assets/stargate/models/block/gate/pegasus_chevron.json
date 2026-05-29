@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "stargate:block/gate/pegasus_ring",
+    "bottom": "stargate:block/gate/pegasus_ring",
+    "north": "stargate:block/gate/pegasus_chevron",
+    "south": "stargate:block/gate/pegasus_chevron",
+    "west": "stargate:block/gate/pegasus_chevron",
+    "east": "stargate:block/gate/pegasus_chevron"
+  }
+}

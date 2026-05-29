@@ -9,7 +9,7 @@ import gungun974.stargate.gate.renders.*;
 import gungun974.stargate.gate.tiles.TileEntityStargateMilkyWay;
 import gungun974.stargate.gate.tiles.TileEntityStargatePegasus;
 import gungun974.stargate.gate.tiles.TileEntityStargateUniverse;
-import net.minecraft.client.render.EntityRenderDispatcher;
+import net.minecraft.client.render.EntityRendererDispatcher;
 import net.minecraft.client.render.TileEntityRenderDispatcher;
 import net.minecraft.client.render.block.color.BlockColorDispatcher;
 import net.minecraft.client.render.block.model.BlockModelDispatcher;
@@ -38,20 +38,17 @@ public class StargateModels implements ModelEntrypoint {
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_MILKYWAY, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_MILKYWAY, "stargate:block/gate/milkyway_ring"));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY)
-			.setAllTextures(0, "stargate:block/gate/milkyway_ring")
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_MILKYWAY, "stargate:block/gate/milkyway")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_PEGASUS, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_PEGASUS, "stargate:block/gate/pegasus_ring"));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_PEGASUS)
-			.setAllTextures(0, "stargate:block/gate/pegasus_ring")
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_PEGASUS, "stargate:block/gate/pegasus")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.STARGATE_UNIVERSE, () -> new BlockModelStargate<>(StargateBlocks.STARGATE_UNIVERSE, "stargate:block/gate/universe_ring"));
 
-		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE)
-			.setAllTextures(0, "stargate:block/gate/universe_ring")
+		ModelHelper.setBlockModel(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, () -> new BlockModelStargateBuildPart<>(StargateBlocks.STARGATE_BUILD_PART_UNIVERSE, "stargate:block/gate/universe")
 		);
 
 		ModelHelper.setBlockModel(StargateBlocks.DHD_MILKYWAY, () -> new BlockModelEmpty<>(StargateBlocks.DHD_MILKYWAY));
@@ -62,72 +59,74 @@ public class StargateModels implements ModelEntrypoint {
 	@Override
 	public void initItemModels(ItemModelDispatcher dispatcher) {
 		ModelHelper.setItemModel(StargateItems.STARGATE_WAND, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.STARGATE_WAND, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent("minecraft", "item/stick"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.STARGATE_WAND, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID("minecraft", "item/stick"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.ADDRESS_CARD, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelAddressCard(StargateItems.ADDRESS_CARD, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/address_card"));
+			ItemModelStandard itemModelStandard = new ItemModelAddressCard(StargateItems.ADDRESS_CARD, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/address_card"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.NAQUADAH, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/naquadah"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.NAQUADAH_DUST, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_DUST, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_dust"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_DUST, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/naquadah_dust"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.NAQUADAH_CRUDE_ALLOY, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_CRUDE_ALLOY, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_crude_alloy"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_CRUDE_ALLOY, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/naquadah_crude_alloy"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.NAQUADAH_ALLOY, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_ALLOY, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/naquadah_alloy"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.NAQUADAH_ALLOY, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/naquadah_alloy"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateItems.CONTROL_CRYSTAL, () -> {
-			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.CONTROL_CRYSTAL, MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/control_crystal"));
+			ItemModelStandard itemModelStandard = new ItemModelStandard(StargateItems.CONTROL_CRYSTAL, false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/control_crystal"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateBlocks.DHD_MILKYWAY.asItem(), () -> {
-			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_MILKYWAY.asItem(), MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/milkyway_dhd"));
+			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_MILKYWAY.asItem(), false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/milkyway_dhd"));
 			return itemModelStandard;
 		});
 
 		ModelHelper.setItemModel(StargateBlocks.DHD_PEGASUS.asItem(), () -> {
-			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_PEGASUS.asItem(), MOD_ID);
-			itemModelStandard.icon = TextureRegistry.getTexture(NamespaceID.getPermanent(MOD_ID, "item/pegasus_dhd"));
+			ItemModelStandard itemModelStandard = new ItemModelDHD(StargateBlocks.DHD_PEGASUS.asItem(), false);
+			itemModelStandard.icon = TextureRegistry.getTexture(new NamespaceID(MOD_ID, "item/pegasus_dhd"));
 			return itemModelStandard;
 		});
 	}
 
 	@Override
-	public void initEntityModels(EntityRenderDispatcher dispatcher) {
+	public void initEntityModels(EntityRendererDispatcher entityRendererDispatcher) {
+
 	}
+
 
 	@Override
 	public void initTileEntityModels(TileEntityRenderDispatcher dispatcher) {
-		ModelHelper.setTileEntityModel(TileEntityStargateMilkyWay.class, TileEntityRenderStargateMilkyWay::new);
-		ModelHelper.setTileEntityModel(TileEntityStargatePegasus.class, TileEntityRenderStargatePegasus::new);
-		ModelHelper.setTileEntityModel(TileEntityStargateUniverse.class, TileEntityRenderStargateUniverse::new);
+		dispatcher.assignRenderer(TileEntityStargateMilkyWay.class, new TileEntityRenderStargateMilkyWay());
+		dispatcher.assignRenderer(TileEntityStargatePegasus.class, new TileEntityRenderStargatePegasus());
+		dispatcher.assignRenderer(TileEntityStargateUniverse.class, new TileEntityRenderStargateUniverse());
 
-		ModelHelper.setTileEntityModel(TileEntityDHDMilkyWay.class, TileEntityRendererDHDMilkyWay::new);
-		ModelHelper.setTileEntityModel(TileEntityDHDPegasus.class, TileEntityRendererDHDPegasus::new);
+		dispatcher.assignRenderer(TileEntityDHDMilkyWay.class, new TileEntityRendererDHDMilkyWay());
+		dispatcher.assignRenderer(TileEntityDHDPegasus.class, new TileEntityRendererDHDPegasus());
 
 		StargateMod.LOGGER.info("Tile Entity Models initialized.");
 	}

@@ -114,7 +114,7 @@ public class StargateUniverseComponent extends StargateComponent {
 			state = StargateState.DIALLING;
 
 			if (stargateTile.worldObj != null) {
-				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+				stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 			}
 		});
 	}
@@ -223,7 +223,7 @@ public class StargateUniverseComponent extends StargateComponent {
 		shouldResetRingDirection = true;
 
 		if (stargateTile.worldObj != null) {
-			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.x, stargateTile.y, stargateTile.z);
+			stargateTile.worldObj.markBlockNeedsUpdate(stargateTile.tilePos);
 		}
 	}
 }

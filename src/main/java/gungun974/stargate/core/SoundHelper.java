@@ -7,7 +7,6 @@ import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.SoundEntry;
 import net.minecraft.client.sound.SoundRepository;
 import net.minecraft.core.sound.SoundCategory;
-import paulscode.sound.SoundSystem;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
 import java.net.URL;
@@ -49,7 +48,7 @@ public class SoundHelper {
 	private static void playSoundWithIdAtPos(String name, SoundCategory category, float x, float y, float z, float volume, float pitch, String id, boolean loop) {
 		SoundEntry entry = SoundRepository.SOUNDS.getSoundEntry(name);
 
-		SoundSystem soundSystem = SoundEngine.getSoundSystem();
+		Object soundSystem = getSoundSystem();
 
 		if (soundSystem == null) {
 			return;
@@ -68,19 +67,22 @@ public class SoundHelper {
 			if (entry.type == SoundEntry.Type.FILE) {
 				URL url = entry.getURL();
 				if (url != null) {
+					Class<?> ss = soundSystem.getClass();
 					if (entry.shouldStream) {
-						soundSystem.newStreamingSource(volume > 1.0F, id, url, entry.name, loop, x, y, z, 2, soundDistance);
+						ss.getMethod("newStreamingSource", boolean.class, String.class, URL.class, String.class, boolean.class, float.class, float.class, float.class, int.class, float.class)
+							.invoke(soundSystem, volume > 1.0F, id, url, entry.name, loop, x, y, z, 2, soundDistance);
 					} else {
-						soundSystem.newSource(volume > 1.0F, id, url, entry.name, loop, x, y, z, 2, soundDistance);
+						ss.getMethod("newSource", boolean.class, String.class, URL.class, String.class, boolean.class, float.class, float.class, float.class, int.class, float.class)
+							.invoke(soundSystem, volume > 1.0F, id, url, entry.name, loop, x, y, z, 2, soundDistance);
 					}
 
 					if (volume > 1.0F) {
 						volume = 1.0F;
 					}
 
-					soundSystem.setPitch(id, pitch * entry.pitch);
-					soundSystem.setVolume(id, volume * SoundCategoryHelper.getEffectiveVolume(category, Minecraft.getMinecraft().gameSettings) * entry.volume);
-					soundSystem.play(id);
+					ss.getMethod("setPitch", String.class, float.class).invoke(soundSystem, id, pitch * entry.pitch);
+					ss.getMethod("setVolume", String.class, float.class).invoke(soundSystem, id, volume * SoundCategoryHelper.getEffectiveVolume(category) * entry.volume);
+					ss.getMethod("play", String.class).invoke(soundSystem, id);
 				}
 			}
 
@@ -90,7 +92,6 @@ public class SoundHelper {
 		} catch (Exception e) {
 			StargateMod.LOGGER.error("Unexpected exception while playing sound '{}' at {} {} {}!", entry, x, y, z, e);
 		}
-
 	}
 
 	static public void stopSingleSoundAt(String name, float x, float y, float z) {
@@ -108,12 +109,24 @@ public class SoundHelper {
 			return;
 		}
 
-		SoundSystem soundSystem = SoundEngine.getSoundSystem();
+		Object soundSystem = getSoundSystem();
 
 		if (soundSystem == null) {
 			return;
 		}
 
-		soundSystem.stop(id);
+		try {
+			soundSystem.getClass().getMethod("stop", String.class).invoke(soundSystem, id);
+		} catch (Exception e) {
+			StargateMod.LOGGER.error("Unexpected exception while stopping sound '{}'!", id, e);
+		}
+	}
+
+	private static Object getSoundSystem() {
+		try {
+			return SoundEngine.class.getMethod("getSoundSystem").invoke(null);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

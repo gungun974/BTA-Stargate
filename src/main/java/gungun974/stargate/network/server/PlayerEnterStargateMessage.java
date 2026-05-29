@@ -9,11 +9,12 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.net.packet.PacketEntityFling;
-import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.entity.player.PlayerServer;
 import org.jetbrains.annotations.NotNull;
+import org.joml.primitives.AABBdc;
 import turniplabs.halplibe.helper.network.NetworkMessage;
 import turniplabs.halplibe.helper.network.UniversalPacket;
 
@@ -84,7 +85,7 @@ public class PlayerEnterStargateMessage implements NetworkMessage {
 			return;
 		}
 
-		TileEntity tileEntity = world.getTileEntity(gateX, gateY, gateZ);
+		TileEntity tileEntity = world.getTileEntity(new TilePos(gateX, gateY, gateZ));
 
 		if (!(tileEntity instanceof TileEntityStargate)) {
 			return;
@@ -102,7 +103,7 @@ public class PlayerEnterStargateMessage implements NetworkMessage {
 			return;
 		}
 
-		AABB detectionBox = gate.getDetectionBox();
+		AABBdc detectionBox = gate.getDetectionBox();
 		List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(null, detectionBox);
 
 		boolean invalidPlayer = true;

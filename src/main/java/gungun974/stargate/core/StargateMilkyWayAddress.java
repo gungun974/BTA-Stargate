@@ -1,8 +1,7 @@
 package gungun974.stargate.core;
 
 import gungun974.stargate.StargateMod;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class StargateMilkyWayAddress extends StargateAddress {
 	public static int NUMBER_OF_SYMBOL = 39;

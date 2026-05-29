@@ -6,7 +6,7 @@ import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.client.render.block.model.BlockModel;
 import net.minecraft.client.render.block.model.BlockModelDispatcher;
 import net.minecraft.client.render.block.model.BlockModelStandard;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.client.render.texture.stitcher.IconCoordinate;
 import net.minecraft.client.render.texture.stitcher.TextureRegistry;
 import net.minecraft.core.block.Block;
@@ -15,6 +15,9 @@ import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.world.WorldSource;
+import net.minecraft.core.world.pos.TilePosc;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BlockModelStargate<T extends BlockLogic> extends BlockModelStandard<T> {
 	protected final IconCoordinate particleTexture;
@@ -25,36 +28,21 @@ public class BlockModelStargate<T extends BlockLogic> extends BlockModelStandard
 	}
 
 	@Override
-	public boolean render(Tessellator tessellator, int x, int y, int z) {
-		TileEntity tileEntity = renderBlocks.blockAccess.getTileEntity(x, y, z);
+	public boolean render(@NotNull TessellatorGeneral tessellator, @NotNull WorldSource worldSource, @NotNull TilePosc tilePos) {
+		TileEntity tileEntity = worldSource.getTileEntity(tilePos);
 		if (tileEntity instanceof TileEntityStargate) {
 			CamouflageComponent camouflageComponent = ((TileEntityStargate) tileEntity).getCamouflageComponent();
 
 			if (camouflageComponent.hasCamouflage()) {
-				Block<?> camoufledBlock = Blocks.blocksList[camouflageComponent.getBlockId()];
+				Block<?> camoufledBlock = Blocks.getBlock(camouflageComponent.getBlockId());
 
 				BlockModel<?> camoufledBlockModel = BlockModelDispatcher.getInstance().getDispatch(camoufledBlock);
 
-				WorldSource orginalWorldSource = BlockModel.renderBlocks.blockAccess;
+				ProxyWorld proxyWorld = new ProxyWorld(worldSource);
 
-				try {
+				proxyWorld.setBlock(tilePos.x(), tilePos.y(), tilePos.z(), camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta(), null);
 
-					ProxyWorld proxyWorld = new ProxyWorld(orginalWorldSource);
-
-					proxyWorld.setBlock(x, y, z, camouflageComponent.getBlockId(), camouflageComponent.getBlockMeta(), null);
-
-					BlockModel.renderBlocks.blockAccess = proxyWorld;
-
-
-					boolean render = camoufledBlockModel.render(tessellator, x, y, z);
-
-					BlockModel.renderBlocks.blockAccess = orginalWorldSource;
-
-					return render;
-
-				} finally {
-					BlockModel.renderBlocks.blockAccess = orginalWorldSource;
-				}
+				return camoufledBlockModel.render(tessellator, proxyWorld, tilePos);
 			}
 		}
 
@@ -62,7 +50,7 @@ public class BlockModelStargate<T extends BlockLogic> extends BlockModelStandard
 	}
 
 	@Override
-	public IconCoordinate getParticleTexture(Side side, int meta) {
+	public @Nullable IconCoordinate getParticleTexture(@NotNull Side side, int meta) {
 		return particleTexture;
 	}
 }

@@ -1,59 +1,66 @@
 package gungun974.stargate.gate.renders;
 
 import gungun974.stargate.gate.blocks.BlockLogicStargateBuildPart;
-import net.minecraft.client.render.block.model.BlockModelStandard;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.block.model.BlockModelDispatcher;
+import net.minecraft.client.render.block.model.generic.BlockModelGeneric;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.client.render.texture.stitcher.IconCoordinate;
-import net.minecraft.client.render.texture.stitcher.TextureRegistry;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLogic;
-import net.minecraft.core.util.helper.Side;
-import net.minecraft.core.util.helper.Sides;
+import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.WorldSource;
+import net.minecraft.core.world.pos.TilePosc;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.useless.dragonfly.models.block.StaticBlockModel;
 
-public class BlockModelStargateBuildPart<T extends BlockLogic> extends BlockModelStandard<T> {
-	public BlockModelStargateBuildPart(Block<T> block) {
-		super(block);
+public class BlockModelStargateBuildPart<T extends BlockLogic> extends BlockModelGeneric<T> {
+	public final @NotNull StaticBlockModel core;
+	public final @NotNull StaticBlockModel chevron;
+
+	public BlockModelStargateBuildPart(Block<T> block, String modelPrefix) {
+		super(block, BlockModelDispatcher.loadDataModel(modelPrefix + "_ring").asModel());
+		this.core = BlockModelDispatcher.loadDataModel(modelPrefix + "_core").asModel();
+		this.chevron = BlockModelDispatcher.loadDataModel(modelPrefix + "_chevron").asModel();
 	}
 
-	public IconCoordinate getBlockTexture(WorldSource blockAccess, int x, int y, int z, Side side) {
-		return getBlockTextureFromSideAndMetadata(side.getOpposite(), blockAccess.getBlockMetadata(x, y, z));
-	}
-
-	public IconCoordinate getBlockTextureFromSideAndMetadata(Side rawSide, int rawMetadata) {
-		Side side = rawSide;
-
-		int currentMetadata = BlockLogicStargateBuildPart.getRawMeta(rawMetadata);
-
-		if (currentMetadata == BlockLogicStargateBuildPart.CORE_META) {
-			int index = Sides.orientationLookUpHorizontal[6 * Math.min(BlockLogicStargateBuildPart.getDirectionFromMeta(rawMetadata).getId(), 5) + rawSide.getId()];
-
-			if (index >= Sides.orientationLookUpHorizontal.length) return this.blockTextures.get(Side.BOTTOM);
-
-			side = Side.getSideById(index);
-		}
-
-		int index = Sides.orientationLookUpHorizontal[side.getId()];
-
-		if (currentMetadata == BlockLogicStargateBuildPart.CHEVRON_META && (side != Side.TOP && side != Side.BOTTOM)) {
-			IconCoordinate original = this.blockTextures.get(side);
-
-			assert original != null;
-
-			return TextureRegistry.getTexture(original.namespaceId.namespace() + ":block/" + original.namespaceId.value().replace("ring", "chevron"));
-		} else if (currentMetadata == BlockLogicStargateBuildPart.CORE_META && (side == Side.SOUTH)) {
-			IconCoordinate original = this.blockTextures.get(side);
-
-			assert original != null;
-
-			return TextureRegistry.getTexture(original.namespaceId.namespace() + ":block/" + original.namespaceId.value().replace("ring", "core"));
-		} else {
-			return this.blockTextures.get(Side.getSideById(index));
+	public boolean renderAttached(@NotNull TessellatorGeneral tessellator, @NotNull WorldSource worldSource, @NotNull TilePosc tilePos, boolean cullFaces, @Nullable IconCoordinate overrideTexture) {
+		Direction direction = BlockLogicStargateBuildPart.getDirectionFromMeta(worldSource.getBlockData(tilePos));
+		switch (direction) {
+			case UP -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, -1, 0, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
+			case DOWN -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, 1, 0, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
+			case WEST -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, 0, 1, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
+			case EAST -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, 0, 3, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
+			case SOUTH -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, 0, 2, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
+			default -> {
+				return this.getModel(worldSource, tilePos).renderAttached(this, tessellator, worldSource, tilePos, 0, 0, 0, 0.0F, 0.0F, 0.0F, false, cullFaces, overrideTexture);
+			}
 		}
 	}
 
 	@Override
-	public boolean render(Tessellator tessellator, int x, int y, int z) {
-		return super.render(tessellator, x, y, z);
+	public @NotNull StaticBlockModel getModel(@NotNull WorldSource source, @NotNull TilePosc tilePosc) {
+		return getModelFromData(BlockLogicStargateBuildPart.getRawMeta(source.getBlockData(tilePosc)));
+	}
+
+	public @NotNull StaticBlockModel getModelFromData(int data) {
+		if (data == BlockLogicStargateBuildPart.CORE_META) {
+			return core;
+		}
+		if (data == BlockLogicStargateBuildPart.CHEVRON_META) {
+			return chevron;
+		}
+
+		return staticModel;
 	}
 }

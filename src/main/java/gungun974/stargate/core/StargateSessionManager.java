@@ -6,9 +6,9 @@ import gungun974.stargate.gate.components.StargateComponent;
 import gungun974.stargate.gate.tiles.TileEntityStargate;
 import net.minecraft.core.util.helper.Direction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import turniplabs.halplibe.helper.EnvironmentHelper;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -98,11 +98,9 @@ public class StargateSessionManager {
 		for (Map.Entry<String, Tag<?>> entry : sessionsTag.getValue().entrySet()) {
 			try {
 				final Tag<?> tag = entry.getValue();
-				if (!(tag instanceof CompoundTag)) {
+				if (!(tag instanceof CompoundTag sessionTag)) {
 					continue;
 				}
-
-				final CompoundTag sessionTag = (CompoundTag) tag;
 
 				sessions.add(new StargateSession(
 					sessionTag.getInteger("OriginX"),
@@ -171,16 +169,16 @@ public class StargateSessionManager {
 		}
 
 		sessions.add(new StargateSession(
-			origin.stargateTile.x,
-			origin.stargateTile.y,
-			origin.stargateTile.z,
+			origin.stargateTile.tilePos.x,
+			origin.stargateTile.tilePos.y,
+			origin.stargateTile.tilePos.z,
 			origin.stargateTile.dim,
 			origin.getDirection(),
 			origin.getOrientation(),
 			origin.getAddress(),
-			destination.stargateTile.x,
-			destination.stargateTile.y,
-			destination.stargateTile.z,
+			destination.stargateTile.tilePos.x,
+			destination.stargateTile.tilePos.y,
+			destination.stargateTile.tilePos.z,
 			destination.stargateTile.dim,
 			destination.getDirection(),
 			destination.getOrientation(),
@@ -204,10 +202,10 @@ public class StargateSessionManager {
 		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
-			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
+			if (tile.tilePos.x == session.originX && tile.tilePos.y == session.originY && tile.tilePos.z == session.originZ && dim == session.originDim) {
 				return session;
 			}
-			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
+			if (tile.tilePos.x == session.destinationX && tile.tilePos.y == session.destinationY && tile.tilePos.z == session.destinationZ && dim == session.destinationDim) {
 				return session;
 			}
 		}
@@ -229,12 +227,12 @@ public class StargateSessionManager {
 		while (iterator.hasNext()) {
 			StargateSession session = iterator.next();
 
-			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
+			if (tile.tilePos.x == session.originX && tile.tilePos.y == session.originY && tile.tilePos.z == session.originZ && dim == session.originDim) {
 				iterator.remove();
 				return;
 			}
 
-			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
+			if (tile.tilePos.x == session.destinationX && tile.tilePos.y == session.destinationY && tile.tilePos.z == session.destinationZ && dim == session.destinationDim) {
 				iterator.remove();
 				return;
 			}
@@ -252,12 +250,12 @@ public class StargateSessionManager {
 		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
-			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
+			if (tile.tilePos.x == session.originX && tile.tilePos.y == session.originY && tile.tilePos.z == session.originZ && dim == session.originDim) {
 				session.fastClosing = true;
 				return;
 			}
 
-			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
+			if (tile.tilePos.x == session.destinationX && tile.tilePos.y == session.destinationY && tile.tilePos.z == session.destinationZ && dim == session.destinationDim) {
 				session.fastClosing = true;
 				return;
 			}
@@ -274,12 +272,12 @@ public class StargateSessionManager {
 		int dim = tile.dim;
 
 		for (StargateSession session : sessions) {
-			if (tile.x == session.originX && tile.y == session.originY && tile.z == session.originZ && dim == session.originDim) {
+			if (tile.tilePos.x == session.originX && tile.tilePos.y == session.originY && tile.tilePos.z == session.originZ && dim == session.originDim) {
 				session.fastCloseTick = 0;
 				return;
 			}
 
-			if (tile.x == session.destinationX && tile.y == session.destinationY && tile.z == session.destinationZ && dim == session.destinationDim) {
+			if (tile.tilePos.x == session.destinationX && tile.tilePos.y == session.destinationY && tile.tilePos.z == session.destinationZ && dim == session.destinationDim) {
 				session.fastCloseTick = 0;
 				return;
 			}
